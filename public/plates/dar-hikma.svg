@@ -1,20 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1250" width="1000" height="1250">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" width="1200" height="1500">
 <defs>
-<radialGradient id="g" cx="0.7" cy="0.45" r="0.95">
-<stop offset="0" stop-color="#457A6E"/><stop offset="0.45" stop-color="#457A6E" stop-opacity="0.62"/>
-<stop offset="1" stop-color="#122622"/></radialGradient>
-<linearGradient id="s" x1="0.1" y1="0" x2="0.8" y2="1">
-<stop offset="0" stop-color="#F4F1E8" stop-opacity="0.16"/>
-<stop offset="0.5" stop-color="#F4F1E8" stop-opacity="0.03"/>
-<stop offset="1" stop-color="#050B0A" stop-opacity="0.30"/></linearGradient>
-<filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3"/>
+<linearGradient id="bg" x1="0" y1="0" x2="0.55" y2="1">
+<stop offset="0" stop-color="#1B3A34"/><stop offset="0.55" stop-color="#0C1E1A"/><stop offset="1" stop-color="#040A09"/>
+</linearGradient>
+<radialGradient id="lite" cx="0.6396795268708837" cy="0.38427883821580494" r="0.62">
+<stop offset="0" stop-color="#F7F5EE" stop-opacity="0.66"/>
+<stop offset="0.35" stop-color="#D8B46A" stop-opacity="0.20"/>
+<stop offset="1" stop-color="#040A09" stop-opacity="0"/></radialGradient>
+<clipPath id="cp"><rect width="1200" height="1500"/></clipPath>
+<filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="4"/>
 <feColorMatrix type="saturate" values="0"/></filter>
+<filter id="soft"><feGaussianBlur stdDeviation="42"/></filter>
 </defs>
-<rect width="1000" height="1250" fill="#122622"/>
-<rect width="1000" height="1250" fill="url(#g)"/>
-<rect width="1000" height="1250" fill="url(#s)"/>
-<ellipse cx="700" cy="562" rx="260" ry="330" fill="#F4F1E8" opacity="0.05"/>
-<rect width="1000" height="1250" filter="url(#n)" opacity="0.09"/>
-<rect x="56" y="56" width="888" height="1138" fill="none" stroke="#F4F1E8" stroke-width="1" opacity="0.18"/>
-<text x="76" y="1164" font-family="ui-monospace,monospace" font-size="16" fill="#F4F1E8" opacity="0.45" letter-spacing="4">PLATE · DAR-HIKMA</text>
-</svg>
+<g clip-path="url(#cp)">
+<rect width="1200" height="1500" fill="url(#bg)"/>
+<g transform="rotate(12 600.0 750.0)"><rect x="0" y="0" width="1200" height="101" fill="#F7F5EE" opacity="0.1"/><rect x="0" y="191" width="1200" height="82" fill="#F7F5EE" opacity="0.092"/><rect x="0" y="317" width="1200" height="134" fill="#F7F5EE" opacity="0.035"/><rect x="0" y="521" width="1200" height="55" fill="#F7F5EE" opacity="0.095"/><rect x="0" y="646" width="1200" height="73" fill="#F7F5EE" opacity="0.13"/><rect x="0" y="821" width="1200" height="44" fill="#F7F5EE" opacity="0.116"/><rect x="0" y="954" width="1200" height="33" fill="#F7F5EE" opacity="0.113"/><rect x="0" y="1081" width="1200" height="46" fill="#F7F5EE" opacity="0.095"/><rect x="0" y="1153" width="1200" height="116" fill="#F7F5EE" opacity="0.15"/><rect x="0" y="1298" width="1200" height="140" fill="#F7F5EE" opacity="0.077"/></g>
+<ellipse cx="767" cy="576" rx="552" ry="600" fill="url(#lite)" filter="url(#soft)"/>
+<rect width="1200" height="1500" filter="url(#gr)" opacity="0.13"/>
+<rect x="0" y="1080" width="1200" height="2" fill="#D8B46A" opacity="0.5"/>
+<rect x="96" y="0" width="1" height="1500" fill="#F7F5EE" opacity="0.14"/>
+</g></svg>

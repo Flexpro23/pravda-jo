@@ -11,48 +11,47 @@ export default function PieceView({ lang, slug }: { lang: Lang; slug: string }) 
 
   return (
     <Page lang={lang}>
-      <section className="piece-hero"><div className="wrap">
-        <Link href={path(lang, 'work')} className="u link piece-back">← {tx('allWork', lang)}</Link>
-        <p className="u register">{p.client[lang]} · {p.sector[lang]} · <span className="num ltr">{p.date}</span></p>
-        <h1 className="d1 register-2" style={{ margin: 'var(--s5) 0' }}>{p.idea[lang]}</h1>
-      </div></section>
-
-      <div className="wrap">
-        <Plate src={`/plates/${p.slug}.svg`} alt={p.idea[lang]} width={1000} height={1250} priority grain={0.06} />
-      </div>
-
-      <section className="sec"><div className="wrap piece-grid">
-        <div>
-          <span className="u eyebrow">{tx('idea', lang)}</span>
-          <p className="body" style={{ fontSize: 18 }}>{p.concept[lang]}</p>
-        </div>
-        <div>
-          <span className="u eyebrow">{tx('cast', lang)}</span>
-          <ul className="cast-list">
-            {p.cast.map((c) => (
-              <li key={c.name.en}>
-                <span className="cast-nm">{c.name[lang]}</span>
-                <span className="u cast-role">{c.role[lang]}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="stat">
-            <span className="u">{tx('result', lang)}</span>
-            <p className="stat-v num">{p.metric}</p>
-            <p className="u" style={{ marginTop: 4 }}>{p.metricLabel[lang]}</p>
+      <section className="wsec" style={{ paddingBlockStart: 'clamp(140px,20vh,240px)' }}>
+        <div className="wrap">
+          <div className="row-meta" style={{ marginBottom: 'var(--s5)' }}>
+            <span className="u">{p.client[lang]}</span>
+            <span className="u">{p.sector[lang]}</span>
+            <span className="u num ltr">{p.date}</span>
           </div>
-          <div className="stat">
-            <span className="u">{tx('from', lang)}</span>
-            <p className="stat-v num" style={{ color: 'var(--brass)' }}>
-              {p.price.toLocaleString('en-US')}
-            </p>
-            <p className="u" style={{ marginTop: 4 }}>
-              {tx('jod', lang)} · <span className="num">{p.assets}</span>{' '}
-              {lang === 'ar' ? 'مقطع' : 'assets'}
-            </p>
+          <h1 className="mega" style={{ marginBottom: 'clamp(32px,5vw,72px)' }}>
+            <span className="cut"><span className="d1">{p.idea[lang]}</span></span>
+          </h1>
+        </div>
+        <div className="wrap wipeIn">
+          <Plate src={`/plates/${p.slug}.svg`} alt={p.idea[lang]} width={1200} height={1500} priority grain={0.05} />
+        </div>
+        <div className="wrap" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))',
+          gap: 'clamp(28px,4vw,72px)', marginTop: 'clamp(48px,7vw,110px)' }}>
+          <div className="riseIn">
+            <span className="u">{tx('idea', lang)}</span>
+            <p className="body" style={{ marginTop: 'var(--s4)', maxWidth: '52ch' }}>{p.concept[lang]}</p>
+          </div>
+          <div className="riseIn">
+            <span className="u">{tx('cast', lang)}</span>
+            <div className="row-cast" style={{ marginTop: 'var(--s4)' }}>
+              {p.cast.map((c) => (
+                <span key={c.name.en}><b>{c.name[lang]}</b><span className="u">{c.role[lang]}</span></span>
+              ))}
+            </div>
+            <div className="row-metric">
+              <span className="v num">{p.metric}</span>
+              <span className="u" style={{ maxWidth: '18ch' }}>{p.metricLabel[lang]}</span>
+            </div>
+            <div className="row-metric">
+              <span className="v num">{p.price.toLocaleString('en-US')}</span>
+              <span className="u">{tx('jod', lang)} · <span className="num">{p.assets}</span> {lang === 'ar' ? 'مقطع' : 'assets'}</span>
+            </div>
           </div>
         </div>
-      </div></section>
+        <div className="wrap" style={{ marginTop: 'clamp(48px,7vw,110px)' }}>
+          <Link href={path(lang, 'work')} className="btn btn-s">← {tx('allWork', lang)}</Link>
+        </div>
+      </section>
     </Page>
   );
 }

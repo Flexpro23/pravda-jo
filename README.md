@@ -50,12 +50,34 @@ The shader does three things:
 - **Pauses** on `IntersectionObserver` and `visibilitychange`.
 - Named imports only. `import * as THREE` defeats tree-shaking.
 
-### Why not ThreeUI
+### ThreeUI
 
-No component in that library accepts a `src`, `images` array, or `children` —
-its entire API is shader knobs. It cannot present a photograph, and it has zero
-RTL awareness. One of its components ships 1.4MB because five stock photos are
-base64-inlined into the JS. This whole WebGL layer is ~137KB of `three`.
+The hero and teardown fields are ThreeUI's `EmeraldHorizonBackground` and
+`RibbonFieldBackground`, wrapped in `components/webgl/Horizon.tsx`.
+
+Three things the wrapper adds, because the library omits them: a capability
+gate (so no shader is compiled on a device that would stall), a
+`visibilitychange` pause, and `webglcontextlost` handling. ThreeUI does pause
+on `IntersectionObserver` already.
+
+Two integration notes worth knowing:
+
+- **`hue` is a CSS `hue-rotate` in degrees, not a shader uniform.** The glow
+  colours are hardcoded bright emerald, so a second `saturate()/brightness()`
+  filter is composited on the library's own wrapper to bring it to PRAVDA
+  petrol.
+- **The shader is a horizon** — `smoothstep(0.4, -0.1, st.y)` means it only
+  emits light in the bottom 40% of its own frame. The field must therefore end
+  where the viewport ends (`height: 100svh`), or the glow renders below the
+  fold, and any bottom-weighted scrim will cover the only lit part.
+
+ThreeUI imports `three128` and `three165` internally. `next.config.mjs` aliases
+both onto the installed `three` — the API surface its shader components touch
+is unchanged in r172. Without the alias the home route ships two runtimes and
+weighs 368 kB; with it, 245 kB.
+
+Work images still use the hand-written `Plate`, because no ThreeUI component
+accepts a `src` — its entire API is shader knobs.
 
 ## Arabic
 
@@ -74,7 +96,7 @@ the Latin and sets ~1.35× at 1.85 line-height.
 
 | | Target | Actual |
 |---|---|---|
-| First Load JS, WebGL routes | ≤250 kB | 242 kB |
+| First Load JS, WebGL routes | ≤250 kB | 245 kB |
 | First Load JS, text routes | ≤250 kB | 109–111 kB |
 | Shared chunk | — | 105 kB |
 

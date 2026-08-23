@@ -3,42 +3,35 @@ import Page from '@/components/Page';
 import { WORK } from '@/lib/data/work';
 import { Lang, path, tx } from '@/lib/i18n';
 
-/** No directory, no filters, no measurements. Everyone is reached through work. */
 export default function CastView({ lang }: { lang: Lang }) {
-  const seen = new Map<string, { name: string; role: string; slug: string; piece: string }>();
-  for (const p of WORK) {
-    for (const c of p.cast) {
-      if (!seen.has(c.name.en)) {
-        seen.set(c.name.en, {
-          name: c.name[lang], role: c.role[lang], slug: p.slug, piece: p.idea[lang],
-        });
-      }
-    }
-  }
+  const seen = new Map<string, { name: string; role: string; slug: string }>();
+  for (const p of WORK) for (const c of p.cast)
+    if (!seen.has(c.name.en)) seen.set(c.name.en, { name: c.name[lang], role: c.role[lang], slug: p.slug });
   const people = [...seen.values()];
 
   return (
     <Page lang={lang}>
-      <section className="hero" style={{ paddingBlock: 'var(--s9) var(--s7)' }}>
+      <section className="wsec" style={{ paddingBlockStart: 'clamp(140px,20vh,260px)' }}>
+        <div className="wrap wsec-head">
+          <h1 className="mega">
+            <span className="cut"><span className="d1">{lang === 'ar' ? 'الوجوه' : 'CAST'}</span></span>
+          </h1>
+          <p className="body fade d3">{tx('castBody', lang)}</p>
+        </div>
         <div className="wrap">
-          <span className="u eyebrow register">{tx('castEyebrow', lang)}</span>
-          <h1 className="d1 register-2" style={{ marginBottom: 'var(--s5)' }}>{tx('castTitle', lang)}</h1>
-          <p className="body register-3">{tx('castBody', lang)}</p>
+          <div className="faces">
+            {people.map((p) => (
+              <Link key={p.name} href={path(lang, `work/${p.slug}`)} className="face riseIn">
+                <div className="face-img" />
+                <div className="face-i">
+                  <p className="face-nm">{p.name}</p>
+                  <span className="u">{p.role}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
-      <section><div className="wrap">
-        <div className="rail">
-          {people.map((p) => (
-            <Link key={p.name} href={path(lang, `work/${p.slug}`)} className="face reveal">
-              <div className="face-img" />
-              <div className="face-i">
-                <p className="face-nm">{p.name}</p>
-                <p className="u">{p.role}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div></section>
     </Page>
   );
 }

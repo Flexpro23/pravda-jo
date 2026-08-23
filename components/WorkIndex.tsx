@@ -1,23 +1,20 @@
 import Page from '@/components/Page';
-import Triptych from '@/components/Triptych';
+import WorkRows from '@/components/WorkRows';
 import { WORK } from '@/lib/data/work';
 import { Lang, tx } from '@/lib/i18n';
 
 export default function WorkIndex({ lang }: { lang: Lang }) {
   return (
     <Page lang={lang}>
-      <section className="hero" style={{ paddingBlock: 'var(--s9) var(--s7)' }}>
-        <div className="wrap">
-          <span className="u eyebrow register">{tx('workEyebrow', lang)}</span>
-          <h1 className="d1 register-2" style={{ marginBottom: 'var(--s5)' }}>{tx('workTitle', lang)}</h1>
-          <p className="body register-3">{tx('workBody', lang)}</p>
+      <section className="wsec" style={{ paddingBlockStart: 'clamp(140px,20vh,260px)' }}>
+        <div className="wrap wsec-head">
+          <h1 className="mega">
+            <span className="cut"><span className="d1">{lang === 'ar' ? 'الأعمال' : 'WORK'}</span></span>
+          </h1>
+          <p className="body fade d3">{tx('workBody', lang)}</p>
         </div>
+        <div className="wrap"><WorkRows lang={lang} pieces={WORK} /></div>
       </section>
-      <section><div className="wrap work-list">
-        {WORK.map((p, i) => (
-          <Triptych key={p.slug} piece={p} lang={lang} index={i} priority={i === 0} />
-        ))}
-      </div></section>
     </Page>
   );
 }

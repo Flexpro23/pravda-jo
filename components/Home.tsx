@@ -1,57 +1,57 @@
 import Link from 'next/link';
-import Plate from '@/components/webgl/Plate';
-import Triptych from '@/components/Triptych';
+import { Horizon } from '@/components/webgl/Horizon';
 import Page from '@/components/Page';
+import WorkRows from '@/components/WorkRows';
 import { WORK } from '@/lib/data/work';
 import { Lang, path, tx } from '@/lib/i18n';
 
 export default function Home({ lang }: { lang: Lang }) {
+  const ar = lang === 'ar';
   return (
     <Page lang={lang}>
       <section className="hero">
-        <div className="wrap hero-grid">
-          <div>
-            <p className="u hero-kick register">{tx('heroKicker', lang)}</p>
-            <h1 className="d1 hero-h">
-              <span className="register">{tx('heroLine1', lang)}</span>
-              <span className="register-2">{tx('heroLine2', lang)}</span>
-            </h1>
-            <p className="body register-3">{tx('heroBody', lang)}</p>
-            <div className="hero-actions register-3">
+        <Horizon className="hero-canvas" />
+        <div className="wrap hero-in">
+          <span className="u hero-kick fade">{tx('heroKicker', lang)}</span>
+
+          <h1 className="mega hero-mega">
+            <span className="cut"><span className="d1">{ar ? 'منشوف' : 'WE READ'}</span></span>
+            <span className="cut l2"><span className="d2">{ar ? 'حسابك' : 'YOUR'}</span></span>
+            <span className="cut l3"><span className="d3">{ar ? 'قبل ما نحكيك' : 'ACCOUNT'}</span></span>
+          </h1>
+
+          <div className="hero-tail">
+            <p className="body fade d4">{tx('heroBody', lang)}</p>
+            <div className="hero-actions fade d5">
               <Link className="btn" href={path(lang, 'teardown')}>{tx('heroCta', lang)}</Link>
               <Link className="btn btn-s" href={path(lang, 'work')}>{tx('heroCta2', lang)}</Link>
             </div>
           </div>
-          <Plate src="/plates/hero.svg" alt={tx('heroLine1', lang)}
-                 width={1000} height={1250} priority grain={0.07} />
         </div>
       </section>
 
-      <section className="sec">
+      <section className="band">
         <div className="wrap">
-          <div className="sec-head">
-            <span className="u eyebrow">{tx('workEyebrow', lang)}</span>
-            <h2 className="d2">{tx('workTitle', lang)}</h2>
-            <p className="body" style={{ marginTop: 'var(--s4)' }}>{tx('workBody', lang)}</p>
-          </div>
-          <div className="work-list">
-            {WORK.slice(0, 2).map((p, i) => (
-              <Triptych key={p.slug} piece={p} lang={lang} index={i} />
-            ))}
-          </div>
-          <Link className="btn btn-s" href={path(lang, 'work')} style={{ marginTop: 'var(--s6)' }}>
-            {tx('allWork', lang)}
-          </Link>
+          <p className="u" style={{ marginBottom: 'var(--s6)' }}>{tx('workEyebrow', lang)}</p>
+          <p className="mid riseIn">
+            {ar
+              ? 'ما منبيع صور. منبيع فكرة، ومَن نفّذها، والرقم اللي طلع.'
+              : 'We do not sell pictures. We sell an idea, the people who made it, and the number it returned.'}
+          </p>
         </div>
       </section>
 
-      <section className="sec">
-        <div className="wrap">
-          <div className="sec-head">
-            <span className="u eyebrow">{tx('tdEyebrow', lang)}</span>
-            <h2 className="d2">{tx('tdTitle', lang)}</h2>
-            <p className="body" style={{ marginTop: 'var(--s4)' }}>{tx('tdBody', lang)}</p>
-          </div>
+      <section className="wsec"><div className="wrap">
+        <WorkRows lang={lang} pieces={WORK.slice(0, 3)} />
+        <Link className="btn btn-s" href={path(lang, 'work')} style={{ marginTop: 'var(--s8)' }}>
+          {tx('allWork', lang)}
+        </Link>
+      </div></section>
+
+      <section className="band">
+        <div className="wrap" style={{ display: 'flex', justifyContent: 'space-between',
+          gap: 'var(--s7)', flexWrap: 'wrap', alignItems: 'end' }}>
+          <p className="big riseIn">{tx('tdTitle', lang)}</p>
           <Link className="btn" href={path(lang, 'teardown')}>{tx('heroCta', lang)}</Link>
         </div>
       </section>
