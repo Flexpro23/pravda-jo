@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1250" width="1000" height="1250">
+<defs>
+<radialGradient id="g" cx="0.7" cy="0.45" r="0.95">
+<stop offset="0" stop-color="#457A6E"/><stop offset="0.45" stop-color="#457A6E" stop-opacity="0.62"/>
+<stop offset="1" stop-color="#122622"/></radialGradient>
+<linearGradient id="s" x1="0.1" y1="0" x2="0.8" y2="1">
+<stop offset="0" stop-color="#F4F1E8" stop-opacity="0.16"/>
+<stop offset="0.5" stop-color="#F4F1E8" stop-opacity="0.03"/>
+<stop offset="1" stop-color="#050B0A" stop-opacity="0.30"/></linearGradient>
+<filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3"/>
+<feColorMatrix type="saturate" values="0"/></filter>
+</defs>
+<rect width="1000" height="1250" fill="#122622"/>
+<rect width="1000" height="1250" fill="url(#g)"/>
+<rect width="1000" height="1250" fill="url(#s)"/>
+<ellipse cx="700" cy="562" rx="260" ry="330" fill="#F4F1E8" opacity="0.05"/>
+<rect width="1000" height="1250" filter="url(#n)" opacity="0.09"/>
+<rect x="56" y="56" width="888" height="1138" fill="none" stroke="#F4F1E8" stroke-width="1" opacity="0.18"/>
+<text x="76" y="1164" font-family="ui-monospace,monospace" font-size="16" fill="#F4F1E8" opacity="0.45" letter-spacing="4">PLATE · DAR-HIKMA</text>
+</svg>
