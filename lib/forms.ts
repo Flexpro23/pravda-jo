@@ -1,104 +1,201 @@
 /**
  * Source forms for the point field to resolve into.
  *
- * Drawn on an offscreen canvas rather than loaded as assets, so there is no
- * network cost and no stock imagery. Each returns a luminance map that the
- * terrain samples to build target positions.
+ * Every form is a diagram, not a picture. A drawn person — silhouette, head
+ * and shoulders, two figures at a shoot — reads as a pictogram: signage, not
+ * photography. It is also the one thing a roster of ninety distinct people
+ * would not recognise as itself. So nothing here depicts. The field resolves
+ * into the instruments of the work instead: a frame being measured, ninety
+ * marks with four of them cast, thirty cells, a published rate, an open
+ * aperture, a convergence.
  *
- * Replace these with real PRAVDA photography when it exists — `sampleImage`
- * takes any drawable source, so a <img> of a real frame drops straight in.
+ * One grammar throughout — light lines on nothing. No filled mass, no anatomy,
+ * no icon a stock library would sell you.
+ *
+ * Replace these with real PRAVDA photography when it exists: `sampleForm`
+ * takes any drawable source, so an <img> of a real frame drops straight in.
  */
 export type Form = (c: CanvasRenderingContext2D, w: number, h: number) => void;
 
-/** Head and shoulders, three-quarter. The most legible "this is a person". */
-export const portrait: Form = (c, w, h) => {
-  const cx = w * 0.5, headR = w * 0.145;
-  const headY = h * 0.32;
-  c.fillStyle = '#fff';
-  // shoulders
-  c.beginPath();
-  c.moveTo(w * 0.12, h);
-  c.bezierCurveTo(w * 0.16, h * 0.66, w * 0.34, h * 0.55, cx - headR * 0.5, h * 0.50);
-  c.lineTo(cx + headR * 0.62, h * 0.50);
-  c.bezierCurveTo(w * 0.70, h * 0.56, w * 0.86, h * 0.68, w * 0.90, h);
-  c.closePath(); c.fill();
-  // neck
-  c.fillRect(cx - headR * 0.38, headY, headR * 0.78, h * 0.22);
-  // head
-  c.beginPath();
-  c.ellipse(cx, headY, headR * 0.92, headR * 1.22, 0, 0, Math.PI * 2);
-  c.fill();
-  // hair mass, offset — keeps it from reading as a mannequin
-  c.beginPath();
-  c.ellipse(cx - headR * 0.16, headY - headR * 0.42, headR * 1.12, headR * 0.98, -0.22, 0, Math.PI * 2);
-  c.fill();
+/** One optical weight across the set, so no form shouts over another. */
+const pen = (c: CanvasRenderingContext2D, w: number, k = 1) => {
+  c.strokeStyle = '#fff';
+  c.lineWidth = Math.max(1, w * 0.0042 * k);
+  c.lineCap = 'butt';
 };
 
-/** An aperture, mid-open. Reads instantly as a camera. */
-export const aperture: Form = (c, w, h) => {
-  const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.40;
-  c.strokeStyle = '#fff'; c.lineWidth = Math.max(2, R * 0.055);
-  for (let i = 0; i < 7; i++) {
-    const a = (i / 7) * Math.PI * 2;
-    const a2 = a + (Math.PI * 2) / 7;
-    c.beginPath();
-    c.moveTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R);
-    c.lineTo(cx + Math.cos(a2) * R * 0.34, cy + Math.sin(a2) * R * 0.34);
-    c.stroke();
-  }
-  c.beginPath(); c.arc(cx, cy, R, 0, Math.PI * 2); c.stroke();
-};
+/** Deterministic scatter — one composition, not a new one each visit. */
+const seeded = (s: number) => () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
 
-/** A 9:16 frame with crop marks — the format the work actually lives in. */
-export const frame: Form = (c, w, h) => {
-  const fh = h * 0.80, fw = fh * (9 / 16);
-  const x = (w - fw) / 2, y = (h - fh) / 2;
-  c.strokeStyle = '#fff'; c.lineWidth = Math.max(2, w * 0.006);
-  c.strokeRect(x, y, fw, fh);
-  // thirds
-  c.lineWidth = Math.max(1, w * 0.0025);
-  for (let i = 1; i < 3; i++) {
-    c.beginPath(); c.moveTo(x + (fw / 3) * i, y); c.lineTo(x + (fw / 3) * i, y + fh); c.stroke();
-    c.beginPath(); c.moveTo(x, y + (fh / 3) * i); c.lineTo(x + fw, y + (fh / 3) * i); c.stroke();
-  }
-  // corner marks
-  c.lineWidth = Math.max(3, w * 0.008);
-  const m = fw * 0.13;
+/**
+ * The read. A 9:16 frame implied by its corners and measured down one edge,
+ * with a single rule across it stopped at what it found.
+ */
+export const reticle: Form = (c, w, h) => {
+  const fh = h * 0.82, fw = fh * (9 / 16);
+  const x = (w - fw) / 2 + w * 0.04, y = (h - fh) / 2;
+  const m = fw * 0.26;
+
+  pen(c, w, 2.2);
   const corner = (px: number, py: number, sx: number, sy: number) => {
-    c.beginPath(); c.moveTo(px, py + sy * m); c.lineTo(px, py); c.lineTo(px + sx * m, py); c.stroke();
+    c.beginPath();
+    c.moveTo(px, py + sy * m); c.lineTo(px, py); c.lineTo(px + sx * m, py);
+    c.stroke();
   };
   corner(x, y, 1, 1); corner(x + fw, y, -1, 1);
   corner(x, y + fh, 1, -1); corner(x + fw, y + fh, -1, -1);
+
+  // graduations outside the left edge — the frame under measurement
+  pen(c, w, 1.0);
+  const gx = x - fw * 0.20;
+  for (let i = 0; i <= 36; i++) {
+    const ty = y + (fh * i) / 36;
+    const len = i % 4 === 0 ? fw * 0.10 : fw * 0.045;
+    c.beginPath(); c.moveTo(gx, ty); c.lineTo(gx + len, ty); c.stroke();
+  }
+
+  // the read: one pass across, marked where it stopped
+  pen(c, w, 1.3);
+  const ry = y + fh * 0.58;
+  c.beginPath(); c.moveTo(x + fw * 0.03, ry); c.lineTo(x + fw * 0.97, ry); c.stroke();
+  c.beginPath(); c.arc(x + fw * 0.68, ry, fw * 0.055, 0, Math.PI * 2); c.stroke();
 };
 
-/** Two figures, a shoot in progress: one holding a camera, one posed. */
-export const shoot: Form = (c, w, h) => {
-  c.fillStyle = '#fff';
-  // model, right
-  const mx = w * 0.66, mr = w * 0.085;
-  c.beginPath(); c.ellipse(mx, h * 0.30, mr * 0.9, mr * 1.15, 0, 0, Math.PI * 2); c.fill();
-  c.beginPath();
-  c.moveTo(mx - mr * 1.5, h); c.bezierCurveTo(mx - mr * 1.2, h * 0.60, mx - mr * 0.7, h * 0.46, mx, h * 0.44);
-  c.bezierCurveTo(mx + mr * 0.8, h * 0.46, mx + mr * 1.3, h * 0.62, mx + mr * 1.7, h);
-  c.closePath(); c.fill();
-  // photographer, left, camera raised
-  const px = w * 0.28, pr = w * 0.072;
-  c.beginPath(); c.ellipse(px, h * 0.40, pr * 0.9, pr * 1.1, 0, 0, Math.PI * 2); c.fill();
-  c.beginPath();
-  c.moveTo(px - pr * 1.5, h); c.bezierCurveTo(px - pr * 1.2, h * 0.68, px - pr * 0.7, h * 0.56, px, h * 0.54);
-  c.bezierCurveTo(px + pr * 0.8, h * 0.56, px + pr * 1.3, h * 0.70, px + pr * 1.7, h);
-  c.closePath(); c.fill();
-  c.fillRect(px + pr * 0.5, h * 0.355, pr * 1.5, pr * 0.95);      // camera body
-  c.beginPath(); c.arc(px + pr * 1.55, h * 0.40, pr * 0.44, 0, Math.PI * 2); c.fill(); // lens
+/**
+ * Ninety. Count them — ten across, nine down, jittered so it is a population
+ * and not a grid. Four carry a ring: the ones cast for the idea on the table.
+ */
+export const roster: Form = (c, w, h) => {
+  const COLS = 10, ROWS = 9;
+  const gw = w * 0.78, gh = h * 0.68;
+  const x0 = (w - gw) / 2, y0 = (h - gh) / 2;
+  const rand = seeded(7);
+  for (let r = 0; r < ROWS; r++) {
+    for (let i = 0; i < COLS; i++) {
+      const n = r * COLS + i;
+      const px = x0 + (gw * i) / (COLS - 1) + (rand() - 0.5) * gw * 0.030;
+      const py = y0 + (gh * r) / (ROWS - 1) + (rand() - 0.5) * gh * 0.034;
+      // rings, not dots: the field samples outlines, so a filled dot would
+      // arrive as a ring anyway. Draw what will actually be drawn.
+      pen(c, w, 1.0);
+      c.beginPath();
+      c.arc(px, py, w * (0.0085 + rand() * 0.0060), 0, Math.PI * 2);
+      c.stroke();
+      if (n === 14 || n === 33 || n === 57 || n === 78) {
+        pen(c, w, 1.6);
+        c.beginPath(); c.arc(px, py, w * 0.034, 0, Math.PI * 2); c.stroke();
+        c.fillStyle = '#fff';
+        c.beginPath(); c.arc(px, py, w * 0.004, 0, Math.PI * 2); c.fill();
+      }
+    }
+  }
 };
 
-export const FORMS: Form[] = [frame, portrait, aperture, shoot, portrait, frame];
+/**
+ * Thirty ideas, each already shot. A contact sheet: thirty 9:16 cells, three
+ * of them bracketed — the shortlist that becomes a proposal.
+ */
+export const library: Form = (c, w, h) => {
+  const COLS = 6, ROWS = 5;
+  // sized from the height, so thirty cells always fit the square
+  const gh = h * 0.84;
+  const gapY = gh * 0.048;
+  const ch = (gh - gapY * (ROWS - 1)) / ROWS;
+  const cw = ch * (9 / 16);
+  const gapX = cw * 0.46;
+  const gw = COLS * cw + gapX * (COLS - 1);
+  const x0 = (w - gw) / 2, y0 = (h - gh) / 2;
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let i = 0; i < COLS; i++) {
+      const n = r * COLS + i;
+      const x = x0 + i * (cw + gapX), y = y0 + r * (ch + gapY);
+      pen(c, w, 0.9);
+      c.strokeRect(x, y, cw, ch);
+      if (n === 8 || n === 15 || n === 23) {
+        // chosen: brackets outside the cell, the way a frame gets selected
+        pen(c, w, 2.2);
+        const m = cw * 0.38, o = gapX * 0.28;
+        const br = (px: number, py: number, sx: number, sy: number) => {
+          c.beginPath();
+          c.moveTo(px, py + sy * m); c.lineTo(px, py); c.lineTo(px + sx * m, py);
+          c.stroke();
+        };
+        br(x - o, y - o, 1, 1); br(x + cw + o, y - o, -1, 1);
+        br(x - o, y + ch + o, 1, -1); br(x + cw + o, y + ch + o, -1, -1);
+      }
+    }
+  }
+};
+
+/**
+ * The rate, published. Two graduated rules — an asset and a month — each cut
+ * at the number it is set to. No figure drawn, only the fact that it is fixed.
+ */
+export const scale: Form = (c, w, h) => {
+  const rule = (y: number, len: number, divs: number, mark: number) => {
+    const x0 = (w - len) / 2;
+    pen(c, w, 1.4);
+    c.beginPath(); c.moveTo(x0, y); c.lineTo(x0 + len, y); c.stroke();
+    pen(c, w, 0.9);
+    for (let i = 0; i <= divs; i++) {
+      const tx = x0 + (len * i) / divs;
+      const t = i % 5 === 0 ? h * 0.045 : h * 0.020;
+      c.beginPath(); c.moveTo(tx, y); c.lineTo(tx, y + t); c.stroke();
+    }
+    pen(c, w, 2.4);
+    const mx = x0 + len * mark;
+    c.beginPath(); c.moveTo(mx, y - h * 0.062); c.lineTo(mx, y + h * 0.062); c.stroke();
+  };
+  rule(h * 0.36, w * 0.78, 40, 0.375);
+  rule(h * 0.66, w * 0.54, 28, 0.625);
+};
+
+/**
+ * Nothing. One ring, wide open — an aperture at full, and a zero. After four
+ * dense diagrams the restraint is the statement.
+ */
+export const zero: Form = (c, w, h) => {
+  const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.33;
+  pen(c, w, 1.5);
+  c.beginPath(); c.arc(cx, cy, R, 0, Math.PI * 2); c.stroke();
+  pen(c, w, 1.1);
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2;
+    const ux = Math.cos(a), uy = Math.sin(a);
+    c.beginPath();
+    c.moveTo(cx + ux * R * 1.10, cy + uy * R * 1.10);
+    c.lineTo(cx + ux * R * 1.22, cy + uy * R * 1.22);
+    c.stroke();
+  }
+};
+
+/** Everything arrives at one place. The node, and what converges on it. */
+export const converge: Form = (c, w, h) => {
+  const nx = w * 0.5, ny = h * 0.5, R = Math.min(w, h) * 0.46;
+  const rand = seeded(19);
+  pen(c, w, 0.9);
+  for (let i = 0; i < 44; i++) {
+    const a = (i / 44) * Math.PI * 2 + (rand() - 0.5) * 0.08;
+    const inner = R * (0.22 + rand() * 0.09);
+    const outer = R * (0.66 + rand() * 0.34);
+    c.beginPath();
+    c.moveTo(nx + Math.cos(a) * inner, ny + Math.sin(a) * inner);
+    c.lineTo(nx + Math.cos(a) * outer, ny + Math.sin(a) * outer);
+    c.stroke();
+  }
+  pen(c, w, 1.8);
+  c.beginPath(); c.arc(nx, ny, R * 0.14, 0, Math.PI * 2); c.stroke();
+};
+
+/** One per scene, in order: read, roster, library, rate, nothing, send. */
+export const FORMS: Form[] = [reticle, roster, library, scale, zero, converge];
 
 /**
  * Draw a form and return the coordinates of every lit pixel, normalised to
  * -0.5..0.5 with y up.
  */
-export function sampleForm(form: Form, res = 210): Float32Array {
+export function sampleForm(form: Form, res = 300): Float32Array {
   const cv = document.createElement('canvas');
   cv.width = res; cv.height = res;
   const c = cv.getContext('2d', { willReadFrequently: true });
@@ -118,7 +215,6 @@ export function sampleForm(form: Form, res = 210): Float32Array {
     for (let x = 0; x < res; x++) {
       if (!lit(x, y)) continue;
       const edge = !lit(x - 1, y) || !lit(x + 1, y) || !lit(x, y - 1) || !lit(x, y + 1);
-      // every edge pixel, and 7% of the interior to give the form some body
       if (edge || Math.random() < 0.07) pts.push(x / res - 0.5, 0.5 - y / res);
     }
   }

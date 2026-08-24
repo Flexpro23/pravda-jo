@@ -15,6 +15,7 @@ uniform vec2  uPointer;
 uniform float uDpr;
 uniform float uIn;      // 0..1 entrance
 uniform float uMorph;   // 0 = terrain, 1 = the form fully resolved
+uniform float uJoin;    // aRand threshold above which a point joins the form
 
 // four ripple slots — xy = origin in world XZ, z = start time, w = strength
 uniform vec4 uRipples[4];
@@ -106,8 +107,10 @@ void main(){
   // than snapping into place.
   // Only part of the field joins the form. The rest stays as field, so the
   // image sits IN the material rather than replacing it — and so the form's
-  // point density never spikes.
-  float joins = step(0.42, aRand);
+  // point density never spikes. How large that part is depends on how much
+  // drawing there is: a sparse diagram needs far fewer points than a filled
+  // shape, or every line resolves into a row of hot beads.
+  float joins = step(uJoin, aRand);
   float lead = 0.62 + aRand * 0.38;
   float m = clamp((uMorph - (1.0 - lead)) / max(lead, 0.001), 0.0, 1.0);
   m = m * m * (3.0 - 2.0 * m) * joins;

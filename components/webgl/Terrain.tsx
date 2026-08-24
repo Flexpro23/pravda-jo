@@ -74,6 +74,10 @@ export default function Terrain({
     const FORM_W = 70, FORM_H = 70, FORM_Y = 10.5, FORM_Z = -44, FORM_X = 19;
     const target = new Float32Array(N * 3);
     const built: Float32Array[] = [];
+    // Points per lit source pixel. Held constant across forms so a bare ring
+    // and a contact sheet draw with the same weight of light.
+    const PER = 15;
+    let join = 0.42;
 
     const applyForm = (index: number) => {
       let pts = built[index];
@@ -83,6 +87,8 @@ export default function Terrain({
       }
       const count = pts.length / 2;
       if (!count) return;
+      join = 1 - Math.min(0.62, Math.max(0.13, (count * PER) / N));
+      if (matRef) matRef.uniforms.uJoin.value = join;
       for (let k = 0; k < N; k++) {
         // deterministic pick per point so a form is stable across re-entry
         const j = (k * 2654435761) % count;
@@ -93,6 +99,8 @@ export default function Terrain({
       const attr = geo.getAttribute('aTarget') as BufferAttribute | undefined;
       if (attr) attr.needsUpdate = true;
     };
+
+    let matRef: RawShaderMaterial | null = null;
 
     const geo = new BufferGeometry();
     geo.setAttribute('position', new BufferAttribute(pos, 3));
@@ -107,6 +115,7 @@ export default function Terrain({
       vertexShader: VERT, fragmentShader: FRAG,
       transparent: true, depthWrite: false, blending: AdditiveBlending,
       uniforms: {
+        uJoin: { value: join },
         uTime: { value: 0 }, uZ: { value: 0 }, uDepth: { value: DEPTH },
         uAmp: { value: 9.6 }, uIn: { value: 0 }, uMorph: { value: 0 }, uPointer: { value: pointer }, uDpr: { value: 1 },
         uBone: { value: new Color('#DCE8DE') },
@@ -132,6 +141,7 @@ export default function Terrain({
     } catch { return; }
     const dpr = Math.min(window.devicePixelRatio, 1.75);
     renderer.setPixelRatio(dpr);
+    matRef = mat;
     mat.uniforms.uDpr.value = dpr;
 
     const resize = () => {
