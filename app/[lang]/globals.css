@@ -211,3 +211,55 @@ bdi,.ltr{unicode-bidi:isolate;direction:ltr;}
 /* the field always sits under a scrim so type never fights the shader */
 .hero-canvas::after{content:'';position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(120% 60% at 50% 42%, rgba(4,10,9,.72) 0%, rgba(4,10,9,.30) 55%, rgba(4,10,9,0) 100%);}
+
+/* ══════ THE FLIGHT ══════ */
+.stage{position:fixed;inset:0;overflow:hidden;background:var(--void);
+  touch-action:none;overscroll-behavior:none;}
+.terrain{position:absolute;inset:0;z-index:0;
+  background:radial-gradient(130% 100% at 50% 96%, #10241F 0%, #071310 42%, #040A09 100%);}
+.terrain canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+.stage-type{position:absolute;inset:0;z-index:2;pointer-events:none;}
+.stage-type::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to bottom, rgba(4,10,9,.90) 0%, rgba(4,10,9,.78) 40%,
+    rgba(4,10,9,.34) 58%, rgba(4,10,9,0) 78%);}
+.stage-type a{pointer-events:auto;}
+.scene{position:absolute;inset:0;display:grid;align-content:start;
+  padding-inline:clamp(20px,5vw,84px);padding-block:13vh 16vh;
+  will-change:opacity;}
+
+.scene-pre{display:block;font-size:clamp(12px,1.05vw,17px);letter-spacing:.3em;
+  margin-bottom:clamp(10px,1.4vw,22px);will-change:transform;}
+[lang="ar"] .scene-pre{font-size:clamp(15px,1.35vw,21px);letter-spacing:0;}
+
+.scene-head{font-size:clamp(52px,11.5vw,180px);line-height:.92;
+  text-wrap:balance;will-change:transform;margin:0;}
+[lang="ar"] .scene-head{font-size:clamp(44px,9.4vw,150px);line-height:1.22;}
+.sup{font-family:var(--sans);font-weight:300;font-size:.22em;letter-spacing:.02em;
+  vertical-align:super;margin-inline-start:.28em;color:var(--brass);}
+[lang="ar"] .sup{font-family:var(--sans);}
+
+.scene-sub{margin-top:clamp(14px,1.7vw,26px);max-width:44ch;
+  font-size:clamp(15px,1.15vw,19px);color:var(--dim);}
+[lang="ar"] .scene-sub{font-size:clamp(17px,1.3vw,21px);max-width:40ch;}
+.scene-actions{display:flex;gap:var(--s3);flex-wrap:wrap;margin-top:clamp(24px,3vw,44px);}
+
+/* HUD */
+.stage-hud{position:absolute;inset-block-end:clamp(18px,3vh,36px);inset-inline:clamp(20px,5vw,84px);
+  z-index:3;display:flex;align-items:center;gap:var(--s4);}
+.rail{flex:1;height:1px;background:var(--rule);display:block;overflow:hidden;}
+.rail-fill{display:block;height:100%;background:var(--brass);transform-origin:inline-start;
+  transform:scaleX(0);}
+[dir="rtl"] .rail-fill{transform-origin:right;}
+
+/* the masthead sits above the flight */
+.stage ~ .mast,.mast{z-index:90;}
+
+/* ── fallback: an ordinary scrolling page ── */
+.flat{padding-block:22vh var(--s10);}
+.flat-scene{max-width:var(--container);margin:0 auto;padding-inline:clamp(20px,5vw,84px);
+  padding-block:clamp(70px,12vh,150px);border-top:1px solid var(--rule);}
+.flat-scene:first-child{border-top:none;}
+.flat-scene .mega{font-size:clamp(46px,9vw,140px);line-height:.95;margin:var(--s3) 0 var(--s5);}
+[lang="ar"] .flat-scene .mega{font-size:clamp(40px,7.6vw,116px);line-height:1.24;}
+.flat-scene .body{max-width:48ch;}

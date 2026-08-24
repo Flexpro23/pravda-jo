@@ -25,6 +25,34 @@ npm run build
 Locale is a URL segment, so `lang` and `dir` are set **server-side** on `<html>`.
 No hydration flash, correct for crawlers, correct with JS disabled.
 
+## The homepage is a flight
+
+`/ar` and `/en` are not a scrolling page. The document never scrolls —
+`overflow` is fixed and wheel/touch/keyboard input is integrated into a single
+normalised `progress` value (0..1). That one value drives **both** the camera
+and the type, so they can never drift apart.
+
+- `components/webgl/Terrain.tsx` — a 190 × 260 point corridor displaced into
+  dunes by two octaves of value noise, wrapped modulo its own depth so the
+  field is infinite. Additive blending, ridges catch brass, a minority of
+  points twinkle. One draw call.
+- `components/Flight.tsx` — virtual scroll, scene envelopes, the HUD.
+- `lib/data/scenes.ts` — six scenes, each one figure. Every number is a fact
+  about PRAVDA (roster, library, rate card), not market research we did not do.
+
+Two things learned building it, both of which look like bugs if you hit them:
+
+- **Scenes must travel, not crossfade in place.** Two headlines fading through
+  each other at the same coordinates reads as a broken render. The outgoing
+  scene translates up and away while the incoming rises in.
+- **The envelope must be clipped.** A raw `sin()` envelope has long tails, so
+  neighbouring scenes stayed partly visible in the gap between their ranges and
+  stacked. `clamp(sin(...) * 1.55 - 0.18)` forces a true zero.
+
+Keyboard: arrows step, space and PageUp/PageDown jump. Reduced motion or a
+device below the capability gate gets `.flat` — the same six scenes as an
+ordinary scrolling page.
+
 ## The WebGL layer
 
 `components/webgl/Plate.tsx` — one fullscreen triangle, one fragment shader,

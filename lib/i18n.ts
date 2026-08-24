@@ -49,6 +49,9 @@ export const t: Dict = {
     en: 'Public business accounts only. We send a link on WhatsApp within one working day.',
   },
 
+  scrollIn:    { ar: 'انزل لتبدأ',      en: 'Scroll to begin' },
+  keepGoing:   { ar: 'كمّل',            en: 'Keep going' },
+  keepGoingEnd:{ ar: 'خلصنا',           en: 'That is all of it' },
   from:        { ar: 'من',             en: 'from' },
   jod:         { ar: 'دينار',          en: 'JOD' },
   perMonth:    { ar: 'بالشهر',         en: 'per month' },
