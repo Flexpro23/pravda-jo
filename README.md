@@ -46,11 +46,21 @@ and the type, so they can never drift apart.
   field is infinite. Additive blending, ridges catch brass, a minority of
   points twinkle. One draw call.
 - `components/Flight.tsx` — virtual scroll, scene envelopes, the HUD.
-- **Ripples.** Four round-robin slots in the shader, each a wave packet whose
-  crest travels outward at 15 units/s and decays with both distance and age.
-  One fires on every section change, so the surface is struck by the
-  interaction rather than animating on its own. Crests swell the point size and
-  catch brass.
+- **Ripples.** Four round-robin slots, each a wave packet struck on every
+  section change. Two things decide whether it reads as a wave or as noise:
+
+  1. **The packet must be wider than its own wavelength.** At 31-unit
+     wavelength and a 29-unit envelope either side you see ~1.9 cycles — a
+     crest with a trough on each shoulder. Narrower than one cycle and it is
+     jitter.
+  2. **It must not be outrun.** The camera covers ~107 world units per section
+     while the front travels 7 units/second, so a ripple struck at the camera
+     is behind you instantly. It is struck **132 units downrange**, roughly
+     where the camera will arrive, so you fly into the ring as it opens.
+
+  Tuning lives in `terrain.glsl.ts`: `speed` (7), band tightness (0.034),
+  wavelength (0.20), age decay (0.17), and the `ring * 2.15` amplitude.
+  The strike position is `originZ` in `Terrain.tsx`.
 - `lib/data/scenes.ts` — six scenes, each one figure. Every number is a fact
   about PRAVDA (roster, library, rate card), not market research we did not do.
 

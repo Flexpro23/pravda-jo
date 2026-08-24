@@ -123,9 +123,13 @@ export default function Terrain({
     const ripples = mat.uniforms.uRipples.value as Vector4[];
     const fire: RippleFn = (strength = 1, spreadX = 0) => {
       const now = (performance.now() - t0) / 1000;
-      // strike just ahead of the camera so the front sweeps toward the viewer
-      const originZ = -(z % DEPTH) - 26;
-      ripples[slot].set(spreadX * 22, originZ, now, strength);
+      // The camera covers roughly 107 world units per section while the wave
+      // front travels 7 units/second — so striking just ahead of the camera
+      // means it flies straight past before the ring can open. Strike well
+      // downrange instead, at about where the camera will ARRIVE, so the
+      // viewer flies into the expanding ring as it opens around them.
+      const originZ = -(z % DEPTH) - 132;
+      ripples[slot].set(spreadX * 26, originZ, now, strength);
       slot = (slot + 1) % ripples.length;
     };
     onReady?.(fire);

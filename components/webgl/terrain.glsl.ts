@@ -57,23 +57,29 @@ void main(){
     vec4 rp = uRipples[i];
     if (rp.w <= 0.0) continue;
     float age = uTime - rp.z;
-    if (age < 0.0 || age > 7.0) continue;
+    if (age < 0.0 || age > 15.0) continue;
 
     float d = distance(vec2(pos.x, z), rp.xy);
-    float speed = 15.0;
+
+    // The packet must be WIDER than its own wavelength or you see less than one
+    // oscillation and it reads as jitter rather than a wave.
+    //   wavelength = 2pi / 0.20  ~= 31 units
+    //   envelope   = 1 / 0.042   ~= 24 units either side of the crest
+    // so roughly one and a half cycles live inside the band: a crest with a
+    // trough on each shoulder, which is what reads as a struck surface.
+    float speed = 7.0;                      // was 15 — a slow, deliberate sweep
     float front = age * speed;
-    // gaussian envelope riding the wavefront
-    float band = exp(-pow((d - front) * 0.115, 2.0));
-    float wave = sin((d - front) * 0.42);
-    float fade = exp(-age * 0.52) * exp(-d * 0.0055);
+    float band  = exp(-pow((d - front) * 0.034, 2.0));
+    float wave  = sin((d - front) * 0.20);
+    float fade  = exp(-age * 0.17) * exp(-d * 0.0040);
     ring += wave * band * fade * rp.w;
   }
-  h += ring * 1.55;
+  h += ring * 2.15;
 
   pos.y   += h * uAmp;
   pos.z    = z;
 
-  vRing = clamp(abs(ring) * 1.7, 0.0, 1.0);
+  vRing = clamp(abs(ring) * 1.9, 0.0, 1.0);
 
   // a little pointer lean, so it feels held rather than played
   pos.x += uPointer.x * 1.6;
@@ -88,7 +94,7 @@ void main(){
 
   gl_Position = projectionMatrix * mv;
   // near points bloom, far points collapse to specks; a ripple crest swells them
-  gl_PointSize = uDpr * mix(1.0, 5.2, vFog) * (0.55 + aRand * 0.9) * (1.0 + vRing * 1.5);
+  gl_PointSize = uDpr * mix(1.0, 5.2, vFog) * (0.55 + aRand * 0.9) * (1.0 + vRing * 2.6);
 }`;
 
 export const FRAG = /* glsl */ `
@@ -118,7 +124,7 @@ void main(){
   col += uBrass * tw * 0.35;
 
   // the wavefront itself catches brass and lifts out of the field
-  col += uBrass * vRing * 0.85;
+  col += uBrass * vRing * 1.45;
 
-  gl_FragColor = vec4(col, alpha * vFog * (0.30 + vRand * 0.70) * (1.0 + vRing * 0.9));
+  gl_FragColor = vec4(col, alpha * vFog * (0.30 + vRand * 0.70) * (1.0 + vRing * 1.6));
 }`;
