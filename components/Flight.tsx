@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Terrain, { capable, type RippleFn } from '@/components/webgl/Terrain';
 import { SCENES } from '@/lib/data/scenes';
+import { CO } from '@/lib/data/company';
 import { Lang, path, tx } from '@/lib/i18n';
 
 const clamp = (n: number, a = 0, b = 1) => Math.min(b, Math.max(a, n));
@@ -145,10 +146,18 @@ export default function Flight({ lang }: { lang: Lang }) {
             <h2 className="mega">{s.head[lang]}{s.sup && <span className="sup num">{s.sup}</span>}</h2>
             <p className="body">{s.sub[lang]}</p>
             {s.outro && (
-              <div className="hero-actions">
-                <Link className="btn" href={path(lang, 'teardown')}>{tx('heroCta', lang)}</Link>
-                <Link className="btn btn-s" href={path(lang, 'work')}>{tx('allWork', lang)}</Link>
-              </div>
+              <>
+                <div className="hero-actions">
+                  <Link className="btn" href={path(lang, 'teardown')}>{tx('heroCta', lang)}</Link>
+                  <Link className="btn btn-s" href={path(lang, 'work')}>{tx('allWork', lang)}</Link>
+                </div>
+                <address className="scene-entity">
+                  <span className="u">{CO.legalName[lang]}</span>
+                  <span className="u">{lang === 'ar' ? 'س.ت' : 'CR'} <span className="num ltr">{CO.cr}</span></span>
+                  <span className="u">{CO.district[lang]}، {CO.city[lang]}</span>
+                  <a className="u tel ltr" href={`tel:${CO.phone}`}>{CO.phoneDisplay}</a>
+                </address>
+              </>
             )}
           </section>
         ))}
@@ -190,9 +199,22 @@ export default function Flight({ lang }: { lang: Lang }) {
                 {s.sub[lang]}
               </p>
               {s.outro && (
-                <div className="scene-actions" style={{ opacity: clamp(e * 1.8 - 0.7) }}>
-                  <Link className="btn" href={path(lang, 'teardown')}>{tx('heroCta', lang)}</Link>
-                  <Link className="btn btn-s" href={path(lang, 'work')}>{tx('allWork', lang)}</Link>
+                <div style={{ opacity: clamp(e * 1.8 - 0.7) }}>
+                  <div className="scene-actions">
+                    <Link className="btn" href={path(lang, 'teardown')}>{tx('heroCta', lang)}</Link>
+                    <Link className="btn btn-s" href={path(lang, 'work')}>{tx('allWork', lang)}</Link>
+                  </div>
+                  {/* The entity block belongs on the homepage too: it is where a
+                      cold visitor lands when they search the name, and it is
+                      what Meta Business Verification checks for. */}
+                  <address className="scene-entity">
+                    <span className="u">{CO.legalName[lang]}</span>
+                    <span className="u">{lang === 'ar' ? 'س.ت' : 'CR'} <span className="num ltr">{CO.cr}</span></span>
+                    <span className="u">{CO.district[lang]}، {CO.city[lang]}</span>
+                    <a className="u tel ltr" href={`tel:${CO.phone}`}>{CO.phoneDisplay}</a>
+                    <Link className="u link" href={path(lang, 'studio')}>{tx('navStudio', lang)}</Link>
+                    <Link className="u link" href={path(lang, 'privacy')}>{tx('navPrivacy', lang)}</Link>
+                  </address>
                 </div>
               )}
             </div>

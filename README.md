@@ -22,14 +22,41 @@ server, `rm -rf .next`, restart.
 
 ## Routes
 
-| Path | |
-|---|---|
-| `/` | 307 → `/ar` |
-| `/ar`, `/en` | Home |
-| `/ar/work`, `/en/work` | The archive |
-| `/ar/work/[slug]` | One piece |
-| `/ar/cast` | Cast & crew — reached only through work |
-| `/ar/teardown` | What a Teardown is, and the handle intake |
+Every page exists in both locales. `/ar` is canonical.
+
+| Path | | Indexed |
+|---|---|---|
+| `/` | 307 → `/ar` | — |
+| `/{lang}` | Home — the flight | yes |
+| `/{lang}/work` | The archive | yes |
+| `/{lang}/work/[slug]` | One piece | yes |
+| `/{lang}/cast` | Cast & crew — reached only through work | yes |
+| `/{lang}/teardown` | What a Teardown is, and the handle intake | yes |
+| `/{lang}/teardown/sample` | A complete specimen teardown | yes |
+| `/{lang}/studio` | Founders and the entity block | yes |
+| `/{lang}/pricing` | Published rates | yes |
+| `/{lang}/privacy` | Privacy | yes |
+| `/{lang}/notice` | PDPL Article 9 processing notice | yes |
+| `/{lang}/terms` | Terms | yes |
+| `/{lang}/data` | The six data rights and how to exercise them | yes |
+| `/{lang}/instagram-professional` | Helper for the ~1/3 of accounts that are personal | yes |
+| `/r/[token]` | **A delivered Teardown** | **no** |
+| `/p/[token]` | **The one-screen preview sent in the DM** | **no** |
+
+`/r` and `/p` are per-recipient. They carry `noindex, nofollow, nocache`, are
+absent from the sitemap, and are disallowed in `robots.txt` — a teardown is
+written for one business and must never surface in search.
+
+`sitemap.xml`, `robots.txt`, `icon.svg`, an error boundary and a skeleton
+loading state are all generated.
+
+### The entity block
+
+The registered name, CR number, street address and phone appear in the footer of
+every page **and in the final scene of the homepage flight**, which has no
+footer. That is not decoration: Meta Business Verification requires them on the
+site, and a cold visitor checking whether PRAVDA is real looks for exactly those
+four things. They live in `lib/data/company.ts` — one source of truth.
 
 Locale is a URL segment, so `lang` and `dir` are set **server-side** on `<html>`.
 No hydration flash, correct for crawlers, correct with JS disabled.
