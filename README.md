@@ -68,10 +68,28 @@ No hydration flash, correct for crawlers, correct with JS disabled.
 normalised `progress` value (0..1). That one value drives **both** the camera
 and the type, so they can never drift apart.
 
-- `components/webgl/Terrain.tsx` — a 190 × 260 point corridor displaced into
-  dunes by two octaves of value noise, wrapped modulo its own depth so the
-  field is infinite. Additive blending, ridges catch brass, a minority of
-  points twinkle. One draw call.
+- `components/webgl/Terrain.tsx` — a 300 × 400 point corridor (120k points)
+  displaced by three octaves plus a drifting ridge, wrapped modulo its own
+  depth so the field is infinite. One draw call.
+
+  Four things decide whether this reads as elegant or cheap, and the first
+  version got all four wrong:
+
+  1. **Point size.** The ceiling is ~4px at dpr 2. At 13px — which is what
+     `mix(1.0, 5.2, vFog)` produced — points read as beads, not grains of
+     light, and crowded areas clip to white.
+  2. **Jitter.** A perfect lattice seen in perspective produces moiré arcs
+     across the near field. Every point carries ±1.25 × spacing of random
+     offset in X and Z.
+  3. **Depth cue in both directions.** Far points fade into the ground; points
+     very close to the camera must fade *too*, or perspective balloons them.
+     `vFog = far * near`.
+  4. **Low alpha.** Additive blending accumulates, so density does the work.
+     Base alpha is 0.17–0.57, not near-opaque.
+
+  A third of the field is a finer, dimmer *dust* tier sitting slightly lower,
+  which gives texture between the structural points. Colour cools with
+  distance as well as darkening.
 - `components/Flight.tsx` — virtual scroll, scene envelopes, the HUD.
 - **Ripples.** Four round-robin slots, each a wave packet struck on every
   section change. Two things decide whether it reads as a wave or as noise:

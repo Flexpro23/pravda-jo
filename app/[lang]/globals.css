@@ -441,3 +441,27 @@ ol.fixes li{display:grid;grid-template-columns:auto 1fr;gap:var(--s4);
 .foot-brand{max-width:34ch;}
 .foot-line{margin-top:var(--s3);}
 .foot-rights{margin-top:var(--s5);opacity:.6;}
+
+/* ══════ masthead — compact below 760 ══════ */
+.mast-compact{display:none;}
+@media(max-width:760px){
+  .mast-full{display:none;}
+  .mast-compact{display:inline;}
+  .mast-in{padding-block:var(--s4);}
+  .wm{font-size:16px;letter-spacing:.28em;}
+  [lang="ar"] .wm{font-size:19px;}
+}
+
+/* ══════ flight on small screens ══════ */
+@media(max-width:760px){
+  .scene{padding-block:16vh 22vh;align-content:center;}
+  .scene-head{font-size:clamp(60px,17vw,110px);line-height:.94;}
+  [lang="ar"] .scene-head{font-size:clamp(48px,13.5vw,92px);line-height:1.22;}
+  .scene-sub{font-size:16px;max-width:32ch;}
+  [lang="ar"] .scene-sub{font-size:17.5px;max-width:28ch;}
+  .stage-hud{inset-block-end:calc(18px + env(safe-area-inset-bottom));gap:var(--s3);}
+  .stage-hud .u{font-size:9px;letter-spacing:.16em;}
+  [lang="ar"] .stage-hud .u{font-size:12px;}
+  .scene-entity{gap:var(--s1) var(--s4);}
+  .scene-entity .u{font-size:9px;}
+}

@@ -12,6 +12,7 @@ uniform float uDepth;     // total corridor depth before wrap
 uniform float uAmp;
 uniform vec2  uPointer;
 uniform float uDpr;
+uniform float uIn;      // 0..1 entrance
 
 // four ripple slots — xy = origin in world XZ, z = start time, w = strength
 uniform vec4 uRipples[4];
@@ -20,6 +21,7 @@ varying float vFog;
 varying float vLift;
 varying float vRand;
 varying float vRing;
+varying float vDust;
 
 // cheap value noise
 vec2 h2(vec2 p){
@@ -45,8 +47,17 @@ void main(){
   float z = mod(pos.z + uZ, uDepth) - uDepth;
 
   // dunes — two scales so ridges read against a slower swell
-  float h  = fbm(vec2(pos.x * 0.055, z * 0.055 + uTime * 0.012)) * 1.0;
-  h       += fbm(vec2(pos.x * 0.16,  z * 0.16  - uTime * 0.03 )) * 0.34;
+  // Three scales rather than two. The slowest carries the large forms that give
+  // the field a horizon; the middle carries dunes; the fastest carries the
+  // grain that keeps it from looking like a smooth cloth.
+  float wind = uTime * 0.014;
+  float h  = fbm(vec2(pos.x * 0.021, z * 0.021 + wind * 0.5)) * 1.62;   // landforms
+  h       += fbm(vec2(pos.x * 0.062, z * 0.062 + wind)) * 0.86;         // dunes
+  h       += fbm(vec2(pos.x * 0.185, z * 0.185 - wind * 2.1)) * 0.26;   // grain
+
+  // a ridge line that drifts across the field, so the silhouette never repeats
+  float ridge = 1.0 - abs(fbm(vec2(pos.x * 0.034 + wind * 0.4, z * 0.034)));
+  h += pow(ridge, 3.0) * 0.72;
 
   // ── ripples ──
   // A travelling ring: a wave packet whose crest moves outward at uSpeed and
@@ -88,13 +99,32 @@ void main(){
   vec4 mv = modelViewMatrix * vec4(pos, 1.0);
   float dist = -mv.z;
 
-  vFog  = 1.0 - smoothstep(6.0, uDepth * 0.92, dist);
+  // Depth cue in two directions. Far points fade into the ground as before —
+  // but points very close to the camera must fade too, or perspective balloons
+  // them into blown-out discs and the whole field reads as cheap beading.
+  float far  = 1.0 - smoothstep(8.0, uDepth * 0.94, dist);
+  float near = smoothstep(3.0, 26.0, dist);
+  // Entrance: the field arrives from the far end and settles, so the first
+  // thing the page does is compose itself rather than snap on.
+  float arrive = smoothstep(0.0, 1.0, uIn * 1.9 - (dist / uDepth) * 0.9);
+  vFog  = far * near * arrive;
+  pos.y *= mix(0.35, 1.0, arrive);
   vLift = smoothstep(-0.35, 1.25, h);
   vRand = aRand;
 
+  // A third of the field is dust: finer, dimmer, sitting slightly lower. It
+  // gives the surface texture between the structural points instead of a
+  // uniform lattice.
+  vDust = step(0.66, aRand);
+  pos.y -= vDust * 0.55;
+
   gl_Position = projectionMatrix * mv;
-  // near points bloom, far points collapse to specks; a ripple crest swells them
-  gl_PointSize = uDpr * mix(1.0, 5.2, vFog) * (0.55 + aRand * 0.9) * (1.0 + vRing * 2.6);
+
+  // Small. A point that reads as a grain of light is elegant; one that reads as
+  // a bead is not. Ceiling is ~4px at dpr 2, not 13.
+  float base = mix(0.70, 2.70, vFog) * (0.80 + aRand * 0.40);
+  base *= mix(1.0, 0.46, vDust);
+  gl_PointSize = uDpr * base * (1.0 + vRing * 1.15);
 }`;
 
 export const FRAG = /* glsl */ `
@@ -102,12 +132,14 @@ precision highp float;
 
 uniform vec3 uBone;
 uniform vec3 uBrass;
+uniform vec3 uDeep;
 uniform float uTime;
 
 varying float vFog;
 varying float vLift;
 varying float vRand;
 varying float vRing;
+varying float vDust;
 
 void main(){
   // round, soft-edged point
@@ -116,15 +148,24 @@ void main(){
   if (d > 0.25) discard;
   float alpha = smoothstep(0.25, 0.02, d);
 
-  // ridges catch brass, troughs stay bone-cold
-  vec3 col = mix(uBone, uBrass, smoothstep(0.45, 0.95, vLift));
+  // Ridges catch brass, troughs stay cold — and distance cools the whole thing,
+  // so the far field recedes in temperature as well as in value.
+  vec3 warm = mix(uBone, uBrass, smoothstep(0.48, 0.96, vLift));
+  vec3 cool = mix(uDeep, uBone, 0.34);
+  vec3 col  = mix(cool, warm, smoothstep(0.15, 0.78, vFog));
 
-  // a slow twinkle on a minority of points — never a uniform pulse
-  float tw = step(0.86, vRand) * (0.55 + 0.45 * sin(uTime * 1.7 + vRand * 40.0));
-  col += uBrass * tw * 0.35;
+  // a slow twinkle on a small minority — never a uniform pulse
+  float tw = step(0.93, vRand) * (0.5 + 0.5 * sin(uTime * 1.4 + vRand * 40.0));
+  col += uBrass * tw * 0.30;
 
-  // the wavefront itself catches brass and lifts out of the field
-  col += uBrass * vRing * 1.45;
+  // the wavefront lifts out of the field
+  col += uBrass * vRing * 1.05;
 
-  gl_FragColor = vec4(col, alpha * vFog * (0.30 + vRand * 0.70) * (1.0 + vRing * 1.6));
+  // Low alpha. Additive blending accumulates, so density does the work — this
+  // is what stops crowded areas clipping to white.
+  float a = alpha * vFog * (0.17 + vRand * 0.40);
+  a *= mix(1.0, 0.42, vDust);
+  a *= (1.0 + vRing * 1.25);
+
+  gl_FragColor = vec4(col, a);
 }`;

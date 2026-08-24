@@ -7,9 +7,9 @@ import {
 } from 'three';
 import { VERT, FRAG } from './terrain.glsl';
 
-const COLS = 190;      // across
-const ROWS = 260;      // into the screen
-const SPREAD = 1.05;   // world units between points
+const COLS = 300;      // across
+const ROWS = 400;      // into the screen
+const SPREAD = 0.82;   // world units between points
 const DEPTH = ROWS * SPREAD;
 
 export function capable(): boolean {
@@ -51,9 +51,12 @@ export default function Terrain({
     let i = 0;
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
-        pos[i * 3] = (c - COLS / 2) * SPREAD;
+        // Jitter breaks the lattice. A regular grid seen in perspective
+        // produces strong moiré arcs across the near field — that repeating
+        // beaded pattern is aliasing, not terrain.
+        pos[i * 3] = (c - COLS / 2) * SPREAD + (Math.random() - 0.5) * SPREAD * 1.25;
         pos[i * 3 + 1] = 0;
-        pos[i * 3 + 2] = -r * SPREAD;
+        pos[i * 3 + 2] = -r * SPREAD + (Math.random() - 0.5) * SPREAD * 1.25;
         rnd[i] = Math.random();
         i++;
       }
@@ -71,9 +74,10 @@ export default function Terrain({
       transparent: true, depthWrite: false, blending: AdditiveBlending,
       uniforms: {
         uTime: { value: 0 }, uZ: { value: 0 }, uDepth: { value: DEPTH },
-        uAmp: { value: 8.4 }, uPointer: { value: pointer }, uDpr: { value: 1 },
-        uBone: { value: new Color('#CFE0D6') },
+        uAmp: { value: 9.6 }, uIn: { value: 0 }, uPointer: { value: pointer }, uDpr: { value: 1 },
+        uBone: { value: new Color('#DCE8DE') },
         uBrass: { value: new Color('#D8B46A') },
+        uDeep: { value: new Color('#0E2A26') },
         uRipples: { value: [new Vector4(), new Vector4(), new Vector4(), new Vector4()] },
       },
     });
@@ -84,7 +88,7 @@ export default function Terrain({
     scene.add(pts);
 
     const cam = new PerspectiveCamera(58, 1, 0.1, DEPTH * 1.1);
-    cam.position.set(0, 13.5, 6);
+    cam.position.set(0, 17.0, 10);
 
     const onLost = (e: Event) => { e.preventDefault(); dead = true; cancelAnimationFrame(raf); };
     cv.addEventListener('webglcontextlost', onLost);
@@ -144,6 +148,7 @@ export default function Terrain({
       z += (target - z) * 0.055;
 
       mat.uniforms.uTime.value = t;
+      mat.uniforms.uIn.value = Math.min(1, t / 2.2);
       mat.uniforms.uZ.value = z;
       pointer.lerp(aim, 0.03);
 
@@ -152,9 +157,9 @@ export default function Terrain({
       const p = progressRef.current;
       // high enough to see the field recede, shallow enough to keep a horizon
       // at mid-frame with dark sky above it for the type to live in
-      cam.position.y = 13.5 + Math.sin(p * Math.PI) * 4.2;
-      cam.rotation.z = pointer.x * 0.028;
-      cam.lookAt(pointer.x * 3.0, 3.5 + Math.sin(p * Math.PI) * 1.4, -62);
+      cam.position.y = 17.0 + Math.sin(p * Math.PI) * 5.0;
+      cam.rotation.z = pointer.x * 0.024;
+      cam.lookAt(pointer.x * 3.4, 5.0 + Math.sin(p * Math.PI) * 1.6, -78);
 
       renderer.render(scene, cam);
     };

@@ -16,8 +16,13 @@ export default function Masthead({ lang }: { lang: Lang }) {
         </Link>
         <nav className="mast-nav fade" aria-label={lang === 'ar' ? 'التنقّل' : 'Navigation'}>
           {NAV.map(([k, p]) => (
-            <Link key={p} href={path(lang, p)} className="u link">{tx(k, lang)}</Link>
+            <Link key={p} href={path(lang, p)} className="u link mast-full">{tx(k, lang)}</Link>
           ))}
+          {/* Below 760px the full set overflows, so it collapses to the one
+              action that matters plus the language switch. */}
+          <Link href={path(lang, 'teardown')} className="u link mast-compact">
+            {tx('navTeardown', lang)}
+          </Link>
           <Link href={path(o)} className="u link" hrefLang={o} lang={o}>{o === 'ar' ? 'ع' : 'EN'}</Link>
         </nav>
       </div>
