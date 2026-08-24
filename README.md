@@ -8,8 +8,17 @@ hand-written Three.js.
 ```bash
 npm install
 npm run dev     # http://localhost:3000 → redirects to /ar
-npm run build
+npm run build   # writes to .next-prod
+npm start       # serves .next-prod
 ```
+
+**`next dev` and `next build` write to different directories on purpose.**
+Both default to `.next`, so building while the dev server is running clobbers
+its module graph and it starts throwing `Cannot find module './403.js'` — the
+chunk names are real but the files were replaced underneath it. `distDir` is
+set from `NEXT_DIST_DIR`, and the build/start scripts point it at `.next-prod`.
+If you ever see that error, the cause is a collision, not corruption: stop the
+server, `rm -rf .next`, restart.
 
 ## Routes
 
