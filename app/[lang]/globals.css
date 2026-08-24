@@ -247,10 +247,11 @@ bdi,.ltr{unicode-bidi:isolate;direction:ltr;}
 /* HUD */
 .stage-hud{position:absolute;inset-block-end:clamp(18px,3vh,36px);inset-inline:clamp(20px,5vw,84px);
   z-index:3;display:flex;align-items:center;gap:var(--s4);}
-.rail{flex:1;height:1px;background:var(--rule);display:block;overflow:hidden;}
-.rail-fill{display:block;height:100%;background:var(--brass);transform-origin:inline-start;
-  transform:scaleX(0);}
-[dir="rtl"] .rail-fill{transform-origin:right;}
+.ticks{flex:1;display:flex;gap:6px;align-items:center;}
+.tick{flex:1;height:1px;background:var(--rule);display:block;
+  transition:background var(--base) var(--ease),transform var(--base) var(--ease);
+  transform-origin:center;}
+.tick[data-on="true"]{background:var(--brass);transform:scaleY(2);}
 
 /* the masthead sits above the flight */
 .stage ~ .mast,.mast{z-index:90;}

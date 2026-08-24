@@ -37,6 +37,11 @@ and the type, so they can never drift apart.
   field is infinite. Additive blending, ridges catch brass, a minority of
   points twinkle. One draw call.
 - `components/Flight.tsx` — virtual scroll, scene envelopes, the HUD.
+- **Ripples.** Four round-robin slots in the shader, each a wave packet whose
+  crest travels outward at 15 units/s and decays with both distance and age.
+  One fires on every section change, so the surface is struck by the
+  interaction rather than animating on its own. Crests swell the point size and
+  catch brass.
 - `lib/data/scenes.ts` — six scenes, each one figure. Every number is a fact
   about PRAVDA (roster, library, rate card), not market research we did not do.
 
@@ -48,6 +53,22 @@ Two things learned building it, both of which look like bugs if you hit them:
 - **The envelope must be clipped.** A raw `sin()` envelope has long tails, so
   neighbouring scenes stayed partly visible in the gap between their ranges and
   stacked. `clamp(sin(...) * 1.55 - 0.18)` forces a true zero.
+
+### Scroll model — one gesture, one section
+
+The flight advances in discrete sections rather than continuously, because a
+hard flick on a trackpad emits dozens of momentum events and a continuous
+integrator turns that into three or four skipped sections.
+
+- Wheel/touch deltas accumulate; crossing `THRESHOLD` (70px) commits one step.
+- Committing sets `locked`, and **every further event is absorbed entirely** —
+  this is what eats trackpad momentum.
+- The lock clears only when *both* the 900ms travel has finished *and* input has
+  been silent for `QUIET` (260ms). Requiring only the first lets momentum
+  immediately commit the next section.
+- A failsafe releases the lock unconditionally at `DURATION + 2500ms`. A lock
+  that never clears makes the page unscrollable, which is far worse than a
+  skipped section.
 
 Keyboard: arrows step, space and PageUp/PageDown jump. Reduced motion or a
 device below the capability gate gets `.flat` — the same six scenes as an

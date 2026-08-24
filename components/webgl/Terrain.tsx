@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import {
   WebGLRenderer, Scene, PerspectiveCamera, Points, BufferGeometry, BufferAttribute,
-  RawShaderMaterial, Vector2, Vector3, Color, AdditiveBlending, Sphere,
+  RawShaderMaterial, Vector2, Vector3, Vector4, Color, AdditiveBlending, Sphere,
 } from 'three';
 import { VERT, FRAG } from './terrain.glsl';
 
@@ -26,9 +26,15 @@ export function capable(): boolean {
  * `progressRef` is the single normalised value (0..1) shared with the type
  * layer, so the camera and the words are driven by one clock rather than two.
  */
+export type RippleFn = (strength?: number, spreadX?: number) => void;
+
 export default function Terrain({
-  progressRef,
-}: { progressRef: React.MutableRefObject<number> }) {
+  progressRef, onReady,
+}: {
+  progressRef: React.MutableRefObject<number>;
+  /** hands back a function the page can call to strike the surface */
+  onReady?: (fire: RippleFn) => void;
+}) {
   const host = useRef<HTMLDivElement>(null);
   const cvRef = useRef<HTMLCanvasElement>(null);
 
@@ -68,6 +74,7 @@ export default function Terrain({
         uAmp: { value: 8.4 }, uPointer: { value: pointer }, uDpr: { value: 1 },
         uBone: { value: new Color('#CFE0D6') },
         uBrass: { value: new Color('#D8B46A') },
+        uRipples: { value: [new Vector4(), new Vector4(), new Vector4(), new Vector4()] },
       },
     });
 
@@ -111,6 +118,18 @@ export default function Terrain({
     const t0 = performance.now();
     let z = 0;
 
+    // round-robin ripple slots so overlapping strikes coexist
+    let slot = 0;
+    const ripples = mat.uniforms.uRipples.value as Vector4[];
+    const fire: RippleFn = (strength = 1, spreadX = 0) => {
+      const now = (performance.now() - t0) / 1000;
+      // strike just ahead of the camera so the front sweeps toward the viewer
+      const originZ = -(z % DEPTH) - 26;
+      ripples[slot].set(spreadX * 22, originZ, now, strength);
+      slot = (slot + 1) % ripples.length;
+    };
+    onReady?.(fire);
+
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
       if (!visible || dead || !renderer) return;
@@ -143,9 +162,10 @@ export default function Terrain({
       document.removeEventListener('visibilitychange', onVis);
       window.removeEventListener('pointermove', onMove);
       cv.removeEventListener('webglcontextlost', onLost);
+      onReady?.(() => {});
       geo.dispose(); mat.dispose(); renderer?.dispose();
     };
-  }, [progressRef]);
+  }, [progressRef, onReady]);
 
   return (
     <div ref={host} className="terrain" aria-hidden="true">

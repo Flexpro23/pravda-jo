@@ -13,9 +13,13 @@ uniform float uAmp;
 uniform vec2  uPointer;
 uniform float uDpr;
 
+// four ripple slots — xy = origin in world XZ, z = start time, w = strength
+uniform vec4 uRipples[4];
+
 varying float vFog;
 varying float vLift;
 varying float vRand;
+varying float vRing;
 
 // cheap value noise
 vec2 h2(vec2 p){
@@ -43,8 +47,33 @@ void main(){
   // dunes — two scales so ridges read against a slower swell
   float h  = fbm(vec2(pos.x * 0.055, z * 0.055 + uTime * 0.012)) * 1.0;
   h       += fbm(vec2(pos.x * 0.16,  z * 0.16  - uTime * 0.03 )) * 0.34;
+
+  // ── ripples ──
+  // A travelling ring: a wave packet whose crest moves outward at uSpeed and
+  // decays both with distance and with age, so it reads as a struck surface
+  // rather than a standing pattern.
+  float ring = 0.0;
+  for (int i = 0; i < 4; i++) {
+    vec4 rp = uRipples[i];
+    if (rp.w <= 0.0) continue;
+    float age = uTime - rp.z;
+    if (age < 0.0 || age > 7.0) continue;
+
+    float d = distance(vec2(pos.x, z), rp.xy);
+    float speed = 15.0;
+    float front = age * speed;
+    // gaussian envelope riding the wavefront
+    float band = exp(-pow((d - front) * 0.115, 2.0));
+    float wave = sin((d - front) * 0.42);
+    float fade = exp(-age * 0.52) * exp(-d * 0.0055);
+    ring += wave * band * fade * rp.w;
+  }
+  h += ring * 1.55;
+
   pos.y   += h * uAmp;
   pos.z    = z;
+
+  vRing = clamp(abs(ring) * 1.7, 0.0, 1.0);
 
   // a little pointer lean, so it feels held rather than played
   pos.x += uPointer.x * 1.6;
@@ -58,8 +87,8 @@ void main(){
   vRand = aRand;
 
   gl_Position = projectionMatrix * mv;
-  // near points bloom, far points collapse to specks
-  gl_PointSize = uDpr * mix(1.0, 5.2, vFog) * (0.55 + aRand * 0.9);
+  // near points bloom, far points collapse to specks; a ripple crest swells them
+  gl_PointSize = uDpr * mix(1.0, 5.2, vFog) * (0.55 + aRand * 0.9) * (1.0 + vRing * 1.5);
 }`;
 
 export const FRAG = /* glsl */ `
@@ -72,6 +101,7 @@ uniform float uTime;
 varying float vFog;
 varying float vLift;
 varying float vRand;
+varying float vRing;
 
 void main(){
   // round, soft-edged point
@@ -87,5 +117,8 @@ void main(){
   float tw = step(0.86, vRand) * (0.55 + 0.45 * sin(uTime * 1.7 + vRand * 40.0));
   col += uBrass * tw * 0.35;
 
-  gl_FragColor = vec4(col, alpha * vFog * (0.30 + vRand * 0.70));
+  // the wavefront itself catches brass and lifts out of the field
+  col += uBrass * vRing * 0.85;
+
+  gl_FragColor = vec4(col, alpha * vFog * (0.30 + vRand * 0.70) * (1.0 + vRing * 0.9));
 }`;
