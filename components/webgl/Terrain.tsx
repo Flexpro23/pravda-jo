@@ -6,6 +6,7 @@ import {
   RawShaderMaterial, Vector2, Vector3, Vector4, Color, AdditiveBlending, Sphere,
 } from 'three';
 import { VERT, FRAG } from './terrain.glsl';
+import { FORMS, sampleForm } from '@/lib/forms';
 
 const COLS = 300;      // across
 const ROWS = 400;      // into the screen
@@ -27,13 +28,16 @@ export function capable(): boolean {
  * layer, so the camera and the words are driven by one clock rather than two.
  */
 export type RippleFn = (strength?: number, spreadX?: number) => void;
+export type FormFn = (index: number) => void;
 
 export default function Terrain({
-  progressRef, onReady,
+  progressRef, morphRef, onReady,
 }: {
   progressRef: React.MutableRefObject<number>;
-  /** hands back a function the page can call to strike the surface */
-  onReady?: (fire: RippleFn) => void;
+  /** 0 = raw field, 1 = the form fully resolved */
+  morphRef: React.MutableRefObject<number>;
+  /** hands back the ripple trigger and the form selector */
+  onReady?: (fire: RippleFn, setForm: FormFn) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const cvRef = useRef<HTMLCanvasElement>(null);
@@ -62,9 +66,39 @@ export default function Terrain({
       }
     }
 
+    // Target positions — where each point sits when a form is resolved. The
+    // plane hangs in front of the camera's travel, sized to fill the view.
+    // Offset right of centre: the type is flush left, so a centred form
+    // collides with the headline. This puts the image where the eye lands
+    // after reading, not underneath the words.
+    const FORM_W = 70, FORM_H = 70, FORM_Y = 10.5, FORM_Z = -44, FORM_X = 19;
+    const target = new Float32Array(N * 3);
+    const built: Float32Array[] = [];
+
+    const applyForm = (index: number) => {
+      let pts = built[index];
+      if (!pts) {
+        pts = sampleForm(FORMS[index % FORMS.length]);
+        built[index] = pts;
+      }
+      const count = pts.length / 2;
+      if (!count) return;
+      for (let k = 0; k < N; k++) {
+        // deterministic pick per point so a form is stable across re-entry
+        const j = (k * 2654435761) % count;
+        target[k * 3] = FORM_X + pts[j * 2] * FORM_W + (rnd[k] - 0.5) * 0.55;
+        target[k * 3 + 1] = FORM_Y + pts[j * 2 + 1] * FORM_H + (rnd[(k + 7) % N] - 0.5) * 0.55;
+        target[k * 3 + 2] = FORM_Z + (rnd[(k + 13) % N] - 0.5) * 3.2;
+      }
+      const attr = geo.getAttribute('aTarget') as BufferAttribute | undefined;
+      if (attr) attr.needsUpdate = true;
+    };
+
     const geo = new BufferGeometry();
     geo.setAttribute('position', new BufferAttribute(pos, 3));
     geo.setAttribute('aRand', new BufferAttribute(rnd, 1));
+    geo.setAttribute('aTarget', new BufferAttribute(target, 3));
+    applyForm(0);
     geo.boundingSphere = new Sphere(new Vector3(0, 0, -DEPTH / 2), DEPTH);
 
     const pointer = new Vector2(0, 0), aim = new Vector2(0, 0);
@@ -74,7 +108,7 @@ export default function Terrain({
       transparent: true, depthWrite: false, blending: AdditiveBlending,
       uniforms: {
         uTime: { value: 0 }, uZ: { value: 0 }, uDepth: { value: DEPTH },
-        uAmp: { value: 9.6 }, uIn: { value: 0 }, uPointer: { value: pointer }, uDpr: { value: 1 },
+        uAmp: { value: 9.6 }, uIn: { value: 0 }, uMorph: { value: 0 }, uPointer: { value: pointer }, uDpr: { value: 1 },
         uBone: { value: new Color('#DCE8DE') },
         uBrass: { value: new Color('#D8B46A') },
         uDeep: { value: new Color('#0E2A26') },
@@ -136,7 +170,7 @@ export default function Terrain({
       ripples[slot].set(spreadX * 26, originZ, now, strength);
       slot = (slot + 1) % ripples.length;
     };
-    onReady?.(fire);
+    onReady?.(fire, applyForm);
 
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
@@ -149,6 +183,7 @@ export default function Terrain({
 
       mat.uniforms.uTime.value = t;
       mat.uniforms.uIn.value = Math.min(1, t / 2.2);
+      mat.uniforms.uMorph.value += (morphRef.current - mat.uniforms.uMorph.value) * 0.055;
       mat.uniforms.uZ.value = z;
       pointer.lerp(aim, 0.03);
 
@@ -171,10 +206,10 @@ export default function Terrain({
       document.removeEventListener('visibilitychange', onVis);
       window.removeEventListener('pointermove', onMove);
       cv.removeEventListener('webglcontextlost', onLost);
-      onReady?.(() => {});
+      onReady?.(() => {}, () => {});
       geo.dispose(); mat.dispose(); renderer?.dispose();
     };
-  }, [progressRef, onReady]);
+  }, [progressRef, morphRef, onReady]);
 
   return (
     <div ref={host} className="terrain" aria-hidden="true">

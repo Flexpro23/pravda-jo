@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import Terrain, { capable, type RippleFn } from '@/components/webgl/Terrain';
+import Terrain, { capable, type RippleFn, type FormFn } from '@/components/webgl/Terrain';
 import { SCENES } from '@/lib/data/scenes';
 import { CO } from '@/lib/data/company';
 import { Lang, path, tx } from '@/lib/i18n';
@@ -27,8 +27,13 @@ export default function Flight({ lang }: { lang: Lang }) {
   const [p, setP] = useState(STOPS[0]);
   const [section, setSection] = useState(0);
   const fireRef = useRef<RippleFn>(() => {});
+  const formRef = useRef<FormFn>(() => {});
+  const morph = useRef(0);
 
-  const onTerrainReady = useCallback((fire: RippleFn) => { fireRef.current = fire; }, []);
+  const onTerrainReady = useCallback((fire: RippleFn, setForm: FormFn) => {
+    fireRef.current = fire;
+    formRef.current = setForm;
+  }, []);
 
   useEffect(() => { setLive(capable()); }, []);
 
@@ -45,6 +50,8 @@ export default function Flight({ lang }: { lang: Lang }) {
       const next = Math.min(LAST, Math.max(0, idx.current + dir));
       if (next === idx.current) return false;
       idx.current = next;
+      // swap the form while the field is dispersed, so the change is unseen
+      formRef.current(next);
       from = progress.current;
       to = STOPS[next];
       startedAt = performance.now();
@@ -103,7 +110,10 @@ export default function Flight({ lang }: { lang: Lang }) {
         const t = clamp((now - startedAt) / DURATION);
         progress.current = from + (to - from) * easeInOut(t);
         setP(progress.current);
-        if (t >= 1) tweening = false;
+        // The field disperses while travelling and resolves once it settles —
+        // raw material between scenes, a formed image at each one.
+        morph.current = t < 0.55 ? 0 : (t - 0.55) / 0.45;
+        if (t >= 1) { tweening = false; morph.current = 1; }
       }
 
       // Unlock only when the travel has finished AND the input has gone quiet.
@@ -122,13 +132,18 @@ export default function Flight({ lang }: { lang: Lang }) {
         tweening = false;
         progress.current = to;
         setP(to);
+        morph.current = 1;
         accum = 0;
       }
     };
+    // the first form resolves once the entrance has settled
+    const opening = window.setTimeout(() => { morph.current = 1; }, 2600);
+
     raf = requestAnimationFrame(tick);
 
     return () => {
       cancelAnimationFrame(raf);
+      window.clearTimeout(opening);
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
@@ -167,7 +182,7 @@ export default function Flight({ lang }: { lang: Lang }) {
 
   return (
     <div className="stage" data-live={live ? 'true' : 'false'}>
-      <Terrain progressRef={progress} onReady={onTerrainReady} />
+      <Terrain progressRef={progress} morphRef={morph} onReady={onTerrainReady} />
 
       <div className="stage-type">
         {SCENES.map((s, i) => {

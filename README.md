@@ -90,6 +90,27 @@ and the type, so they can never drift apart.
   A third of the field is a finer, dimmer *dust* tier sitting slightly lower,
   which gives texture between the structural points. Colour cools with
   distance as well as darkening.
+
+- **The field resolves into images.** Every point carries a second address —
+  `aTarget` — and `uMorph` blends between the terrain and a form. The field
+  disperses while travelling between sections and resolves once it settles, so
+  raw material becomes a picture at each moment of the story. That is the
+  business, stated in the medium.
+
+  Forms live in `lib/forms.ts`, drawn on an offscreen canvas rather than
+  loaded: a 9:16 frame with thirds, a head-and-shoulders portrait, a camera
+  aperture, a photographer and model at work. **`sampleForm` takes any
+  drawable source, so real PRAVDA photography drops straight in** — pass an
+  `<img>` instead of a draw function.
+
+  Two rules keep it elegant rather than a white mass:
+
+  1. **Sample edges, not fills.** A solid silhouette concentrates every point
+     into a small area and additive blending clips it to white. Forms are the
+     outline plus 7% of the interior, so they read as a drawing.
+  2. **Only 58% of the field joins.** The rest stays as terrain, so the image
+     sits *in* the material rather than replacing it, and density never spikes.
+     Per-point alpha also drops as the form resolves, because density rises.
 - `components/Flight.tsx` — virtual scroll, scene envelopes, the HUD.
 - **Ripples.** Four round-robin slots, each a wave packet struck on every
   section change. Two things decide whether it reads as a wave or as noise:

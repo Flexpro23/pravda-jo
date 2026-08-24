@@ -3,6 +3,7 @@ precision highp float;
 
 attribute vec3 position;
 attribute float aRand;
+attribute vec3 aTarget;   // where this point sits when the form is resolved
 
 uniform mat4  projectionMatrix;
 uniform mat4  modelViewMatrix;
@@ -13,6 +14,7 @@ uniform float uAmp;
 uniform vec2  uPointer;
 uniform float uDpr;
 uniform float uIn;      // 0..1 entrance
+uniform float uMorph;   // 0 = terrain, 1 = the form fully resolved
 
 // four ripple slots — xy = origin in world XZ, z = start time, w = strength
 uniform vec4 uRipples[4];
@@ -22,6 +24,7 @@ varying float vLift;
 varying float vRand;
 varying float vRing;
 varying float vDust;
+varying float vMorph;
 
 // cheap value noise
 vec2 h2(vec2 p){
@@ -96,6 +99,25 @@ void main(){
   pos.x += uPointer.x * 1.6;
   pos.y += uPointer.y * 0.9;
 
+  // ── resolve ──
+  // Every point carries a second address: where it belongs when the image is
+  // formed. The field is raw material; the form is what we make out of it.
+  // Points arrive at slightly different rates so the picture assembles rather
+  // than snapping into place.
+  // Only part of the field joins the form. The rest stays as field, so the
+  // image sits IN the material rather than replacing it — and so the form's
+  // point density never spikes.
+  float joins = step(0.42, aRand);
+  float lead = 0.62 + aRand * 0.38;
+  float m = clamp((uMorph - (1.0 - lead)) / max(lead, 0.001), 0.0, 1.0);
+  m = m * m * (3.0 - 2.0 * m) * joins;
+  vec3 formed = aTarget;
+  // a little residual drift so a held form still breathes
+  formed.x += sin(uTime * 0.5 + aRand * 24.0) * 0.16;
+  formed.y += cos(uTime * 0.42 + aRand * 31.0) * 0.16;
+  pos = mix(pos, formed, m);
+  vMorph = m;
+
   vec4 mv = modelViewMatrix * vec4(pos, 1.0);
   float dist = -mv.z;
 
@@ -107,7 +129,7 @@ void main(){
   // Entrance: the field arrives from the far end and settles, so the first
   // thing the page does is compose itself rather than snap on.
   float arrive = smoothstep(0.0, 1.0, uIn * 1.9 - (dist / uDepth) * 0.9);
-  vFog  = far * near * arrive;
+  vFog  = mix(far * near, far, vMorph) * arrive;
   pos.y *= mix(0.35, 1.0, arrive);
   vLift = smoothstep(-0.35, 1.25, h);
   vRand = aRand;
@@ -122,8 +144,9 @@ void main(){
 
   // Small. A point that reads as a grain of light is elegant; one that reads as
   // a bead is not. Ceiling is ~4px at dpr 2, not 13.
-  float base = mix(0.70, 2.70, vFog) * (0.80 + aRand * 0.40);
+  float base = mix(0.94, 3.45, vFog) * (0.80 + aRand * 0.40);
   base *= mix(1.0, 0.46, vDust);
+  base *= 1.0 - vMorph * 0.28;
   gl_PointSize = uDpr * base * (1.0 + vRing * 1.15);
 }`;
 
@@ -140,6 +163,7 @@ varying float vLift;
 varying float vRand;
 varying float vRing;
 varying float vDust;
+varying float vMorph;
 
 void main(){
   // round, soft-edged point
@@ -153,6 +177,7 @@ void main(){
   vec3 warm = mix(uBone, uBrass, smoothstep(0.48, 0.96, vLift));
   vec3 cool = mix(uDeep, uBone, 0.34);
   vec3 col  = mix(cool, warm, smoothstep(0.15, 0.78, vFog));
+  col = mix(col, mix(uBone, uBrass, 0.22), vMorph * 0.72);
 
   // a slow twinkle on a small minority — never a uniform pulse
   float tw = step(0.93, vRand) * (0.5 + 0.5 * sin(uTime * 1.4 + vRand * 40.0));
@@ -163,7 +188,9 @@ void main(){
 
   // Low alpha. Additive blending accumulates, so density does the work — this
   // is what stops crowded areas clipping to white.
-  float a = alpha * vFog * (0.17 + vRand * 0.40);
+  // brighter overall, and brighter still where the form is resolved
+  float a = alpha * vFog * (0.38 + vRand * 0.74);
+  a *= 1.0 - vMorph * 0.26;   // density rises; per-point weight falls
   a *= mix(1.0, 0.42, vDust);
   a *= (1.0 + vRing * 1.25);
 
