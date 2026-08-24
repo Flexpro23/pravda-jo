@@ -1,6 +1,9 @@
 import Page from '@/components/Page';
 import { CO, FOUNDERS } from '@/lib/data/company';
-import { Lang, tx } from '@/lib/i18n';
+import { Lang, sep } from '@/lib/i18n';
+
+/** Distinct tints so two reserved frames never read as one repeated box. */
+const TINTS = ['#283B2E', '#1C2A20'];
 
 export default function StudioView({ lang }: { lang: Lang }) {
   const ar = lang === 'ar';
@@ -8,7 +11,7 @@ export default function StudioView({ lang }: { lang: Lang }) {
     <Page lang={lang}>
       <section className="wsec" style={{ paddingBlockStart: 'clamp(140px,20vh,240px)' }}>
         <div className="wrap wsec-head">
-          <h1 className="mega"><span className="cut"><span className="d1">{ar ? 'الاستوديو' : 'STUDIO'}</span></span></h1>
+          <h1 className="mega"><span className="cut"><span className="d1">{ar ? 'الاستوديو' : 'Studio'}</span></span></h1>
           <p className="body fade d3">
             {ar
               ? 'برافدا اتنين: علي وخالد. والباقي روستر منشتغل معه لكل مشروع — ما منوظّف تسعين شخص، منكاستهم.'
@@ -17,9 +20,12 @@ export default function StudioView({ lang }: { lang: Lang }) {
         </div>
 
         <div className="wrap founders">
-          {FOUNDERS.map((f) => (
+          {FOUNDERS.map((f, i) => (
             <article key={f.key} className="founder riseIn">
-              <div className="founder-img" />
+              <div className="founder-img"
+                   style={{ '--tint': TINTS[i % TINTS.length] } as React.CSSProperties}>
+                <span className="mono" aria-hidden="true">{[...f.name[lang]][0]}</span>
+              </div>
               <div>
                 <h2 className="mid">{f.name[lang]}</h2>
                 <p className="u founder-role">{f.role[lang]}</p>
@@ -40,7 +46,7 @@ export default function StudioView({ lang }: { lang: Lang }) {
               <dt className="u">{ar ? 'السجل التجاري' : 'Commercial registration'}</dt>
               <dd className="num ltr">{CO.cr}</dd>
               <dt className="u">{ar ? 'العنوان' : 'Address'}</dt>
-              <dd>{CO.street[lang]}، {CO.district[lang]}، {CO.city[lang]}، {CO.country[lang]}</dd>
+              <dd>{[CO.street, CO.district, CO.city, CO.country].map((f) => f[lang]).join(sep(lang))}</dd>
               <dt className="u">{ar ? 'الهاتف' : 'Phone'}</dt>
               <dd><a className="tel ltr" href={`tel:${CO.phone}`}>{CO.phoneDisplay}</a></dd>
               <dt className="u">{ar ? 'البريد' : 'Email'}</dt>

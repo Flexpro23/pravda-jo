@@ -34,7 +34,7 @@ export async function generateMetadata(
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0C1917',
+  themeColor: '#1A1A1A',
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
@@ -53,7 +53,7 @@ export default async function RootLayout(
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=Amiri:wght@400;700&family=Inter:wght@300;400;500&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Italiana&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Amiri:wght@400;700&family=Inter:wght@300;400;500&display=swap"
           rel="stylesheet"
         />
       </head>

@@ -1,7 +1,8 @@
+import Link from 'next/link';
 import Page from '@/components/Page';
 import Intake from '@/components/Intake';
 import { Ribbon } from '@/components/webgl/Horizon';
-import { Lang, tx } from '@/lib/i18n';
+import { Lang, path, tx, fwd } from '@/lib/i18n';
 
 export default function TeardownView({ lang }: { lang: Lang }) {
   const ar = lang === 'ar';
@@ -17,25 +18,31 @@ export default function TeardownView({ lang }: { lang: Lang }) {
 
   return (
     <Page lang={lang}>
-      <section className="hero" style={{ minHeight: '86svh' }}>
+      <section className="hero">
         <Ribbon className="hero-canvas" />
         <div className="wrap hero-in">
           <span className="u hero-kick fade">{tx('tdEyebrow', lang)}</span>
           <h1 className="mega hero-mega">
-            <span className="cut"><span className="d1">{ar ? 'التحقيق' : 'THE'}</span></span>
-            <span className="cut l3"><span className="d2">{ar ? 'مجانًا' : 'TEARDOWN'}</span></span>
+            <span className="cut"><span className="d1">{ar ? 'التحقيق' : 'The'}</span></span>
+            <span className="cut l3"><span className="d2">{ar ? 'مجانًا' : 'Teardown'}</span></span>
           </h1>
           <p className="body fade d4">{tx('tdBody', lang)}</p>
           <Intake lang={lang} />
+          {/* Whoever is deciding whether to hand over a handle should be able to
+              read a finished one first. */}
+          <p className="hero-alt fade d5">
+            <Link className="u link" href={path(lang, 'teardown/sample')}>
+              {tx('heroCta2', lang)} {fwd(lang)}
+            </Link>
+          </p>
         </div>
       </section>
 
       <section className="wsec"><div className="wrap">
-        {rows.map(([a, b], i) => (
-          <div key={a} className="row riseIn" style={{ gridTemplateColumns: '1fr 1fr',
-            paddingBlock: 'clamp(28px,4vw,64px)', alignItems: 'baseline' }}>
+        {rows.map(([a, b]) => (
+          <div key={a} className="td-row riseIn">
             <p className="mid">{a}</p>
-            <p className="body" style={{ margin: 0 }}>{b}</p>
+            <p className="body">{b}</p>
           </div>
         ))}
       </div></section>

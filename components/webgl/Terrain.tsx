@@ -118,9 +118,9 @@ export default function Terrain({
         uJoin: { value: join },
         uTime: { value: 0 }, uZ: { value: 0 }, uDepth: { value: DEPTH },
         uAmp: { value: 9.6 }, uIn: { value: 0 }, uMorph: { value: 0 }, uPointer: { value: pointer }, uDpr: { value: 1 },
-        uBone: { value: new Color('#DCE8DE') },
-        uBrass: { value: new Color('#D8B46A') },
-        uDeep: { value: new Color('#0E2A26') },
+        uBone: { value: new Color('#EFECE5') },
+        uBrass: { value: new Color('#CDC4B3') },
+        uDeep: { value: new Color('#17231B') },
         uRipples: { value: [new Vector4(), new Vector4(), new Vector4(), new Vector4()] },
       },
     });

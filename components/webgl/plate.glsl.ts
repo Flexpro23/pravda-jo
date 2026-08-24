@@ -65,7 +65,7 @@ void main(){
   col += (n - 0.5) * uGrain * (0.35 + lum * 0.65);
 
   // ── vignette toward the brand ground, not toward black ──
-  vec3 ground = vec3(0.047, 0.098, 0.090); // #0C1917
+  vec3 ground = vec3(0.102, 0.102, 0.102); // #1A1A1A — Almost black
   float vig = smoothstep(1.02, 0.30, d);
   col = mix(ground, col, vig * 0.58 + 0.42);
 

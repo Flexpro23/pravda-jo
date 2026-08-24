@@ -9,7 +9,7 @@ export default function PricingView({ lang }: { lang: Lang }) {
     <Page lang={lang}>
       <section className="wsec" style={{ paddingBlockStart: 'clamp(140px,20vh,240px)' }}>
         <div className="wrap wsec-head">
-          <h1 className="mega"><span className="cut"><span className="d1">{ar ? 'الأسعار' : 'PRICING'}</span></span></h1>
+          <h1 className="mega"><span className="cut"><span className="d1">{ar ? 'الأسعار' : 'Pricing'}</span></span></h1>
           <p className="body fade d3">
             {ar
               ? 'مكتوبة هون، مش بالمكالمة. إذا حدا ما بيقلّك السعر إلا بعد اجتماع، السبب إنه السعر بيتغيّر حسب مين إنت.'
@@ -23,7 +23,8 @@ export default function PricingView({ lang }: { lang: Lang }) {
               <div key={r.key} className="rate riseIn">
                 <p className="u">{r.label[lang]}</p>
                 <p className="rate-v num">
-                  {r.price === 0 ? (ar ? '٠' : '0') : r.price.toLocaleString('en-US')}
+                  {/* every other figure on the site is Western-digit, in both locales */}
+                  {r.price.toLocaleString('en-US')}
                   <span className="rate-u">{r.unit[lang]}</span>
                 </p>
                 <p className="body rate-note">{r.note[lang]}</p>

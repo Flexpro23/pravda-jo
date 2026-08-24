@@ -23,12 +23,15 @@ export default function ReportView({
              : 'Specimen — fictional business, illustrative figures. Not a real report.'}
         </div>
       )}
+      <a className="skip" href="#main">
+        {ar ? 'تخطَّ إلى التحقيق' : 'Skip to the teardown'}
+      </a>
       <Masthead lang={lang} />
 
-      <article className="rep">
+      <main id="main" tabIndex={-1}><article className="rep">
         {/* dateline — the trust payload, all text, first screen */}
         <header className="wrap rep-date">
-          <span className="u">{CO.city[lang]} · AMMAN</span>
+          <span className="u">{ar ? `${CO.city.ar} · ${CO.city.en.toUpperCase()}` : CO.city.en}</span>
           <span className="u num ltr">{r.date}</span>
           <span className="u">{ar ? 'إلى' : 'For'} {r.client[lang]}</span>
           <a className="u tel ltr" href={`tel:${CO.phone}`}>{CO.phoneDisplay}</a>
@@ -51,7 +54,7 @@ export default function ReportView({
           <div className="vitals">
             {r.vitals.map((v) => (
               <div className="vital" key={v.fig + v.label.en}>
-                <span className={`v-fig num${v.low ? ' low' : ''}`}>{v.fig}</span>
+                <span className={`v-fig num ltr${v.low ? ' low' : ''}`}>{v.fig}</span>
                 <span className="u v-lbl">{v.label[lang]}</span>
                 <span className="v-cmp body">
                   {v.cmp[lang]} <span className="prov">{v.prov[lang]}</span>
@@ -77,7 +80,7 @@ export default function ReportView({
                   <span className="bar-track">
                     <span className={`bar-fill${b.hi ? ' hi' : ''}`} style={{ width: `${b.v}%` }} />
                   </span>
-                  <span className="bar-val num">{b.x}</span>
+                  <span className="bar-val num ltr">{b.x}</span>
                 </div>
               ))}
             </div>
@@ -94,8 +97,8 @@ export default function ReportView({
         <section className="wrap rep-s">
           <p className="u">{ar ? 'الإعلانات المدفوعة' : 'Paid'}</p>
           <div className="ads">
-            <div><p className="ads-big num low">{r.ads.mine}</p><p className="u">{r.ads.mineLabel[lang]}</p></div>
-            <div><p className="ads-big num">{r.ads.theirs}</p><p className="u">{r.ads.theirsLabel[lang]}</p></div>
+            <div><p className="ads-big num low ltr">{r.ads.mine}</p><p className="u">{r.ads.mineLabel[lang]}</p></div>
+            <div><p className="ads-big num ltr">{r.ads.theirs}</p><p className="u">{r.ads.theirsLabel[lang]}</p></div>
           </div>
           <p className="body">{r.ads.p[lang]}</p>
         </section>
@@ -162,14 +165,25 @@ export default function ReportView({
           </div>
         </section>
 
+        {/* A specimen is read on the website, not in a WhatsApp thread — so it
+            closes on getting your own rather than on replying to a message. */}
         <section className="wrap rep-cta">
-          <h2 className="big">{ar ? 'بدكم مواعيد التصوير؟' : 'Want the shoot dates?'}</h2>
+          <h2 className="big">
+            {specimen
+              ? (ar ? 'بدكم تحقيق زي هاد؟' : 'Want one of these?')
+              : (ar ? 'بدكم مواعيد التصوير؟' : 'Want the shoot dates?')}
+          </h2>
           <p className="body">
-            {ar ? 'ردّوا على هالرسالة وخالد بيحكي معكم. بدون فورم، وبدون عرض تقديمي.'
-                : 'Reply to this message and Khaled will call you. No form, no deck.'}
+            {specimen
+              ? (ar ? 'ابعتوا حسابكم، ومنقرأه كله، ومنبعتلكم تحقيقكم إنتو. مجانًا، وبدون مكالمة مبيعات قبله.'
+                    : 'Send us your handle. We read the whole account and send back one of these about you — free, and with no sales call first.')
+              : (ar ? 'ردّوا على هالرسالة وخالد بيحكي معكم. بدون فورم، وبدون عرض تقديمي.'
+                    : 'Reply to this message and Khaled will call you. No form, no deck.')}
           </p>
           <div className="hero-actions">
-            <a className="btn" href={`tel:${CO.phone}`}>{ar ? 'اتصلوا بخالد' : 'Call Khaled'}</a>
+            {specimen
+              ? <Link className="btn" href={path(lang, 'teardown')}>{tx('heroCta', lang)}</Link>
+              : <a className="btn" href={`tel:${CO.phone}`}>{ar ? 'اتصلوا بخالد' : 'Call Khaled'}</a>}
             <Link className="btn btn-s" href={path(lang, 'work')}>{tx('allWork', lang)}</Link>
           </div>
         </section>
@@ -186,7 +200,7 @@ export default function ReportView({
             </a>
           </div>
         </section>
-      </article>
+      </article></main>
 
       <Foot lang={lang} />
     </>

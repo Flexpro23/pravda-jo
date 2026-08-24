@@ -4,6 +4,12 @@ export const isRTL = (l: Lang) => l === 'ar';
 export const other = (l: Lang): Lang => (l === 'ar' ? 'en' : 'ar');
 export const path = (l: Lang, p = '') => `/${l}${p ? `/${p}` : ''}`;
 
+/** Reading direction decides which way "onward" and "back" point. */
+export const fwd = (l: Lang) => (l === 'ar' ? '←' : '→');
+export const back = (l: Lang) => (l === 'ar' ? '→' : '←');
+/** List separator. An Arabic comma inside an English address is a tell. */
+export const sep = (l: Lang) => (l === 'ar' ? '، ' : ', ');
+
 type Dict = Record<string, { ar: string; en: string }>;
 
 export const t: Dict = {
@@ -52,11 +58,15 @@ export const t: Dict = {
     en: 'We read what you published publicly — nothing more. A hundred posts, their formats, their timing, and the visible comments. Plus your ads and your neighbours’ from Meta’s public library.',
   },
   tdCta:       { ar: 'ابعتوا الحساب',   en: 'Send the handle' },
-  tdPlaceholder:{ ar: '@حسابكم',        en: '@yourbusiness' },
+  /* The field takes a Latin handle, so the placeholder stays Latin in both
+     locales — an Arabic placeholder inside a dir="ltr" input renders mangled.
+     The accessible name carries the language instead. */
+  tdField:     { ar: 'حساب إنستغرام',   en: 'Instagram handle' },
   tdNote: {
     ar: 'حسابات الأعمال العامة بس. منبعتلكم رابط على واتساب خلال يوم عمل.',
     en: 'Public business accounts only. We send a link on WhatsApp within one working day.',
   },
+  tdSwitch:    { ar: 'حسابكم لسّا شخصي؟', en: 'Account still personal?' },
 
   scrollIn:    { ar: 'انزل لتبدأ',      en: 'Scroll to begin' },
   keepGoing:   { ar: 'كمّل',            en: 'Keep going' },

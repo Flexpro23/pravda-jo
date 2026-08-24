@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Plate from '@/components/webgl/Plate';
-import { Lang, path, tx } from '@/lib/i18n';
+import { Lang, path, tx, fwd } from '@/lib/i18n';
 import type { Piece } from '@/lib/data/work';
 
 export default function WorkRows({
@@ -35,12 +35,12 @@ export default function WorkRows({
             </div>
 
             <div className="row-metric">
-              <span className="v num">{p.metric}</span>
+              <span className="v num ltr">{p.metric}</span>
               <span className="u" style={{ maxWidth: '18ch' }}>{p.metricLabel[lang]}</span>
             </div>
 
             <Link href={path(lang, `work/${p.slug}`)} className="u link">
-              {tx('readMore', lang)} →
+              {tx('readMore', lang)} {fwd(lang)}
             </Link>
           </div>
         </article>

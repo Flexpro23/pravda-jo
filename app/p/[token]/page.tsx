@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { SPECIMEN } from '@/lib/data/report';
 import { CO } from '@/lib/data/company';
+import { sep } from '@/lib/i18n';
 
 export const metadata = {
   title: 'PRAVDA',
@@ -59,7 +60,7 @@ export default async function P({
         </div>
 
         <p className="u prev-foot">
-          {CO.legalName[lang]} · {CO.district[lang]}, {CO.city[lang]} ·{' '}
+          {CO.legalName[lang]} · {CO.district[lang]}{sep(lang)}{CO.city[lang]} ·{' '}
           <a className="tel" href={`/${lang}/privacy`}>{ar ? 'الخصوصية' : 'Privacy'}</a>
         </p>
       </div>

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Lang, path, tx } from '@/lib/i18n';
+import { Lang, path, tx, sep } from '@/lib/i18n';
 import { CO } from '@/lib/data/company';
 
 /**
@@ -42,7 +42,9 @@ export default function Foot({ lang }: { lang: Lang }) {
       <address className="entity">
         <span className="u">{CO.legalName[lang]}</span>
         <span className="u">{lang === 'ar' ? 'س.ت' : 'CR'} <span className="num ltr">{CO.cr}</span></span>
-        <span className="u">{CO.street[lang]}، {CO.district[lang]}، {CO.city[lang]}، {CO.country[lang]}</span>
+        <span className="u">
+          {[CO.street, CO.district, CO.city, CO.country].map((f) => f[lang]).join(sep(lang))}
+        </span>
         <a className="u tel ltr" href={`tel:${CO.phone}`}>{CO.phoneDisplay}</a>
         <a className="u tel ltr" href={`mailto:${CO.email}`}>{CO.email}</a>
         <a className="u tel ltr" href={`https://instagram.com/${CO.instagram}`} rel="me">@{CO.instagram}</a>

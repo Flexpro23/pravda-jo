@@ -9,7 +9,7 @@ export default function WorkIndex({ lang }: { lang: Lang }) {
       <section className="wsec" style={{ paddingBlockStart: 'clamp(140px,20vh,260px)' }}>
         <div className="wrap wsec-head">
           <h1 className="mega">
-            <span className="cut"><span className="d1">{lang === 'ar' ? 'الأعمال' : 'WORK'}</span></span>
+            <span className="cut"><span className="d1">{lang === 'ar' ? 'الأعمال' : 'Work'}</span></span>
           </h1>
           <p className="body fade d3">{tx('workBody', lang)}</p>
         </div>

@@ -3,7 +3,11 @@ import { notFound } from 'next/navigation';
 import Page from '@/components/Page';
 import Plate from '@/components/webgl/Plate';
 import { byslug } from '@/lib/data/work';
-import { Lang, path, tx } from '@/lib/i18n';
+import { Lang, path, tx, back } from '@/lib/i18n';
+
+/** Arabic takes the plural for 3–10 and the accusative singular from 11 up. */
+const assetWord = (n: number, lang: Lang) =>
+  lang === 'en' ? 'assets' : n >= 3 && n <= 10 ? 'مقاطع' : 'مقطعًا';
 
 export default function PieceView({ lang, slug }: { lang: Lang; slug: string }) {
   const p = byslug(slug);
@@ -23,7 +27,8 @@ export default function PieceView({ lang, slug }: { lang: Lang; slug: string }) 
           </h1>
         </div>
         <div className="wrap wipeIn">
-          <Plate src={`/plates/${p.slug}.svg`} alt={p.idea[lang]} width={1200} height={1500} priority grain={0.05} />
+          <Plate className="piece-plate" src={`/plates/${p.slug}.svg`} alt={p.idea[lang]}
+                 width={1200} height={1500} priority grain={0.05} />
         </div>
         <div className="wrap" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))',
           gap: 'clamp(28px,4vw,72px)', marginTop: 'clamp(48px,7vw,110px)' }}>
@@ -39,17 +44,17 @@ export default function PieceView({ lang, slug }: { lang: Lang; slug: string }) 
               ))}
             </div>
             <div className="row-metric">
-              <span className="v num">{p.metric}</span>
+              <span className="v num ltr">{p.metric}</span>
               <span className="u" style={{ maxWidth: '18ch' }}>{p.metricLabel[lang]}</span>
             </div>
             <div className="row-metric">
-              <span className="v num">{p.price.toLocaleString('en-US')}</span>
-              <span className="u">{tx('jod', lang)} · <span className="num">{p.assets}</span> {lang === 'ar' ? 'مقطع' : 'assets'}</span>
+              <span className="v num ltr">{p.price.toLocaleString('en-US')}</span>
+              <span className="u">{tx('jod', lang)} · <span className="num">{p.assets}</span> {assetWord(p.assets, lang)}</span>
             </div>
           </div>
         </div>
         <div className="wrap" style={{ marginTop: 'clamp(48px,7vw,110px)' }}>
-          <Link href={path(lang, 'work')} className="btn btn-s">← {tx('allWork', lang)}</Link>
+          <Link href={path(lang, 'work')} className="btn btn-s">{back(lang)} {tx('allWork', lang)}</Link>
         </div>
       </section>
     </Page>
