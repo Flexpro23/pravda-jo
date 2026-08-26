@@ -30,8 +30,26 @@ const MEDIA_FIELDS = [
   'timestamp', 'like_count', 'comments_count',
 ].join(',');
 
-/** Profile fields confirmed public. Anything tagged Standard is left out. */
-const PROFILE_FIELDS = ['username', 'followers_count', 'media_count', 'biography', 'website'];
+/**
+ * Profile fields, all verified live against the endpoint on 27 Aug 2026.
+ *
+ * `follows_count`, `profile_picture_url`, `name` and `ig_id` are documented as
+ * Standard rather than Public and were long assumed unavailable for a cold
+ * prospect. They return. `name` in particular is what lets a teardown address a
+ * business by its own name instead of its handle.
+ */
+const PROFILE_FIELDS = [
+  'username', 'name', 'followers_count', 'follows_count', 'media_count',
+  'biography', 'website', 'profile_picture_url', 'ig_id',
+];
+
+/**
+ * Verified: the edge serves 100 media in a single call, not the 25 assumed
+ * from the per-page default. At roughly 200 calls an hour that is the whole
+ * difference between fifty prospects an hour and two hundred, so it is worth
+ * asking for the ceiling rather than paging politely up to it.
+ */
+const PAGE = 100;
 
 export type Media = {
   id: string;
@@ -47,10 +65,15 @@ export type Media = {
 
 export type Profile = {
   username: string;
+  /** The business's own display name. Absent on a few accounts, so never assumed. */
+  name?: string;
   followers_count: number;
+  follows_count?: number;
   media_count: number;
   biography?: string;
   website?: string;
+  profile_picture_url?: string;
+  ig_id?: number;
   media: Media[];
 };
 
@@ -75,12 +98,11 @@ export function normaliseHandle(input: string): string | null {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * One page of the read. Business Discovery caps media at 25 per call and pages
- * with a cursor, so a hundred posts is four round trips against a budget of
- * roughly 200 calls an hour.
+ * One page of the read. A hundred posts arrive in a single round trip; the
+ * cursor is only needed for a deeper read than that.
  */
-async function page(igUserId: string, token: string, handle: string, after?: string) {
-  const media = `media.limit(25)${after ? `.after(${after})` : ''}{${MEDIA_FIELDS}}`;
+async function page(igUserId: string, token: string, handle: string, after?: string, want = PAGE) {
+  const media = `media.limit(${want})${after ? `.after(${after})` : ''}{${MEDIA_FIELDS}}`;
   const fields = `business_discovery.username(${handle}){${PROFILE_FIELDS.join(',')},${media}}`;
   const url = `${GRAPH}/${VERSION}/${igUserId}`
     + `?fields=${encodeURIComponent(fields)}&access_token=${encodeURIComponent(token)}`;
@@ -106,7 +128,9 @@ export async function discover(handle: string, posts = 100): Promise<DiscoveryRe
   let after: string | undefined;
 
   while (!profile || profile.media.length < posts) {
-    let attempt = await page(igUserId, token, clean, after);
+    // Never ask for more than is still wanted; a 40-post read is one call.
+    const want = Math.min(PAGE, posts - (profile?.media.length ?? 0));
+    let attempt = await page(igUserId, token, clean, after, want);
 
     // Code 110 / subcode 2207013 fires intermittently on accounts that are
     // perfectly readable, and `is_transient: false` on it is simply wrong. One
@@ -114,7 +138,7 @@ export async function discover(handle: string, posts = 100): Promise<DiscoveryRe
     const err = attempt.body?.error;
     if (err?.code === 110 || err?.error_subcode === 2207013) {
       await sleep(700);
-      attempt = await page(igUserId, token, clean, after);
+      attempt = await page(igUserId, token, clean, after, want);
     }
 
     const { res, body } = attempt;
@@ -141,10 +165,14 @@ export async function discover(handle: string, posts = 100): Promise<DiscoveryRe
     if (!profile) {
       profile = {
         username: bd.username,
+        name: bd.name,
         followers_count: bd.followers_count ?? 0,
+        follows_count: bd.follows_count,
         media_count: bd.media_count ?? 0,
         biography: bd.biography,
         website: bd.website,
+        profile_picture_url: bd.profile_picture_url,
+        ig_id: bd.ig_id,
         media: batch,
       };
     } else {

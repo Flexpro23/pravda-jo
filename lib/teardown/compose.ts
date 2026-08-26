@@ -35,11 +35,16 @@ const AR_MONTHS = ['كانون الثاني', 'شباط', 'آذار', 'نيسا�
 const EN_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
 
-const dayMonth = (iso: string, lang: 'ar' | 'en') => {
+const dayMonth = (iso: string, lang: 'ar' | 'en', withYear = false) => {
   const d = new Date(iso);
-  const day = d.getUTCDate(), m = d.getUTCMonth();
-  return lang === 'ar' ? `${ar(day)} ${AR_MONTHS[m]}` : `${day} ${EN_MONTHS[m]}`;
+  const day = d.getUTCDate(), m = d.getUTCMonth(), y = d.getUTCFullYear();
+  const base = lang === 'ar' ? `${ar(day)} ${AR_MONTHS[m]}` : `${day} ${EN_MONTHS[m]}`;
+  return withYear ? `${base} ${lang === 'ar' ? ar(y) : y}` : base;
 };
+
+/** A window that crosses a new year reads as a few months unless it says so. */
+const crossesYear = (a: string, b: string) =>
+  new Date(a).getUTCFullYear() !== new Date(b).getUTCFullYear();
 
 /** 14 → "2pm" / "٢ بعد الضهر". Hours are already Amman local. */
 const dayPart = (h: number) =>
@@ -79,7 +84,7 @@ const TODO = (what: string) => ({
   en: `⟦Needs writing: ${what}⟧`,
 });
 
-export function composeDraft(s: Signals, token: string): Report {
+export function composeDraft(s: Signals, token: string, name?: string): Report {
   const vitals: Vital[] = [];
 
   // ── engagement ────────────────────────────────────────────────────────────
@@ -90,7 +95,7 @@ export function composeDraft(s: Signals, token: string): Report {
       label: { ar: 'نسبة التفاعل', en: 'Engagement rate' },
       cmp: {
         ar: `يعني المنشور العادي عندكم بيوصل تفاعل من ${ar(n0(s.medianEngagement))} حساب، وعندكم ${ar(s.followers.toLocaleString('en-US'))} متابع.`,
-        en: `A typical post draws ${s.medianEngagement.toLocaleString('en-US')} reactions against ${s.followers.toLocaleString('en-US')} followers.`,
+        en: `A typical post draws ${Math.round(s.medianEngagement).toLocaleString('en-US')} reactions against ${s.followers.toLocaleString('en-US')} followers.`,
       },
       prov: {
         ar: `محسوب · ${ar(s.posts)} منشور`,
@@ -125,7 +130,11 @@ export function composeDraft(s: Signals, token: string): Report {
   }
 
   // ── asking for anything at all ────────────────────────────────────────────
-  vitals.push({
+  // Only when captions were actually read. A read that returned none would
+  // otherwise accuse a business of never asking for anything in a hundred
+  // posts — the single most damaging thing this document could get wrong, and
+  // indistinguishable to the reader from a finding we had earned.
+  if (s.captions.withCaption > 0) vitals.push({
     fig: `${n0(s.captions.askingShare)}%`,
     low: s.captions.askingShare < 20,
     label: { ar: 'من الكابشنات بتطلب إشي', en: 'Of captions ask for anything' },
@@ -160,13 +169,21 @@ export function composeDraft(s: Signals, token: string): Report {
 
   return {
     token,
-    client: { ar: `@${s.handle}`, en: `@${s.handle}` },
+    // A business reads its own name; a handle reads like a database row. The
+    // display name is verified available on this edge, but a few accounts leave
+    // it empty, so the handle stays as the fallback.
+    client: name?.trim()
+      ? { ar: name.trim(), en: name.trim() }
+      : { ar: `@${s.handle}`, en: `@${s.handle}` },
     sector: TODO('القطاع / sector'),
     date: new Date().toISOString().slice(0, 10),
-    window: {
-      ar: `${dayMonth(s.first, 'ar')} — ${dayMonth(s.last, 'ar')} · ${ar(s.posts)} منشور`,
-      en: `${dayMonth(s.first, 'en')} — ${dayMonth(s.last, 'en')} · ${s.posts} posts`,
-    },
+    window: (() => {
+      const y = crossesYear(s.first, s.last);
+      return {
+        ar: `${dayMonth(s.first, 'ar', y)} — ${dayMonth(s.last, 'ar', y)} · ${ar(s.posts)} منشور`,
+        en: `${dayMonth(s.first, 'en', y)} — ${dayMonth(s.last, 'en', y)} · ${s.posts} posts`,
+      };
+    })(),
     hero: {
       cap: heroCap,
       head: best

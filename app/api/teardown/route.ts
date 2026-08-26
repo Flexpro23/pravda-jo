@@ -63,7 +63,7 @@ export async function POST(req: Request) {
   }
 
   const token = mintToken();
-  const report = composeDraft(signals, token);
+  const report = composeDraft(signals, token, read.profile.name);
   const now = new Date().toISOString();
 
   await saveTeardown({
