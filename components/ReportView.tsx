@@ -88,20 +88,18 @@ export default function ReportView({
           </div>
         </section>
 
-        <section className="wrap rep-s">
-          <p className="u">{ar ? 'جمهوركم' : 'Your audience'}</p>
-          <h2 className="mid">{r.audience.head[lang]}</h2>
-          {r.audience.p.map((p, i) => <p className="body" key={i}>{p[lang]}</p>)}
-        </section>
-
-        <section className="wrap rep-s">
-          <p className="u">{ar ? 'الإعلانات المدفوعة' : 'Paid'}</p>
-          <div className="ads">
-            <div><p className="ads-big num low ltr">{r.ads.mine}</p><p className="u">{r.ads.mineLabel[lang]}</p></div>
-            <div><p className="ads-big num ltr">{r.ads.theirs}</p><p className="u">{r.ads.theirsLabel[lang]}</p></div>
-          </div>
-          <p className="body">{r.ads.p[lang]}</p>
-        </section>
+        {/* Paid only runs when a human has read the Ad Library; there is no
+            API path to it for Jordan. A teardown without it is still whole. */}
+        {r.ads && (
+          <section className="wrap rep-s">
+            <p className="u">{ar ? 'الإعلانات المدفوعة' : 'Paid'}</p>
+            <div className="ads">
+              <div><p className="ads-big num low ltr">{r.ads.mine}</p><p className="u">{r.ads.mineLabel[lang]}</p></div>
+              <div><p className="ads-big num ltr">{r.ads.theirs}</p><p className="u">{r.ads.theirsLabel[lang]}</p></div>
+            </div>
+            <p className="body">{r.ads.p[lang]}</p>
+          </section>
+        )}
 
         <section className="wrap rep-s">
           <p className="u brass">{ar ? 'مجانًا' : 'Free'}</p>

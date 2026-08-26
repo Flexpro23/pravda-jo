@@ -1,0 +1,36 @@
+# Firebase App Hosting. Plain Firebase Hosting serves static files only, and
+# this app needs a Node runtime for the operator endpoint, the Firestore reads
+# behind /r and /p, and Next's own server rendering.
+#
+# The runtime service account supplies Application Default Credentials, so no
+# Firebase key is configured here — lib/store/firebase.ts falls back to a
+# service-account JSON only when running locally.
+
+runConfig:
+  # A teardown read is I/O against Graph and Firestore, not computation.
+  cpu: 1
+  memoryMiB: 512
+  minInstances: 0
+  maxInstances: 4
+  concurrency: 80
+
+env:
+  # Values live in Cloud Secret Manager, never in this file. Create each with:
+  #   firebase apphosting:secrets:set META_ACCESS_TOKEN
+  - variable: META_ACCESS_TOKEN
+    secret: META_ACCESS_TOKEN
+    availability: [RUNTIME]
+
+  - variable: META_IG_USER_ID
+    secret: META_IG_USER_ID
+    availability: [RUNTIME]
+
+  - variable: OPERATOR_KEY
+    secret: OPERATOR_KEY
+    availability: [RUNTIME]
+
+  # Pinned deliberately: a Graph version bump can change field availability on
+  # the business_discovery edge, so it moves when we have tested it moving.
+  - variable: META_API_VERSION
+    value: v21.0
+    availability: [RUNTIME]

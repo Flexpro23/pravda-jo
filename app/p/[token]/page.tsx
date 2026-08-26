@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { SPECIMEN } from '@/lib/data/report';
+import { getTeardown } from '@/lib/store/teardowns';
 import { CO } from '@/lib/data/company';
 import { sep } from '@/lib/i18n';
 
@@ -8,7 +8,7 @@ export const metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
-function resolve(token: string) { return token === 'sample' ? SPECIMEN : null; }
+
 
 /**
  * The preview. One screen, built only from what the subject published, sent as
@@ -23,7 +23,7 @@ export default async function P({
 }) {
   const { token } = await params;
   const { lang: q } = await searchParams;
-  const r = resolve(token);
+  const r = await getTeardown(token);
   if (!r) notFound();
   const lang = q === 'en' ? 'en' : 'ar';
   const ar = lang === 'ar';

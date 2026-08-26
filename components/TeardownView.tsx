@@ -8,11 +8,11 @@ export default function TeardownView({ lang }: { lang: Lang }) {
   const ar = lang === 'ar';
   const rows = ar
     ? [['مية منشور', 'صيغها، توقيتها، وأداؤها'],
-       ['التعليقات الظاهرة', 'الأسئلة المتكررة ونسبة الرد'],
+       ['الكابشنات', 'شو بتحكوا، وكل قدّيش بتطلبوا إشي'],
        ['مكتبة الإعلانات', 'إعلاناتكم وإعلانات جيرانكم'],
        ['الملف الشخصي', 'البايو، الرابط، ومسار الطلب']]
     : [['A hundred posts', 'formats, timing, performance'],
-       ['Visible comments', 'recurring questions, reply rate'],
+       ['Your captions', 'what you say, and how often you ask for anything'],
        ['The Ad Library', 'your ads and your neighbours’'],
        ['The profile', 'bio, link, path to an order']];
 

@@ -1,3 +1,18 @@
+/**
+ * A teardown claims only what it can prove.
+ *
+ * Everything here is derivable from what the subject published, read through
+ * Business Discovery, which needs no permission from them. That boundary is the
+ * whole credibility of the artifact, so it is enforced in the schema rather
+ * than left to whoever writes the copy.
+ *
+ * Deliberately absent: audience composition. It reads as the strongest section
+ * in the report — who is actually talking to you, versus who follows you — and
+ * it cannot be built. It needs comment text, and the comments edge is Standard
+ * rather than Public, so it is unreachable for a business that has not
+ * authorised us, at every access tier. `comments_count` is public; the comments
+ * are not. A section that needs the words cannot be honest here.
+ */
 type B = { ar: string; en: string };
 
 export type Vital = {
@@ -20,8 +35,13 @@ export type Report = {
   vitals: Vital[];
   working: B[];
   pattern: { head: B; bars: { label: B; v: number; x: string; hi?: boolean }[]; tail: B };
-  audience: { head: B; p: B[] };
-  ads: { mine: string; theirs: string; mineLabel: B; theirsLabel: B; p: B };
+  /**
+   * Paid. The Ad Library API returns nothing for Jordan — non-EU ads surface
+   * only if they are about social issues, elections or politics — so this can
+   * never be engine-derived. A human reads the public web interface and fills
+   * it, or the section does not run. Optional, so a report is whole without it.
+   */
+  ads?: { mine: string; theirs: string; mineLabel: B; theirsLabel: B; p: B };
   fixes: Fix[];
   concepts: Concept[];
   plan: { m: B; p: B }[];
@@ -84,15 +104,6 @@ export const SPECIMEN: Report = {
     ],
     tail: { ar: 'هالإشي ما بينشاف إلا لما تتفرّج على مية منشور مع بعض. أي أسبوع لحاله بيبيّن تمام — وهاد ليش ولا حدا من جوّا الشغل بيلاقيه.',
             en: 'This is only visible across a hundred posts at once. Any single week looks fine — which is exactly why nobody inside a business ever finds it.' },
-  },
-  audience: {
-    head: { ar: 'أربعة وتلاتين حساب هم ٥٨٪ من تعليقاتكم', en: 'Thirty-four accounts are 58% of your comments' },
-    p: [
-      { ar: 'على مدى مية منشور، نفس الأربعة وتلاتين حساب عملوا أكثر من نص التفاعل. عدد متابعينكم ٨٤٠٠. وعدد الناس الفعليين بالحوار أقرب لأربعين.',
-        en: 'Across a hundred posts, the same thirty-four accounts produced more than half of all engagement. Your follower count is 8,400. The number of people actually in the conversation is closer to forty.' },
-      { ar: 'وهاد مش فشل — هاد جمهور وفيّ. بس معناه إنّ الحساب بيحكي مع ناس أصلًا بتاكل عندكم، مش مع حدا بيقرّر وين يروح الليلة.',
-        en: 'That is not a failure — it is a loyal core. But it means the account is talking to people who already eat with you, not to anyone deciding where to go tonight.' },
-    ],
   },
   ads: {
     mine: '0', theirs: '19',

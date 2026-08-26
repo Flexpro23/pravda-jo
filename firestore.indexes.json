@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "teardowns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "handle", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

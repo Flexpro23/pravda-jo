@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import ReportView from '@/components/ReportView';
-import { SPECIMEN } from '@/lib/data/report';
+import { getTeardown } from '@/lib/store/teardowns';
 import './report.css';
 
 export const metadata = {
@@ -9,10 +9,7 @@ export const metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
-/** In production this resolves the token against the store. */
-function resolve(token: string) {
-  return token === 'sample' ? SPECIMEN : null;
-}
+
 
 export default async function P({
   params, searchParams,
@@ -22,7 +19,7 @@ export default async function P({
 }) {
   const { token } = await params;
   const { lang: q } = await searchParams;
-  const r = resolve(token);
+  const r = await getTeardown(token);
   if (!r) notFound();
   const lang = q === 'en' ? 'en' : 'ar';
   return <ReportView r={r} lang={lang} specimen={r.token === 'sample'} />;
