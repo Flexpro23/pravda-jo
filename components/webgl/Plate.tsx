@@ -18,6 +18,8 @@ type Props = {
   priority?: boolean;
   grain?: number;
   className?: string;
+  /** fill the parent instead of holding the intrinsic ratio — for full-bleed use */
+  fill?: boolean;
 };
 
 /** Capability gate. Runs once, cheaply, before anything is compiled. */
@@ -49,7 +51,7 @@ function capable(): boolean {
  * produces a flicker loop.
  */
 export default function Plate({
-  src, alt, width, height, priority = false, grain = 0.055, className = '',
+  src, alt, width, height, priority = false, grain = 0.055, className = '', fill = false,
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -193,8 +195,8 @@ export default function Plate({
   return (
     <div
       ref={host}
-      className={`plate ${className}`}
-      style={{ aspectRatio: `${width} / ${height}` }}
+      className={`plate ${fill ? 'plate-fill' : ''} ${className}`}
+      style={fill ? undefined : { aspectRatio: `${width} / ${height}` }}
     >
       <img
         src={src}

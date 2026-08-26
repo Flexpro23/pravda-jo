@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
 import './globals.css';
 import type { Lang } from '@/lib/i18n';
+import RouteTransition from '@/components/RouteTransition';
 
 const LANGS = ['ar', 'en'] as const;
 export function generateStaticParams() { return LANGS.map((lang) => ({ lang })); }
@@ -57,7 +58,7 @@ export default async function RootLayout(
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body><RouteTransition>{children}</RouteTransition></body>
     </html>
   );
 }

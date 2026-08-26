@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Lang, path, tx, other } from '@/lib/i18n';
 
 const NAV = [
@@ -12,6 +13,7 @@ const NAV = [
 const isDelivery = (p: string) => /^\/(r|p)\//.test(p);
 
 export default function MastNav({ lang }: { lang: Lang }) {
+  const [open, setOpen] = useState(false);
   const o = other(lang);
   const here = usePathname() || path(lang);
   const seg = here.replace(/^\/(ar|en)\/?/, '').split('/')[0];
@@ -30,22 +32,38 @@ export default function MastNav({ lang }: { lang: Lang }) {
   const label = o === 'ar' ? 'ع' : 'EN';
   const langAttrs = { hrefLang: o, lang: o, className: 'u link' };
 
+  useEffect(() => { setOpen(false); }, [here]);
+
+  const links = NAV.map(([k, p]) => (
+    <Link key={p} href={path(lang, p)} className="u link mast-link"
+          aria-current={seg === p ? 'page' : undefined}
+          onClick={() => setOpen(false)}>
+      {tx(k, lang)}
+    </Link>
+  ));
+
   return (
     <nav className="mast-nav fade" aria-label={lang === 'ar' ? 'التنقّل' : 'Navigation'}>
-      {NAV.map(([k, p]) => (
-        <Link key={p} href={path(lang, p)} className="u link mast-full"
-              aria-current={seg === p ? 'page' : undefined}>
-          {tx(k, lang)}
-        </Link>
-      ))}
+      <span className="mast-full">{links}</span>
       <Link href={path(lang, compact[1])} className="u link mast-compact">
         {tx(compact[0], lang)}
       </Link>
+      <button type="button" className="u mast-menu-toggle" aria-expanded={open}
+              aria-controls="mast-menu" onClick={() => setOpen((v) => !v)}>
+        <span className="mast-menu-label">{lang === 'ar' ? 'القائمة' : 'Menu'}</span>
+        <span className="mast-menu-icon" aria-hidden="true"><i /><i /></span>
+      </button>
       {/* A delivery page reads its language on load, so that swap is a real
           navigation rather than a client-side transition. */}
       {isDelivery(here)
         ? <a href={swap} {...langAttrs}>{label}</a>
         : <Link href={swap} {...langAttrs}>{label}</Link>}
+      <div id="mast-menu" className="mast-menu" data-open={open ? 'true' : 'false'}>
+        <div className="mast-menu-inner">
+          <span className="u brass">{lang === 'ar' ? 'الانتقال' : 'Navigate'}</span>
+          <div className="mast-menu-links">{links}</div>
+        </div>
+      </div>
     </nav>
   );
 }

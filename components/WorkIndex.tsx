@@ -1,20 +1,20 @@
-import Page from '@/components/Page';
-import WorkRows from '@/components/WorkRows';
-import { WORK } from '@/lib/data/work';
-import { Lang, tx } from '@/lib/i18n';
+import Masthead from '@/components/Masthead';
+import WorkFlow from '@/components/WorkFlow';
+import type { Lang } from '@/lib/i18n';
 
+/**
+ * Like Cast and the homepage, the archive is a fixed stage rather than a
+ * document, so it carries no footer — the closing screen holds the offer and
+ * the entity block. On a phone it falls back to the scrolling rows.
+ */
 export default function WorkIndex({ lang }: { lang: Lang }) {
   return (
-    <Page lang={lang}>
-      <section className="wsec" style={{ paddingBlockStart: 'clamp(140px,20vh,260px)' }}>
-        <div className="wrap wsec-head">
-          <h1 className="mega">
-            <span className="cut"><span className="d1">{lang === 'ar' ? 'الأعمال' : 'Work'}</span></span>
-          </h1>
-          <p className="body fade d3">{tx('workBody', lang)}</p>
-        </div>
-        <div className="wrap"><WorkRows lang={lang} pieces={WORK} /></div>
-      </section>
-    </Page>
+    <>
+      <a className="skip" href="#main">
+        {lang === 'ar' ? 'تخطَّ إلى الأعمال' : 'Skip to the work'}
+      </a>
+      <Masthead lang={lang} />
+      <main id="main" tabIndex={-1}><WorkFlow lang={lang} /></main>
+    </>
   );
 }

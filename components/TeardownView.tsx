@@ -40,7 +40,7 @@ export default function TeardownView({ lang }: { lang: Lang }) {
 
       <section className="wsec"><div className="wrap">
         {rows.map(([a, b]) => (
-          <div key={a} className="td-row riseIn">
+          <div key={a} className="td-row td-evidence riseIn">
             <p className="mid">{a}</p>
             <p className="body">{b}</p>
           </div>

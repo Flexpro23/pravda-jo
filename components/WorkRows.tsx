@@ -9,14 +9,14 @@ export default function WorkRows({
   return (
     <>
       {pieces.map((p, i) => (
-        <article className="row" key={p.slug}>
+        <article className="row row-work" key={p.slug} style={{ '--row-index': i } as React.CSSProperties}>
           <Link href={path(lang, `work/${p.slug}`)} className="row-media wipeIn">
             <span className="row-n num">{String(offset + i + 1).padStart(2, '0')}</span>
             <Plate src={`/plates/${p.slug}.svg`} alt={p.idea[lang]}
                    width={1200} height={1500} priority={i === 0} grain={0.05} />
           </Link>
 
-          <div className="row-body riseIn">
+          <div className="row-body riseIn row-work-body">
             <div className="row-meta">
               <span className="u">{p.client[lang]}</span>
               <span className="u">{p.sector[lang]}</span>

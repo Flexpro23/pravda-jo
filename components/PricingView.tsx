@@ -20,7 +20,7 @@ export default function PricingView({ lang }: { lang: Lang }) {
         <div className="wrap">
           <div className="rates">
             {RATES.map((r) => (
-              <div key={r.key} className="rate riseIn">
+              <div key={r.key} className="rate rate-card riseIn">
                 <p className="u">{r.label[lang]}</p>
                 <p className="rate-v num">
                   {/* every other figure on the site is Western-digit, in both locales */}

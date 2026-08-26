@@ -51,6 +51,24 @@ export const t: Dict = {
     en: 'We do not present people as a list you pick from. Everyone here is reached through work they made. That is how production actually works.',
   },
 
+  castReached: { ar: 'وصلناله من',     en: 'Reached through' },
+  castPick:    { ar: 'خلّي الذكاء الاصطناعي يختار طاقمك',
+                 en: 'Let AI choose your perfect cast' },
+  castPickBody: {
+    ar: 'قوللنا شو بدك تصوّر ومنقرأ حسابك، وبنرجعلك بطاقم مقترح بالاسم — مع السعر، قبل أي مكالمة.',
+    en: 'Tell us what you need to shoot. We read your account and come back with a cast proposed by name, priced, before any call.',
+  },
+  castNone: {
+    ar: 'ما عندنا حدا بهالتخصص على الروستر لحد الآن. احكينا شو بدك ومنلاقيلك.',
+    en: 'Nobody on the roster for this yet. Tell us what you need and we will find them.',
+  },
+
+  workPick:    { ar: 'شوف شو منعمل إلك', en: 'See what we would make for you' },
+  workPickBody: {
+    ar: 'كل شغلة هون بلّشت بتحقيق للحساب. ابعتلنا حسابك ومنقرأه بنفس الطريقة — مجانًا، وبسعر مكتوب قبل أي مكالمة.',
+    en: 'Every piece here started as a teardown of the account. Send us yours and we read it the same way — free, and priced before any call.',
+  },
+
   tdEyebrow:   { ar: 'التحقيق',        en: 'The teardown' },
   tdTitle:     { ar: 'شو منقرأ، وشو ما منقرأ', en: 'What we read, and what we do not' },
   tdBody: {

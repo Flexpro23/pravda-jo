@@ -42,8 +42,18 @@
   --sans:'Inter',system-ui,sans-serif;
   --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--s7:48px;--s8:64px;--s9:96px;--s10:160px;--s11:240px;
   --fast:140ms; --base:280ms; --slow:640ms; --reveal:1100ms;
+  /* Every part of the Cast cut is derived from --cut: the wipe, the outgoing
+     push, the inner stagger, and the gesture lock, which reads it back in JS. */
+  --cut:720ms;
   --ease:cubic-bezier(.16,1,.3,1);
   --ease-in:cubic-bezier(.7,0,.84,0);
+  /* --ease is heavily front-loaded, which is right for arrivals and wrong for a
+     wipe: it finished 90% of the travel in the first third and read as a jump. */
+  --ease-cut:cubic-bezier(.66,0,.28,1);
+  /* transform-origin takes no logical keyword, so the inline start edge is a
+     token instead. Referenced by the work metric, which grew from the wrong
+     side in Arabic while this was undefined. */
+  --inline-start:left;
   --container:1520px; --measure:74ch;
 }
 *,*::before,*::after{box-sizing:border-box;}
@@ -55,6 +65,7 @@ body{margin:0;background:var(--void);color:var(--bone);font-family:var(--body);
 [lang="ar"] .u,[lang="ar"] .btn{text-transform:none !important;}
 [lang="ar"]{font-family:var(--ar);}
 [lang="ar"] em,[lang="ar"] i{font-style:normal;}
+[dir="rtl"]{--inline-start:right;}
 bdi,.ltr{unicode-bidi:isolate;direction:ltr;}
 .num{font-variant-numeric:tabular-nums;}
 /* Error surfaces are authored bilingually because they render without a locale
@@ -109,6 +120,15 @@ bdi,.ltr{unicode-bidi:isolate;direction:ltr;}
 .fade{opacity:0;animation:fadeIn var(--slow) var(--ease) forwards;}
 @keyframes fadeIn{to{opacity:1;}}
 
+/* ══ route handoff ══ */
+.route-wash{position:fixed;inset:0;z-index:120;pointer-events:none;background:var(--forest);
+  animation:routeWash 560ms var(--ease) both;}
+@keyframes routeWash{from{clip-path:inset(0 0 0 0);opacity:.98}
+  to{clip-path:inset(0 100% 0 0);opacity:0}}
+[dir="rtl"] .route-wash{animation-name:routeWashR;}
+@keyframes routeWashR{from{clip-path:inset(0 0 0 0);opacity:.98}
+  to{clip-path:inset(0 0 0 100%);opacity:0}}
+
 /* ══ scroll-driven — visible, not decorative ══ */
 @supports (animation-timeline: view()){
   @media (prefers-reduced-motion: no-preference){
@@ -120,6 +140,54 @@ bdi,.ltr{unicode-bidi:isolate;direction:ltr;}
     @keyframes wipeInR{from{clip-path:inset(0 0 0 100%);}to{clip-path:inset(0 0 0 0);}}
     .drift{animation:drift linear both;animation-timeline:view();animation-range:cover;}
     @keyframes drift{from{transform:translateY(46px);}to{transform:translateY(-46px);}}
+
+    /* The archive gets a slower, image-led rhythm than the generic reveal. */
+    .row-work .row-media{animation:workMedia linear both;animation-timeline:view();
+      animation-range:entry 0% entry 58%;}
+    .row-work .row-work-body{animation:workBody linear both;animation-timeline:view();
+      animation-range:entry 4% entry 64%;}
+    .row-work .row-metric{animation:metricResolve linear both;animation-timeline:view();
+      animation-range:entry 16% entry 68%;transform-origin:var(--inline-start,left);}
+    @keyframes workMedia{from{clip-path:inset(0 100% 0 0);transform:translateY(34px) scale(.985);}
+      to{clip-path:inset(0 0 0 0);transform:none;}}
+    @keyframes workBody{from{opacity:0;transform:translateY(48px) scale(.98);}
+      to{opacity:1;transform:none;}}
+    @keyframes metricResolve{from{opacity:.2;transform:scaleX(.25);}
+      to{opacity:1;transform:scaleX(1);}}
+    [dir="rtl"] .row-work .row-media{animation-name:workMediaR;}
+    @keyframes workMediaR{from{clip-path:inset(0 0 0 100%);transform:translateY(34px) scale(.985);}
+      to{clip-path:inset(0 0 0 0);transform:none;}}
+
+    .founder-card .founder-img{animation:founderFrame linear both;animation-timeline:view();
+      animation-range:entry 0% entry 64%;}
+    .founder-card > div:last-child{animation:founderCopy linear both;animation-timeline:view();
+      animation-range:entry 8% entry 70%;}
+    @keyframes founderFrame{from{opacity:.3;transform:translateY(28px) scale(.96);filter:saturate(.4);}
+      to{opacity:1;transform:none;filter:none;}}
+    @keyframes founderCopy{from{opacity:0;transform:translateX(34px);}
+      to{opacity:1;transform:none;}}
+    [dir="rtl"] .founder-card > div:last-child{animation-name:founderCopyR;}
+    @keyframes founderCopyR{from{opacity:0;transform:translateX(-34px);}
+      to{opacity:1;transform:none;}}
+
+    .rate-card{position:relative;overflow:hidden;}
+    .rate-card::after{content:'';position:absolute;inset-block-start:0;inset-inline-start:0;
+      width:100%;height:2px;background:var(--brass);transform:scaleX(0);transform-origin:left;
+      animation:rateRule linear both;animation-timeline:view();animation-range:entry 0% entry 58%;}
+    .rate-card .rate-v{animation:rateResolve linear both;animation-timeline:view();
+      animation-range:entry 8% entry 64%;}
+    @keyframes rateRule{to{transform:scaleX(1);}}
+    @keyframes rateResolve{from{opacity:.35;transform:translateY(18px) scale(.92);}
+      to{opacity:1;transform:none;}}
+    [dir="rtl"] .rate-card::after{transform-origin:right;}
+
+    .td-evidence{position:relative;}
+    .td-evidence::before{content:'';position:absolute;inset-block-start:-1px;inset-inline-start:0;
+      width:clamp(28px,5vw,80px);height:2px;background:var(--brass);transform:scaleX(0);
+      transform-origin:left;animation:evidenceMark linear both;animation-timeline:view();
+      animation-range:entry 0% entry 52%;}
+    @keyframes evidenceMark{to{transform:scaleX(1);}}
+    [dir="rtl"] .td-evidence::before{transform-origin:right;}
   }
 }
 
@@ -157,6 +225,14 @@ main:focus{outline:none;}
 [lang="ar"] .wm{font-family:var(--ar);font-size:30px;letter-spacing:0;}
 .mast-nav{display:flex;align-items:center;gap:clamp(16px,2.4vw,40px);}
 .mast-nav a{color:var(--linen);text-decoration:none;}
+.mast-full{display:inline-flex;align-items:center;gap:clamp(16px,2.4vw,40px);}
+.mast-menu-toggle{display:none;appearance:none;border:0;padding:0;background:none;color:var(--linen);
+  cursor:pointer;align-items:center;gap:8px;}
+.mast-menu-icon{display:inline-grid;gap:4px;width:18px;}
+.mast-menu-icon i{display:block;width:18px;height:1px;background:currentColor;transition:transform var(--base) var(--ease);}
+.mast-menu-toggle[aria-expanded="true"] .mast-menu-icon i:first-child{transform:translateY(2.5px) rotate(45deg);}
+.mast-menu-toggle[aria-expanded="true"] .mast-menu-icon i:last-child{transform:translateY(-2.5px) rotate(-45deg);}
+.mast-menu{display:none;}
 
 /* ══ HERO — type is the image ══ */
 /* min-height rather than height: a fixed height centres the block and lets a
@@ -195,7 +271,7 @@ main:focus{outline:none;}
 
 /* ══ WORK — editorial rows, alternating, bleeding ══ */
 .wsec{padding-block:clamp(80px,11vw,180px);}
-.wsec-head{display:flex;justify-content:space-between;align-items:end;gap:var(--s7);
+.wsec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--s7);
   flex-wrap:wrap;margin-bottom:clamp(48px,7vw,110px);}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,72px);
   align-items:center;padding-block:clamp(48px,7vw,112px);position:relative;}
@@ -231,6 +307,7 @@ main:focus{outline:none;}
 
 /* ══ plate ══ */
 .plate{position:relative;overflow:hidden;background:var(--void);}
+.plate-fill{width:100%;height:100%;}
 /* a 4:5 plate at full container width is ~1900px tall — too tall to read past */
 .piece-plate{max-width:860px;}
 .plate-poster{display:block;width:100%;height:100%;object-fit:cover;}
@@ -242,26 +319,300 @@ main:focus{outline:none;}
 .band{padding-block:clamp(90px,13vw,220px);border-block:1px solid var(--rule);}
 .band .mid{max-width:22ch;}
 
-/* ══ cast ══ */
-.faces{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(160px,17vw,260px),1fr));
-  gap:clamp(12px,1.6vw,26px);}
-.face{position:relative;display:block;text-decoration:none;overflow:hidden;}
-.face-img{aspect-ratio:3/4;transition:transform var(--slow) var(--ease);}
-.face:hover .face-img{transform:scale(1.05);}
-.face-i{position:absolute;inset-block-end:0;inset-inline:0;padding:var(--s4);
-  display:grid;gap:var(--s1);
-  background:linear-gradient(to top,rgba(26,26,26,.94),rgba(26,26,26,.55) 52%,transparent);}
-.face-nm{font-family:var(--body);font-weight:500;font-size:clamp(17px,1.35vw,23px);color:var(--bone);margin:0;}
-[lang="ar"] .face-nm{font-family:var(--ar);}
+/* ══════ CAST — cut, not scrolled ══════
+   The stage is fixed and a gesture commits one screen, so nothing here scrolls.
+   Reduced motion gets .cast-flat instead: the same scenes as a normal page. */
 
-/* ══ reserved frames ══
-   No photography exists yet. Rather than four identical empty boxes, each plate
-   is a distinct tint carrying the person's initial and an inset frame line, so
-   it reads as a frame held for them instead of a broken image. */
-.face-img,.founder-img{position:relative;overflow:hidden;
+.cast-scene{position:relative;display:grid;grid-template-columns:1fr 1fr;
+  align-items:stretch;min-height:100svh;}
+.cast-stage .cast-scene{min-height:0;}
+/* the shot changes sides screen to screen so the eye crosses as it advances */
+.cast-scene[data-side="end"] .cast-shot{order:2;}
+.cast-scene[data-kind="intro"],
+.cast-scene[data-kind="empty"],
+.cast-scene[data-kind="outro"]{grid-template-columns:1fr;}
+
+.cast-shot{position:relative;overflow:hidden;background:var(--forest);min-height:0;}
+/* Absolute, so the picture's own aspect ratio can never set the screen height. */
+.cast-shot img{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;display:block;transform:scale(1.06);}
+.cast-veil{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(26,26,26,.5) 0%,rgba(26,26,26,0) 34%,
+    rgba(26,26,26,0) 62%,rgba(26,26,26,.62) 100%);}
+
+.cast-info{display:grid;align-content:center;gap:var(--s3);
+  padding:clamp(40px,7vh,90px) clamp(28px,5vw,84px);}
+.cast-disc{color:var(--brass);}
+.cast-name{font-family:var(--display);font-weight:400;margin:0;
+  font-size:clamp(52px,7.4vw,124px);line-height:1.04;letter-spacing:-.01em;}
+[lang="ar"] .cast-name{font-family:var(--ar);line-height:1.2;}
+.cast-role{margin:0;}
+.cast-line{margin:var(--s4) 0 0;max-width:34ch;}
+.cast-via{display:grid;gap:var(--s2);margin:var(--s6) 0 0;justify-items:start;}
+.cast-piece{font-family:var(--body);font-size:clamp(15px,1.3vw,18px);color:var(--bone);
+  text-decoration:none;border-bottom:1px solid var(--rule);padding-bottom:3px;}
+[lang="ar"] .cast-piece{font-family:var(--ar);}
+.cast-piece:hover{border-color:var(--brass);}
+
+/* the intro, the empty answer and the closing offer all centre on one column */
+.cast-title{display:grid;align-content:center;justify-items:start;gap:var(--s4);
+  padding:clamp(90px,14vh,150px) clamp(24px,6vw,90px);max-width:var(--container);
+  margin-inline:auto;width:100%;}
+.cast-thesis{margin-top:var(--s3);}
+.cast-end{justify-items:center;text-align:center;}
+.cast-end-h{font-family:var(--display);font-weight:400;margin:0;max-width:16ch;
+  font-size:clamp(38px,6vw,96px);line-height:1.06;letter-spacing:-.01em;text-wrap:balance;}
+[lang="ar"] .cast-end-h{font-family:var(--ar);line-height:1.24;}
+.cast-end .body{margin-inline:auto;}
+.cast-end .hero-actions{justify-content:center;margin-top:var(--s4);}
+.cast-end .scene-entity{justify-content:center;margin-top:var(--s6);}
+
+/* ══════ THE CUT — shared by Cast and Work ══════
+   Both screens stay mounted. The arriving one is opaque and on top, so its own
+   wipe edge is what erases the outgoing frame: the two are never legible at the
+   same moment, and no stage ground is ever exposed between them.
+
+   Nothing here animates opacity. A translucent incoming frame was what let the
+   old name ghost through, and it was also what left a black band while the wipe
+   travelled. The outgoing screen pushes on scale rather than drifting, because
+   a drift lifts its edge and shows the ground behind it.
+
+   Every duration is a multiple of --cut, which JS reads back for the gesture
+   lock, so the whole transition retimes from one number. */
+.cutstage{position:fixed;inset:0;overflow:hidden;background:var(--void);
+  touch-action:none;overscroll-behavior:none;}
+.cutstage .cutscene{position:absolute;inset:0;}
+
+@media (prefers-reduced-motion:no-preference){
+  .cutstage .cutscene[data-state="in"]{
+    z-index:2;background:var(--void);
+    animation:cutIn var(--cut) var(--ease-cut) both;}
+  .cutstage .cutscene[data-state="in"][data-dir="back"]{animation-name:cutInBack;}
+  .cutstage .cutscene[data-state="out"]{
+    z-index:1;background:var(--void);
+    animation:cutOut var(--cut) var(--ease-cut) both;}
+  .cutstage .cutscene[data-state="out"][data-dir="back"]{animation-name:cutOutBack;}
+
+  @keyframes cutIn{from{clip-path:inset(100% 0 0 0);}to{clip-path:inset(0 0 0 0);}}
+  @keyframes cutInBack{from{clip-path:inset(0 0 100% 0);}to{clip-path:inset(0 0 0 0);}}
+  @keyframes cutOut{from{transform:scale(1);}to{transform:scale(1.045);}}
+  @keyframes cutOutBack{from{transform:scale(1);}to{transform:scale(.972);}}
+
+  /* The copy leaves before the edge reaches it, so the wipe never bisects a
+     headline and two records are never readable at once. Only the copy goes —
+     the frame underneath stays opaque, or the ground would show. */
+  .cutstage .cutscene[data-state="out"] .cutcopy{
+    animation:liftOut calc(var(--cut) * .46) var(--ease-in) both;}
+  .cutstage .cutscene[data-state="out"][data-dir="back"] .cutcopy{
+    animation-name:liftOutBack;}
+  @keyframes liftOut{to{opacity:0;transform:translateY(-16px);}}
+  @keyframes liftOutBack{to{opacity:0;transform:translateY(16px);}}
+
+  /* the picture keeps moving after the wipe lands, so the screen settles
+     rather than stopping dead */
+  .cutstage .cutscene[data-state="in"] .cutshot img,
+  .cutstage .cutscene[data-state="in"] .cutshot .plate-poster{
+    animation:shotPush calc(var(--cut) * 2) var(--ease) both;}
+  @keyframes shotPush{from{transform:scale(1.14);}to{transform:scale(1.06);}}
+
+  /* One stagger mechanism: --lift is the element's place in the queue. */
+  .cutstage .cutscene[data-state="in"] .lift{
+    animation:liftIn calc(var(--cut) * .66) var(--ease) both;
+    animation-delay:calc(var(--cut) * .18 + var(--cut) * .1 * var(--lift, 0));}
+  @keyframes liftIn{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:none;}}
+}
+
+/* ── discipline toggle. Fixed, so it never costs a screen. ── */
+.cast-toggle{position:fixed;z-index:70;display:flex;flex-wrap:wrap;
+  gap:var(--s2);inset-block-start:calc(var(--s5) + 52px);
+  inset-inline-start:clamp(20px,5vw,84px);}
+.cast-chip{appearance:none;background:transparent;cursor:pointer;
+  border:1px solid var(--rule);color:var(--ash);
+  padding:7px 13px;display:inline-flex;align-items:center;gap:8px;
+  font:inherit;font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  font-family:var(--sans);
+  transition:color var(--base) var(--ease),border-color var(--base) var(--ease),
+    background var(--base) var(--ease);}
+[lang="ar"] .cast-chip{font-family:var(--ar);font-size:13px;letter-spacing:0;text-transform:none;}
+.cast-chip:hover{color:var(--bone);border-color:var(--edge);}
+.cast-chip[data-empty="true"]{opacity:.55;}
+/* the selected chip is never dimmed, even when its discipline is empty */
+.cast-chip[aria-pressed="true"]{color:var(--void);background:var(--brass);
+  border-color:var(--brass);opacity:1;}
+.cast-n{opacity:.6;}
+.cast-short{display:none;}
+
+/* ── read-out, in the flight's voice ── */
+.cast-hud{position:fixed;z-index:70;inset-block-end:clamp(18px,3vh,36px);
+  inset-inline:clamp(20px,5vw,84px);display:flex;align-items:center;gap:var(--s4);}
+.cast-hud .ticks{flex:1;}
+.cast-step{display:inline-flex;gap:var(--s2);}
+.cast-arrow{appearance:none;background:transparent;border:1px solid var(--rule);
+  color:var(--ash);cursor:pointer;font:inherit;font-size:12px;line-height:1;
+  min-width:34px;min-height:34px;display:inline-grid;place-items:center;
+  transition:color var(--base) var(--ease),border-color var(--base) var(--ease);}
+.cast-arrow:hover:not(:disabled){color:var(--bone);border-color:var(--edge);}
+.cast-arrow:disabled{opacity:.32;cursor:default;}
+.cast-say{white-space:nowrap;}
+
+/* ── the scrolling fallback ── */
+.cast-flat .cast-scene{scroll-snap-align:start;}
+html:has(.cast-flat){scroll-snap-type:y proximity;}
+.cast-flat[data-ready="false"]{visibility:hidden;}
+
+@media(max-width:860px) and (orientation:portrait){
+  /* The stage runs on a phone too, so a screen has to fit the phone. The shot
+     becomes a fixed band at the bottom and the copy takes the remainder —
+     minmax(0,1fr) so it is allowed to be shorter than its content and pan,
+     rather than pushing the screen past the viewport. */
+  .cast-scene{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;}
+  .cast-scene[data-side="end"] .cast-shot{order:0;}
+  .cast-info{order:-1;align-content:start;gap:var(--s2);
+    padding:calc(58px + var(--s4)) clamp(20px,5vw,40px) var(--s4);}
+  .cast-name{font-size:clamp(38px,10.4vw,58px);line-height:1.06;}
+  [lang="ar"] .cast-name{font-size:clamp(34px,9vw,50px);line-height:1.24;}
+  .cast-line{margin-top:var(--s2);max-width:none;font-size:14.5px;line-height:1.62;}
+  [lang="ar"] .cast-line{font-size:16px;line-height:1.8;}
+  .cast-via{margin-top:var(--s3);}
+  /* A member carries little copy — name, credit, one line, the piece — so the
+     portrait takes the larger share rather than leaving a gap above it. */
+  .cast-shot{height:46svh;min-height:0;}
+  .cast-title{padding-inline:clamp(20px,5vw,40px);
+    padding-block:calc(70px + var(--s4)) calc(104px + env(safe-area-inset-bottom));}
+  /* Thumb height, and one deliberate row — four chips wrap to two on a narrow
+     phone, which reads as an accident. It scrolls sideways instead. */
+  .cast-toggle{inset-block-start:auto;inset-block-end:calc(60px + env(safe-area-inset-bottom));
+    inset-inline:0;flex-wrap:nowrap;overflow-x:auto;gap:6px;
+    padding-inline:clamp(14px,4vw,24px);scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;}
+  .cast-toggle::-webkit-scrollbar{display:none;}
+  .cast-chip{padding:7px 11px;gap:6px;flex:0 0 auto;
+    background:rgba(26,26,26,.72);backdrop-filter:blur(6px);}
+  .cast-chip[aria-pressed="true"]{backdrop-filter:none;}
+  .cast-long{display:none;}
+  .cast-short{display:inline;}
+  .cast-hud{inset-block-end:calc(16px + env(safe-area-inset-bottom));
+    inset-inline:clamp(14px,4vw,24px);gap:var(--s3);}
+  .cast-hud .u{font-size:9px;letter-spacing:.16em;}
+  [lang="ar"] .cast-hud .u{font-size:12px;}
+  .cast-flat .cast-toggle{position:sticky;inset-block-start:72px;inset-block-end:auto;
+    z-index:70;margin-inline:clamp(14px,4vw,24px);width:max-content;max-width:calc(100% - 28px);
+    background:rgba(26,26,26,.82);backdrop-filter:blur(8px);}
+  .cast-flat .cast-scene[data-kind="intro"]{min-height:0;}
+  .cast-flat .cast-scene[data-kind="intro"] .cast-title{padding-block-end:var(--s8);}
+}
+
+/* ══════ WORK — one piece, one screen ══════
+   Same stage and same cut as Cast; a piece just carries more record, so the
+   plate takes one half and the archive entry the other. */
+.wk-scene{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;}
+.wk-scene[data-side="end"] .wk-shot{order:2;}
+.wk-scene[data-kind="intro"],
+.wk-scene[data-kind="outro"]{grid-template-columns:1fr;}
+
+.wk-shot{position:relative;display:block;overflow:hidden;
+  background:var(--forest);text-decoration:none;min-height:0;}
+.wk-shot .plate{position:absolute;inset:0;}
+.wk-veil{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(26,26,26,.42) 0%,rgba(26,26,26,0) 30%,
+    rgba(26,26,26,0) 64%,rgba(26,26,26,.58) 100%);}
+/* The archive number sits high against the plate — along the bottom it ran
+   into the read-out, which spans the full width of the stage. */
+.wk-n{position:absolute;inset-block-start:clamp(76px,11vh,124px);
+  inset-inline-start:clamp(18px,2.6vw,38px);
+  font-family:var(--display);font-size:clamp(40px,5vw,84px);line-height:.8;
+  color:var(--bone);mix-blend-mode:difference;pointer-events:none;}
+
+.wk-info{display:grid;align-content:center;gap:var(--s3);
+  padding:clamp(40px,7vh,90px) clamp(28px,5vw,84px);}
+.wk-idea{font-family:var(--display);font-weight:400;margin:0;
+  font-size:clamp(38px,5.2vw,88px);line-height:1.06;letter-spacing:-.01em;}
+[lang="ar"] .wk-idea{font-family:var(--ar);line-height:1.2;}
+.wk-concept{margin:var(--s3) 0 0;max-width:38ch;}
+.wk-go{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--s3) var(--s5);
+  margin:var(--s5) 0 0;}
+.wk-price{color:var(--ash);}
+
+.wk-title{display:grid;align-content:center;justify-items:start;gap:var(--s4);
+  padding:clamp(90px,14vh,150px) clamp(24px,6vw,90px);
+  max-width:var(--container);margin-inline:auto;width:100%;}
+.wk-thesis{margin-top:var(--s3);}
+.wk-end{justify-items:center;text-align:center;}
+.wk-end-h{font-family:var(--display);font-weight:400;margin:0;max-width:17ch;
+  font-size:clamp(38px,6vw,96px);line-height:1.06;letter-spacing:-.01em;text-wrap:balance;}
+[lang="ar"] .wk-end-h{font-family:var(--ar);line-height:1.24;}
+.wk-end .body{margin-inline:auto;}
+.wk-end .hero-actions{justify-content:center;margin-top:var(--s4);}
+.wk-end .scene-entity{justify-content:center;margin-top:var(--s6);}
+/* the scrolling fallback still ends on the offer */
+.wk-end-flat{border-top:1px solid var(--rule);
+  background:radial-gradient(70% 55% at 50% 46%, rgba(205,196,179,.07) 0%, rgba(26,26,26,0) 72%);}
+.wk-flat[data-ready="false"]{visibility:hidden;}
+
+@media(max-width:860px) and (orientation:portrait){
+  /* Same shape as Cast: a fixed shot band, the record taking the remainder and
+     panning if it is longer than the phone. A piece carries more copy than a
+     person does, so its type steps down further. */
+  .wk-scene{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;}
+  .wk-scene[data-side="end"] .wk-shot{order:0;}
+  .wk-info{order:-1;align-content:start;gap:var(--s2);
+    padding:calc(58px + var(--s4)) clamp(20px,5vw,40px) var(--s4);}
+  .wk-idea{font-size:clamp(28px,7.8vw,42px);line-height:1.1;}
+  [lang="ar"] .wk-idea{font-size:clamp(26px,7vw,38px);line-height:1.26;}
+  .wk-concept{margin-top:var(--s2);max-width:none;font-size:14.5px;line-height:1.62;}
+  [lang="ar"] .wk-concept{font-size:16px;line-height:1.8;}
+  .wk-go{margin-top:var(--s3);gap:var(--s2) var(--s4);}
+  .row-metric{padding-top:var(--s3);margin-top:var(--s2);}
+  .row-metric .v{font-size:clamp(30px,8vw,46px);}
+  .wk-shot{height:32svh;min-height:0;}
+  .wk-n{font-size:clamp(28px,8vw,44px);inset-block-start:clamp(12px,2vh,20px);}
+  .wk-title{padding-inline:clamp(20px,5vw,40px);
+    padding-block:calc(70px + var(--s4)) calc(56px + env(safe-area-inset-bottom));}
+}
+
+/* A fixed stage swallows every gesture, which is right until a screen's own
+   copy is taller than the phone holding it. These columns may pan; the stage
+   controller checks for a scrollable ancestor with room left before it claims
+   a drag, so panning the copy never jumps to the next screen. */
+@media(max-width:860px),(max-height:620px){
+  .cast-info,.wk-info,.cast-title,.wk-title{
+    overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch;
+    align-content:start;align-content:safe center;}
+  /* the chips sit over the copy once the toggle leaves its portrait berth */
+  .cast-chip{background:rgba(26,26,26,.72);backdrop-filter:blur(6px);}
+  .cast-chip[aria-pressed="true"]{backdrop-filter:none;}
+  .cast-info::-webkit-scrollbar,.wk-info::-webkit-scrollbar,
+  .cast-title::-webkit-scrollbar,.wk-title::-webkit-scrollbar{display:none;}
+}
+
+/* A short viewport — a phone turned sideways, or a small laptop window. It has
+   width to spare and no height, so the columns stay side by side and the type
+   steps down. Landscape-only and placed after every stage rule on purpose:
+   `max-height` alone also matches a small portrait phone, where it would strip
+   the masthead clearance and collapse the shot band to nothing. */
+@media (max-height:620px) and (orientation:landscape){
+  .cast-info,.wk-info{padding-block:var(--s5);gap:var(--s1);}
+  .cast-name{font-size:clamp(30px,4.6vw,46px);line-height:1.05;}
+  .wk-idea{font-size:clamp(26px,3.8vw,40px);line-height:1.08;}
+  [lang="ar"] .cast-name,[lang="ar"] .wk-idea{line-height:1.24;}
+  .cast-line,.wk-concept{font-size:14px;line-height:1.55;margin-top:var(--s2);max-width:none;}
+  .cast-via,.wk-go{margin-top:var(--s3);}
+  .row-metric{padding-top:var(--s2);margin-top:var(--s1);}
+  .row-metric .v{font-size:clamp(26px,3.4vw,40px);}
+  .cast-title,.wk-title{padding-block:clamp(56px,13vh,84px) var(--s6);gap:var(--s2);}
+  .cast-end-h,.wk-end-h{font-size:clamp(28px,4.4vw,52px);}
+  .cast-end .scene-entity,.wk-end .scene-entity{margin-top:var(--s4);}
+}
+
+/* ══ reserved frames — studio ══
+   No photography exists yet. Rather than an empty box, each plate is a tint
+   carrying the person's initial and an inset frame line, so it reads as a frame
+   held for them instead of a broken image. */
+.founder-img{position:relative;overflow:hidden;
   background:linear-gradient(155deg,var(--tint,var(--lift)) 0%,var(--void) 78%);}
-.face-img::after,.founder-img::after{content:'';position:absolute;inset:10px;
-  border:1px solid rgba(247,245,238,.08);pointer-events:none;}
+.founder-img::after{content:'';position:absolute;inset:10px;
+  border:1px solid rgba(239,236,229,.08);pointer-events:none;}
 .mono{position:absolute;inset:0;display:grid;place-items:center;
   font-family:var(--display);font-weight:400;line-height:1;color:var(--bone);
   font-size:clamp(56px,8vw,116px);opacity:.11;user-select:none;}
@@ -283,8 +634,8 @@ main:focus{outline:none;}
 /* ══ footer ══ */
 .foot{padding-block:clamp(60px,8vw,120px) var(--s8);border-top:1px solid var(--rule);}
 .foot-in{display:flex;justify-content:space-between;gap:var(--s7);flex-wrap:wrap;
-  align-items:end;margin-bottom:clamp(48px,7vw,100px);}
-.foot-nav{display:flex;flex-direction:column;gap:var(--s3);align-items:start;}
+  align-items:flex-end;margin-bottom:clamp(48px,7vw,100px);}
+.foot-nav{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start;}
 .tel{color:var(--bone);text-decoration:none;border-bottom:1px solid var(--brass);}
 
 .field{position:absolute;inset:0;overflow:hidden;z-index:0;background:
@@ -553,9 +904,24 @@ ol.fixes li{display:grid;grid-template-columns:auto 1fr;gap:var(--s4);
 @media(max-width:760px){
   .mast-full{display:none;}
   .mast-compact{display:inline;}
+  .mast-menu-toggle{display:inline-flex;}
   .mast-in{padding-block:var(--s4);}
   .wm{font-size:22px;letter-spacing:.24em;}
   [lang="ar"] .wm{font-size:25px;}
+  .mast-nav{gap:clamp(10px,3vw,18px);}
+  .mast-menu{position:fixed;inset-block-start:66px;inset-inline:14px;display:block;
+    pointer-events:none;opacity:0;transform:translateY(-10px);transition:opacity var(--base) var(--ease),
+      transform var(--base) var(--ease);mix-blend-mode:normal;isolation:isolate;}
+  /* opacity alone leaves five links focusable behind an invisible panel */
+  .mast-menu{visibility:hidden;}
+  .mast-menu[data-open="true"]{pointer-events:auto;opacity:1;transform:none;
+    visibility:visible;}
+  .mast:has(.mast-menu[data-open="true"]){mix-blend-mode:normal;}
+  .mast-menu-inner{padding:20px;background:var(--forest);border:1px solid var(--edge);
+    box-shadow:0 18px 50px rgba(0,0,0,.28);}
+  .mast-menu-links{display:grid;gap:var(--s4);margin-top:var(--s5);}
+  .mast-menu-links .mast-link{font-size:13px;color:var(--bone);letter-spacing:.2em;}
+  [lang="ar"] .mast-menu-links .mast-link{font-size:17px;letter-spacing:0;}
 }
 
 /* ══════ flight on small screens ══════ */

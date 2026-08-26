@@ -21,7 +21,7 @@ export default function StudioView({ lang }: { lang: Lang }) {
 
         <div className="wrap founders">
           {FOUNDERS.map((f, i) => (
-            <article key={f.key} className="founder riseIn">
+            <article key={f.key} className="founder founder-card riseIn">
               <div className="founder-img"
                    style={{ '--tint': TINTS[i % TINTS.length] } as React.CSSProperties}>
                 <span className="mono" aria-hidden="true">{[...f.name[lang]][0]}</span>
