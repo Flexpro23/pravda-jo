@@ -111,21 +111,27 @@ export function useCutStage(last: number) {
     let touchY = 0;
     let touchId: number | null = null;
 
+    const tracked = (list: TouchList) => {
+      for (let k = 0; k < list.length; k++) {
+        if (list[k].identifier === touchId) return list[k];
+      }
+      return null;
+    };
+
     const onTouchStart = (e: TouchEvent) => {
-      if (touchId !== null) return;            // already following a finger
+      // Keep following our finger only while it is genuinely still down. A
+      // touchend can go missing — iOS hands the gesture to the system for a
+      // Control Centre or app-switcher swipe and neither end nor cancel
+      // arrives — and a touchId pinned to a finger that has long since left
+      // would leave the stage deaf to every later swipe, with no failsafe the
+      // way the commit lock has one.
+      if (touchId !== null && tracked(e.touches)) return;
       const t = e.changedTouches[0];
       if (!t) return;
       touchId = t.identifier;
       touchY = t.clientY;
       lastInput = performance.now();
       panner = scrollableUnder(t.target);
-    };
-
-    const tracked = (list: TouchList) => {
-      for (let k = 0; k < list.length; k++) {
-        if (list[k].identifier === touchId) return list[k];
-      }
-      return null;
     };
 
     const onTouchMove = (e: TouchEvent) => {
@@ -142,7 +148,14 @@ export function useCutStage(last: number) {
     };
 
     const onTouchEnd = (e: TouchEvent) => {
-      if (tracked(e.changedTouches)) { touchId = null; panner = null; }
+      if (!tracked(e.changedTouches)) return;  // some other finger left; ours still leads
+      // Hand the gesture to a finger that is still down rather than dropping it,
+      // re-anchored to where that finger is now so the handover itself moves nothing.
+      const next = e.touches[0];
+      if (!next) { touchId = null; panner = null; return; }
+      touchId = next.identifier;
+      touchY = next.clientY;
+      panner = scrollableUnder(next.target);
     };
 
     const onKey = (e: KeyboardEvent) => {

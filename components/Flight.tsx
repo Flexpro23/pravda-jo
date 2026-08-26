@@ -73,13 +73,52 @@ export default function Flight({ lang }: { lang: Lang }) {
 
     const onWheel = (e: WheelEvent) => { e.preventDefault(); feed(e.deltaY); };
 
+    // One finger is followed by identifier, not by position in the touch list.
+    // touches[0] is an index, not a finger: rest a thumb on the screen while
+    // dragging with another finger and lifting the thumb makes the drag finger
+    // become touches[0], so the next move measures the gap between two
+    // different fingers and throws the flight several sections at once.
     let touchY = 0;
-    const onTouchStart = (e: TouchEvent) => { touchY = e.touches[0].clientY; lastInput = performance.now(); };
+    let touchId: number | null = null;
+
+    const tracked = (list: TouchList) => {
+      for (let k = 0; k < list.length; k++) {
+        if (list[k].identifier === touchId) return list[k];
+      }
+      return null;
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      // Keep following our finger only while it is genuinely still down. A
+      // touchend can go missing — iOS hands the gesture to the system for a
+      // Control Centre or app-switcher swipe and neither end nor cancel
+      // arrives — and a touchId pinned to a finger that has long since left
+      // would leave the stage deaf to every later swipe, with no failsafe the
+      // way the commit lock has one.
+      if (touchId !== null && tracked(e.touches)) return;
+      const t = e.changedTouches[0];
+      if (!t) return;
+      touchId = t.identifier;
+      touchY = t.clientY;
+      lastInput = performance.now();
+    };
     const onTouchMove = (e: TouchEvent) => {
+      const t = tracked(e.touches);
+      if (!t) return;                          // our finger is not the one moving
       e.preventDefault();
-      const y = e.touches[0].clientY;
-      feed((touchY - y) * 2.1);
+      const y = t.clientY;
+      // A single frame can never legitimately travel a whole screen; clamping
+      // keeps any residual jump from skipping several sections at once.
+      feed(Math.max(-260, Math.min(260, (touchY - y) * 2.1)));
       touchY = y;
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!tracked(e.changedTouches)) return;  // some other finger left; ours still leads
+      // Hand the gesture to a finger that is still down rather than dropping it,
+      // re-anchored to where that finger is now so the handover itself moves nothing.
+      const next = e.touches[0];
+      touchId = next ? next.identifier : null;
+      if (next) touchY = next.clientY;
     };
 
     const onKey = (e: KeyboardEvent) => {
@@ -94,6 +133,8 @@ export default function Flight({ lang }: { lang: Lang }) {
     window.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', onTouchEnd, { passive: true });
     window.addEventListener('keydown', onKey);
 
     if (process.env.NODE_ENV !== 'production') {
@@ -147,6 +188,8 @@ export default function Flight({ lang }: { lang: Lang }) {
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchEnd);
       window.removeEventListener('keydown', onKey);
     };
   }, [live]);
