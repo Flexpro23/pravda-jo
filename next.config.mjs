@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Production builds write to their own directory. `next dev` and `next build`
-  // both default to .next, so building while the dev server is running clobbers
-  // its module graph and it starts throwing "Cannot find module './NNN.js'".
+  // Defaults to .next, which is what App Hosting resolves and what `npm run
+  // build` produces. `npm run build:local` sets NEXT_DIST_DIR so a production
+  // build on a developer's machine cannot clobber the running dev server's
+  // module graph, which otherwise starts throwing "Cannot find module './NNN.js'".
   distDir: process.env.NEXT_DIST_DIR || '.next',
   reactStrictMode: true,
   poweredByHeader: false,
