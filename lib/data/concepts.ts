@@ -609,6 +609,16 @@ export function shortlist(v: Vertical | null, limit = 6): ConceptSource[] {
  */
 export const crewDayCost = (models: number) => 35 + 50 * Math.max(0, models);
 
+/**
+ * What a client pays per finished video, flat.
+ *
+ * Not a new rule — every one of the thirty concepts already bills at exactly
+ * originations × 150, so this is the rule the library was written against, now
+ * said out loud. It includes the shoot, the edit, the cast and the marketing;
+ * a client never sees a crew day or a rate card.
+ */
+export const VIDEO_JOD_PER = 150;
+
 // ── adaptation ──────────────────────────────────────────────────────────────
 
 type B = { ar: string; en: string };
