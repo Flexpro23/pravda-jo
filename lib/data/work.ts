@@ -12,6 +12,12 @@ export type Piece = {
   assets: number;
   date: string;
   hue: string;
+  /**
+   * Invented, and shown as though it were not. True for everything shipped
+   * before there was real work to show. The archive's copy keys off this, so
+   * the claim disappears with the record rather than needing to be remembered.
+   */
+  placeholder?: boolean;
 };
 
 export const WORK: Piece[] = [
@@ -28,6 +34,7 @@ export const WORK: Piece[] = [
     metric: '4.2×', metricLabel: { ar: 'وصول مقارنة بالمعدل', en: 'reach vs their average' },
     cast: [{ name: { ar: 'عمر', en: 'Omar' }, role: { ar: 'تصوير وتركيب', en: 'Shoot & edit' } }],
     price: 1500, assets: 10, date: '2026-06', hue: '#22332A',
+    placeholder: true,
   },
   {
     slug: 'nadi-sittin',
@@ -45,6 +52,7 @@ export const WORK: Piece[] = [
       { name: { ar: 'ليث', en: 'Laith' }, role: { ar: 'أمام الكاميرا', en: 'On camera' } },
     ],
     price: 900, assets: 6, date: '2026-05', hue: '#1A2A20',
+    placeholder: true,
   },
   {
     slug: 'zeitouna-optics',
@@ -62,6 +70,7 @@ export const WORK: Piece[] = [
       { name: { ar: 'عمر', en: 'Omar' }, role: { ar: 'تصوير وتركيب', en: 'Shoot & edit' } },
     ],
     price: 600, assets: 11, date: '2026-04', hue: '#283B2E',
+    placeholder: true,
   },
   {
     slug: 'dar-hikma',
@@ -76,6 +85,7 @@ export const WORK: Piece[] = [
     metric: '31%', metricLabel: { ar: 'نسبة الردود', en: 'reply rate' },
     cast: [{ name: { ar: 'عمر', en: 'Omar' }, role: { ar: 'تصوير وتركيب', en: 'Shoot & edit' } }],
     price: 600, assets: 4, date: '2026-03', hue: '#1E3025',
+    placeholder: true,
   },
 ];
 

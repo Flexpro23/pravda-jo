@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useCutStage } from '@/components/useCutStage';
 import Plate from '@/components/webgl/Plate';
 import WorkRows from '@/components/WorkRows';
-import { WORK, type Piece } from '@/lib/data/work';
+import { type Piece } from '@/lib/data/work';
 import { CO } from '@/lib/data/company';
 import { Lang, path, tx, fwd, back, sep } from '@/lib/i18n';
 
@@ -19,11 +19,15 @@ type Scene = { kind: 'intro' } | { kind: 'piece'; p: Piece; n: number } | { kind
  * it was for, what the idea was, who shot it, what it returned — so the plate
  * takes one half and the record the other, and the sides alternate.
  */
-export default function WorkFlow({ lang }: { lang: Lang }) {
+export default function WorkFlow({
+  lang, pieces,
+}: { lang: Lang; pieces: Piece[] }) {
+  /* One invented record is enough to make the archive's claim false. */
+  const demo = pieces.some((p) => p.placeholder);
 
   const scenes: Scene[] = [
     { kind: 'intro' },
-    ...WORK.map((p, n): Scene => ({ kind: 'piece', p, n })),
+    ...pieces.map((p, n): Scene => ({ kind: 'piece', p, n })),
     { kind: 'outro' },
   ];
   const LAST = scenes.length - 1;
@@ -36,7 +40,7 @@ export default function WorkFlow({ lang }: { lang: Lang }) {
           <h1 className="mega">
             <span className="cut"><span className="d1">{lang === 'ar' ? 'الأعمال' : 'Work'}</span></span>
           </h1>
-          <p className="body wk-thesis lift" style={{ ['--lift' as string]: 2 }}>{tx('workBody', lang)}</p>
+          <p className="body wk-thesis lift" style={{ ['--lift' as string]: 2 }}>{tx(demo ? 'workBodyDemo' : 'workBody', lang)}</p>
         </div>
       );
     }
@@ -125,9 +129,9 @@ export default function WorkFlow({ lang }: { lang: Lang }) {
             <h1 className="mega">
               <span className="cut"><span className="d1">{lang === 'ar' ? 'الأعمال' : 'Work'}</span></span>
             </h1>
-            <p className="body fade d3">{tx('workBody', lang)}</p>
+            <p className="body fade d3">{tx(demo ? 'workBodyDemo' : 'workBody', lang)}</p>
           </div>
-          <div className="wrap"><WorkRows lang={lang} pieces={WORK} /></div>
+          <div className="wrap"><WorkRows lang={lang} pieces={pieces} /></div>
         </section>
         <section className="wk-title wk-end wk-end-flat">
           <span className="u brass">{tx('navTeardown', lang)}</span>

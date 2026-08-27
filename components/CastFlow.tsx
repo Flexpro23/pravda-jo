@@ -4,9 +4,10 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useCutStage } from '@/components/useCutStage';
 import {
-  ROSTER, DISCIPLINES, DISCIPLINE_LABEL, DISCIPLINE_SHORT, shotFor, pieceOf, countBy,
+  DISCIPLINES, DISCIPLINE_LABEL, DISCIPLINE_SHORT, shotFor,
   type Discipline, type CastMember,
 } from '@/lib/data/roster';
+import type { Piece } from '@/lib/data/work';
 import { CO } from '@/lib/data/company';
 import { Lang, path, tx, fwd, back } from '@/lib/i18n';
 
@@ -26,9 +27,19 @@ type Scene =
  * page advances. Reduced motion drops to an ordinary scrolling list, because a
  * hijacked scroll with no animation to justify it is only an obstacle.
  */
-export default function CastFlow({ lang }: { lang: Lang }) {
+export default function CastFlow({
+  lang, roster, work,
+}: { lang: Lang; roster: CastMember[]; work: Piece[] }) {
   const [filter, setFilter] = useState<Filter>('all');
-  const shown = filter === 'all' ? ROSTER : ROSTER.filter((m) => m.discipline === filter);
+  const demo = roster.some((m) => m.placeholder);
+  const shown = filter === 'all' ? roster : roster.filter((m) => m.discipline === filter);
+
+  /* Resolved here rather than imported, because the roster and the archive are
+     both read from the store now and a module-level lookup would be reaching
+     for data this component was not given. */
+  const countBy = (d: Filter) =>
+    d === 'all' ? roster.length : roster.filter((m) => m.discipline === d).length;
+  const pieceOf = (m: CastMember) => work.find((w) => w.slug === m.piece);
 
   const scenes: Scene[] = [
     { kind: 'intro' },
@@ -76,7 +87,7 @@ export default function CastFlow({ lang }: { lang: Lang }) {
           <h1 className="mega">
             <span className="cut"><span className="d1">{lang === 'ar' ? 'الوجوه' : 'Cast'}</span></span>
           </h1>
-          <p className="body cast-thesis lift" style={{ ["--lift" as string]: 2 }}>{tx('castBody', lang)}</p>
+          <p className="body cast-thesis lift" style={{ ["--lift" as string]: 2 }}>{tx(demo ? 'castBodyDemo' : 'castBody', lang)}</p>
         </div>
       );
     }

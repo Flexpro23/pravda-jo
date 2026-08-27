@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { WORK } from '@/lib/data/work';
+import { getWork } from '@/lib/store/content';
 
 const BASE = 'https://pravda.jo';
 const PAGES = ['', 'work', 'cast', 'teardown', 'teardown/sample', 'studio',
@@ -7,7 +7,8 @@ const PAGES = ['', 'work', 'cast', 'teardown', 'teardown/sample', 'studio',
                'instagram-professional'];
 
 /** /r and /p are per-recipient and deliberately absent — see robots.ts. */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const work = await getWork();
   const langs = ['ar', 'en'] as const;
   const out: MetadataRoute.Sitemap = [];
 
@@ -25,7 +26,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         },
       });
     }
-    for (const w of WORK) {
+    for (const w of work) {
       out.push({ url: `${BASE}/${lang}/work/${w.slug}`, changeFrequency: 'yearly', priority: 0.5 });
     }
   }

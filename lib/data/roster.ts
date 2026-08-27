@@ -1,5 +1,3 @@
-import { WORK } from './work';
-
 type B = { ar: string; en: string };
 
 /** The three things a client casts for. The toggle on the Cast page is this list. */
@@ -37,6 +35,8 @@ export type CastMember = {
    * Drop a file in /public/cast and set this to switch a person over.
    */
   photo?: string;
+  /** Invented. See the same field on Piece. */
+  placeholder?: boolean;
 };
 
 /**
@@ -51,6 +51,7 @@ export const ROSTER: CastMember[] = [
     name: { ar: 'عمر', en: 'Omar' },
     role: { ar: 'تصوير وتركيب', en: 'Shoot & edit' },
     discipline: 'videographer',
+    placeholder: true,
     piece: 'bayt-al-akhdar',
     line: {
       ar: 'بيصوّر وبيركّب نفس الشغلة، فما بيضيع إشي بين الاتنين. إعداد واحد، ما بينتقل، وبيخلص بنص يوم.',
@@ -62,6 +63,7 @@ export const ROSTER: CastMember[] = [
     name: { ar: 'رنا', en: 'Rana' },
     role: { ar: 'تصوير', en: 'Camera' },
     discipline: 'videographer',
+    placeholder: true,
     piece: 'nadi-sittin',
     line: {
       ar: 'بتفضّل الإضاءة الموجودة وعدسة طويلة. بتشتغل بعيد عن الناس لحد ما ينسوا إنها موجودة.',
@@ -73,6 +75,7 @@ export const ROSTER: CastMember[] = [
     name: { ar: 'ليث', en: 'Laith' },
     role: { ar: 'أمام الكاميرا', en: 'On camera' },
     discipline: 'model',
+    placeholder: true,
     piece: 'nadi-sittin',
     line: {
       ar: 'بيوقف قدّام الكاميرا وبيدرّب غيره كمان — أصحاب المحلات اللي عمرهم ما انصوّروا، بيخلّيهم يبطّلوا يمثّلوا.',
@@ -84,6 +87,7 @@ export const ROSTER: CastMember[] = [
     name: { ar: 'دانا', en: 'Dana' },
     role: { ar: 'أمام الكاميرا', en: 'On camera' },
     discipline: 'model',
+    placeholder: true,
     piece: 'zeitouna-optics',
     line: {
       ar: 'بتقرأ النص مرّة وبعدها بتحكيه بطريقتها. بتشتغل أسبوعي، ونفس الوجه بيرجع كل خميس.',
@@ -95,7 +99,6 @@ export const ROSTER: CastMember[] = [
 /** The image a member is shown with: their portrait, else the plate of their piece. */
 export const shotFor = (m: CastMember) => m.photo ?? `/plates/${m.piece}.svg`;
 
-export const pieceOf = (m: CastMember) => WORK.find((w) => w.slug === m.piece);
-
-export const countBy = (d: Discipline | 'all') =>
-  d === 'all' ? ROSTER.length : ROSTER.filter((m) => m.discipline === d).length;
+/* pieceOf and countBy used to live here and reached into the archive module.
+   Both are resolved in CastFlow now from the roster and archive it is handed,
+   because neither list is a compile-time constant any more. */

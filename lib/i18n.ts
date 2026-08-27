@@ -43,6 +43,23 @@ export const t: Dict = {
     ar: 'كل عمل هون معروض بنفس الشكل اللي بيوصلكم فيه التحقيق. نفس الصفحة، نفس التركيبة — بس هدول اتنفّذوا فعلًا.',
     en: 'Every piece here is shown in the same layout your teardown arrives in. Same page, same structure — these ones already happened.',
   },
+  /* The same page before there is any finished work to put on it. A teardown
+     insists it only says what it can prove; an archive of invented clients
+     would be the one thing that makes that insistence worthless, and four made
+     up Amman businesses are checkable in an afternoon by exactly the people we
+     cold-message. Shown whenever any record is still a placeholder. */
+  workBodyDemo: {
+    ar: 'هدول نماذج بتوضّح الشكل اللي بيوصلكم فيه التحقيق — نفس الصفحة، نفس التركيبة. مش شغل منفّذ، وما منقول غير هيك.',
+    en: 'These are worked examples showing the shape a teardown and a finished piece take — same page, same structure. They are not completed work, and we will not pretend otherwise.',
+  },
+  castBodyDemo: {
+    ar: 'هيك بنعرض الطاقم: كل شخص بتوصلوا إله من خلال شغل عمله. الأسماء هون نماذج لحد ما ينضمّ الطاقم الفعلي.',
+    en: 'This is how we present a cast — each person reached through work they made. These entries are examples until the roster is real.',
+  },
+  demoNote: {
+    ar: 'نموذج توضيحي',
+    en: 'Worked example',
+  },
 
   castEyebrow: { ar: 'الوجوه والطاقم',  en: 'Cast & crew' },
   castTitle:   { ar: 'ما في دليل أسماء', en: 'There is no directory' },

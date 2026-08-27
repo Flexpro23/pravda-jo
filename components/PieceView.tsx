@@ -2,15 +2,15 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Page from '@/components/Page';
 import Plate from '@/components/webgl/Plate';
-import { byslug } from '@/lib/data/work';
+import { getPiece } from '@/lib/store/content';
 import { Lang, path, tx, back } from '@/lib/i18n';
 
 /** Arabic takes the plural for 3–10 and the accusative singular from 11 up. */
 const assetWord = (n: number, lang: Lang) =>
   lang === 'en' ? 'assets' : n >= 3 && n <= 10 ? 'مقاطع' : 'مقطعًا';
 
-export default function PieceView({ lang, slug }: { lang: Lang; slug: string }) {
-  const p = byslug(slug);
+export default async function PieceView({ lang, slug }: { lang: Lang; slug: string }) {
+  const p = await getPiece(slug);
   if (!p) notFound();
 
   return (
