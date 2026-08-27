@@ -27,12 +27,16 @@ export const DISCIPLINE_RATE = {
   /** The published rate card. PRAVDA sets these; talent never proposes them. */
   videographer: 35,   // shoots and edits, per day
   model: 50,          // per shooting day
-  voiceover: 0,       // UNSET — see rateIsSet(). No published rate yet.
+  voiceover: 40,      // per day, set 27 Aug 2026
 } as const;
 
 export type TalentDiscipline = keyof typeof DISCIPLINE_RATE;
 
-/** A discipline we can actually quote. Voiceover is not one of them yet. */
+/**
+ * A discipline we can quote. All three are set today, but the check stays: a
+ * fourth discipline added without a rate should surface as unbookable rather
+ * than as somebody who can be hired for nothing a day.
+ */
 export const rateIsSet = (d: TalentDiscipline) => DISCIPLINE_RATE[d] > 0;
 
 /**

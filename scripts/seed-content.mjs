@@ -51,9 +51,14 @@ const existing = new Map(
   (await db.collection(`${PREFIX}talent`).get()).docs.map((d) => [d.id, d.data()]),
 );
 const issued = [];
+const reactivated = [];
 const talent = ROSTER.map((m) => {
   const prior = existing.get(m.key);
-  const rate = m.discipline === 'voiceover' ? VO_RATE : DISCIPLINE_RATE[m.discipline];
+  // The card is the source. The flag is only an override, and only when given
+  // — reading it as the source meant a published rate was replaced by the
+  // flag's own default of zero the moment nobody passed the flag.
+  const rate = (m.discipline === 'voiceover' && VO_RATE > 0)
+    ? VO_RATE : DISCIPLINE_RATE[m.discipline];
   const bookable = rate > 0;
   // A code is issued once and only shown once. A rerun must not silently
   // invalidate a code somebody is already using.
@@ -63,20 +68,36 @@ const talent = ROSTER.map((m) => {
     passCodeHash = createHash('sha256').update(code).digest('hex');
     issued.push([m.name.en, code]);
   }
+  // A rate an operator set by hand is kept; a stored ZERO is not a decision,
+  // it is the absence of one, and must not block the rate that replaces it.
+  // `??` alone got this wrong — it only falls back on null and undefined, so a
+  // stored 0 survived a real rate and a stored false survived activation.
+  const keptRate = prior?.dayRateJOD > 0 ? prior.dayRateJOD : rate;
+  const wasUnbookable = !prior || !prior.active || !(prior.dayRateJOD > 0);
+  if (prior && wasUnbookable && bookable) {
+    reactivated.push(`${m.name.en} — now ${keptRate} JOD/day`);
+  }
   return {
     id: m.key,
     name: m.name,
     discipline: m.discipline,
-    dayRateJOD: prior?.dayRateJOD ?? rate,
+    dayRateJOD: keptRate,
     phone: prior?.phone ?? '',
     availability: prior?.availability ?? 'available',
     passCodeHash,
-    active: prior?.active ?? bookable,
+    // Only a record that was already bookable keeps its own answer; one that
+    // was held back for want of a rate is released as soon as there is one.
+    active: wasUnbookable ? bookable : prior.active,
     placeholder: true,
     createdAt: prior?.createdAt ?? new Date().toISOString(),
   };
 });
 await put('talent', talent, (t) => t.id);
+
+if (reactivated.length) {
+  console.log('\nReleased for booking:');
+  for (const r of reactivated) console.log(`  ${r}`);
+}
 
 if (issued.length) {
   console.log('\nSign-in codes — shown once, stored hashed. Reissue if lost:');
