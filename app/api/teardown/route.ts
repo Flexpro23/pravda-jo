@@ -52,9 +52,15 @@ export async function POST(req: Request) {
   if (!read.ok) {
     // 'unreadable' genuinely cannot be narrowed: personal account, typo,
     // renamed and deleted all return the same error, so we do not guess.
+    // 'no-data' and 'unauthorised' are both OUR fault, not the prospect's, and
+    // are reported as such so nobody spends an afternoon on a healthy account.
     const status = read.reason === 'throttled' ? 429
-      : read.reason === 'unauthorised' ? 502 : 404;
-    return NextResponse.json({ error: read.reason }, { status });
+      : read.reason === 'unauthorised' || read.reason === 'no-data' ? 502
+        : 404;
+    const hint = read.reason === 'no-data'
+      ? 'The account reports posts but returned none — check whether the token has passed data_access_expires_at.'
+      : undefined;
+    return NextResponse.json({ error: read.reason, hint }, { status });
   }
 
   const signals = computeSignals(handle, read.profile.followers_count, read.profile.media);

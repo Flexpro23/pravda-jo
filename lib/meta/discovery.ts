@@ -81,6 +81,16 @@ export type DiscoveryFailure =
   | { ok: false; reason: 'unreadable' }   // personal, typo, renamed, deleted — indistinguishable
   | { ok: false; reason: 'throttled' }
   | { ok: false; reason: 'unauthorised' } // our token, not their account
+  /**
+   * The account says it has posts and the endpoint returned none.
+   *
+   * This is the shape of an expired data-access window: past
+   * data_access_expires_at a token keeps reporting is_valid true and simply
+   * returns nothing rather than erroring. Without this check the engine reads
+   * an empty set, decides the account is too young to analyse, and sends
+   * whoever is debugging it to look at the prospect instead of at our token.
+   */
+  | { ok: false; reason: 'no-data' }
   | { ok: false; reason: 'network'; detail: string };
 
 export type DiscoveryResult = { ok: true; profile: Profile } | DiscoveryFailure;
@@ -109,7 +119,24 @@ async function page(igUserId: string, token: string, handle: string, after?: str
 
   const res = await fetch(url, { cache: 'no-store' });
   const body = await res.json().catch(() => null);
-  return { res, body };
+  return { res, body, usage: appUsage(res) };
+}
+
+/**
+ * Meta publishes the remaining budget on every response as x-app-usage, in
+ * percentages. Waiting for a 429 to discover we are out is the expensive way
+ * to learn it, and a sweep across a target list accumulates faster than a
+ * single read suggests — so the ceiling is read as we go.
+ */
+function appUsage(res: Response): number {
+  try {
+    const raw = res.headers.get('x-app-usage');
+    if (!raw) return 0;
+    const u = JSON.parse(raw);
+    return Math.max(u.call_count ?? 0, u.total_cputime ?? 0, u.total_time ?? 0);
+  } catch {
+    return 0;
+  }
 }
 
 /**
@@ -142,6 +169,12 @@ export async function discover(handle: string, posts = 100): Promise<DiscoveryRe
     }
 
     const { res, body } = attempt;
+
+    // Back off while there is still budget rather than after it is gone: past
+    // the ceiling Meta blocks the whole app for an hour, which would take the
+    // whole sweep down, not just this prospect.
+    if (attempt.usage >= 95) return { ok: false, reason: 'throttled' };
+
     if (!res.ok) {
       const e = body?.error;
       if (e?.code === 4 || e?.code === 17 || e?.code === 32 || e?.code === 613) {
@@ -162,6 +195,12 @@ export async function discover(handle: string, posts = 100): Promise<DiscoveryRe
     if (!bd) return { ok: false, reason: 'unreadable' };
 
     const batch: Media[] = bd.media?.data ?? [];
+
+    // An account that reports posts but hands back none is not a young account.
+    if (!profile && batch.length === 0 && (bd.media_count ?? 0) > 0) {
+      return { ok: false, reason: 'no-data' };
+    }
+
     if (!profile) {
       profile = {
         username: bd.username,
