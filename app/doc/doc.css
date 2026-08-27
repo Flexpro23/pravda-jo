@@ -1,0 +1,83 @@
+/* Printable documents. Ink on paper — see app/doc/layout.tsx. */
+:root{
+  --ink:#1A1A1A; --dim:#55534D; --rule:#C9C5BB; --faint:#F2F0EA;
+  --forest:#1C2A20; --brass:#8A7B5F;
+  --body:'Lora',Georgia,serif; --ar:'Amiri',serif; --sans:'Inter',system-ui,sans-serif;
+}
+[lang="ar"]{--body:var(--ar);}
+*{box-sizing:border-box;}
+body{margin:0;background:#EFECE5;color:var(--ink);
+  font:400 15px/1.62 var(--body);-webkit-font-smoothing:antialiased;padding:26px 18px 70px;}
+
+.sheet{max-width:760px;margin:0 auto;background:#fff;padding:52px 56px 46px;
+  box-shadow:0 1px 3px rgba(0,0,0,.13);}
+@media(max-width:640px){.sheet{padding:32px 24px;}}
+
+.u{font-family:var(--sans);font-size:10.5px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--dim);}
+.num{font-family:var(--sans);font-variant-numeric:tabular-nums;
+  direction:ltr;unicode-bidi:isolate;}
+
+/* ── letterhead ── */
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:28px;
+  padding-bottom:22px;border-bottom:2px solid var(--ink);margin-bottom:28px;}
+.mark{font-family:var(--sans);font-weight:600;font-size:19px;letter-spacing:.24em;margin:0;}
+.entity{font-family:var(--sans);font-size:11.5px;line-height:1.65;color:var(--dim);
+  text-align:end;}
+.entity span{display:block;}
+
+.title{display:flex;justify-content:space-between;align-items:baseline;gap:20px;
+  flex-wrap:wrap;margin-bottom:6px;}
+h1{font-weight:600;font-size:27px;line-height:1.2;margin:0;}
+.ref{font-family:var(--sans);font-size:12px;color:var(--dim);}
+.to{margin:0 0 30px;color:var(--dim);}
+.to b{color:var(--ink);font-weight:600;}
+
+/* ── line items ── */
+table{width:100%;border-collapse:collapse;margin:0 0 6px;}
+th{text-align:start;font-family:var(--sans);font-size:10px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--dim);font-weight:500;
+  padding:0 0 9px;border-bottom:1px solid var(--rule);}
+th.r,td.r{text-align:end;}
+td{padding:14px 0;border-bottom:1px solid var(--rule);vertical-align:top;}
+td .what{font-weight:600;display:block;margin-bottom:3px;}
+td .sub{font-size:13.5px;color:var(--dim);display:block;}
+td.amt{font-family:var(--sans);font-variant-numeric:tabular-nums;white-space:nowrap;
+  font-weight:500;}
+
+.totals{margin-top:20px;display:flex;flex-direction:column;gap:9px;align-items:flex-end;}
+.tot{display:flex;gap:26px;align-items:baseline;justify-content:flex-end;min-width:290px;}
+.tot .lab{color:var(--dim);font-family:var(--sans);font-size:12.5px;flex:1;text-align:end;}
+.tot .val{font-family:var(--sans);font-variant-numeric:tabular-nums;font-size:16px;
+  font-weight:500;min-width:110px;text-align:end;}
+.tot.big{border-top:2px solid var(--ink);padding-top:11px;margin-top:5px;}
+.tot.big .val{font-size:22px;font-weight:600;}
+.tot.big .lab{color:var(--ink);font-weight:600;font-size:13.5px;}
+
+.note{margin-top:34px;padding-top:20px;border-top:1px solid var(--rule);
+  font-size:13.5px;line-height:1.7;color:var(--dim);}
+.note p{margin:0 0 9px;}
+.note p:last-child{margin:0;}
+.note b{color:var(--ink);}
+
+.sign{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+.sign div{border-top:1px solid var(--rule);padding-top:9px;}
+
+/* ── the bar you print from; never on paper ── */
+.bar{max-width:760px;margin:0 auto 18px;display:flex;gap:10px;align-items:center;
+  flex-wrap:wrap;}
+.bar button,.bar a{font:500 13px/1 var(--sans);padding:11px 16px;border-radius:5px;
+  border:1px solid var(--rule);background:#fff;color:var(--ink);cursor:pointer;
+  text-decoration:none;}
+.bar button:hover,.bar a:hover{border-color:var(--ink);}
+.bar .sp{flex:1;}
+.bar .hint{font-family:var(--sans);font-size:12px;color:var(--dim);}
+
+@media print{
+  @page{margin:14mm;}
+  body{background:#fff;padding:0;font-size:11.5pt;}
+  .sheet{box-shadow:none;max-width:none;padding:0;}
+  .bar{display:none !important;}
+  tr{break-inside:avoid;}
+  .note,.sign,.totals{break-inside:avoid;}
+}

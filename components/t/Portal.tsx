@@ -23,6 +23,11 @@ const when = (iso: string) => {
 
 const isPast = (iso: string) => new Date(`${iso}T23:59:59`) < new Date();
 
+const monthName = (ym: string) => {
+  const [y, m] = ym.split('-').map(Number);
+  return `${AR_MONTHS[m - 1]} ${arNum(y)}`;
+};
+
 export default function Portal({
   me, bookings,
 }: { me: Talent; bookings: Booking[] }) {
@@ -62,6 +67,11 @@ export default function Portal({
   const upcoming = bookings.filter((b) => b.status === 'accepted' && !isPast(b.date));
   const past = bookings.filter((b) => !offered.includes(b) && !upcoming.includes(b));
   const owed = past.filter((b) => b.status === 'done').reduce((a, b) => a + b.feeJOD, 0);
+  /* Months they actually worked, newest first — not a date picker over a year
+     of empty statements. */
+  const months = [...new Set(past
+    .filter((b) => b.status === 'done' || b.status === 'paid')
+    .map((b) => b.date.slice(0, 7)))].sort().reverse().slice(0, 6);
 
   const Card = ({ b, act }: { b: Booking; act?: boolean }) => (
     <div className="card" data-s={b.status}>
@@ -141,6 +151,17 @@ export default function Portal({
             سابق{owed > 0 ? ` · ${arNum(owed)} دينار مستحقة` : ''}
           </p>
           {past.map((b) => <Card key={b.id} b={b} />)}
+          {/* Their own months, to print or send on. Only theirs — the page
+              behind this refuses anyone but them and an operator. */}
+          <div style={{ marginTop: 18, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {months.map((m) => (
+              <a key={m} href={`/doc/invoice/${me.id}?m=${m}`}
+                 target="_blank" rel="noreferrer"
+                 style={{ textDecoration: 'none' }}>
+                <button type="button">كشف {monthName(m)}</button>
+              </a>
+            ))}
+          </div>
         </>
       )}
 

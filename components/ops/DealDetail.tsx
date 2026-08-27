@@ -129,7 +129,12 @@ export default function DealDetail({
               <tbody>
                 {bookings.map((b) => (
                   <tr key={b.id}>
-                    <td>{byId(b.talentId)?.name.en ?? b.talentId}</td>
+                    <td>
+                      <a href={`/doc/invoice/${b.talentId}?m=${b.date.slice(0, 7)}`}
+                         target="_blank" rel="noreferrer">
+                        {byId(b.talentId)?.name.en ?? b.talentId}
+                      </a>
+                    </td>
                     <td className="mono">{b.date}</td>
                     <td className="mono">{b.feeJOD} JOD</td>
                     <td><span className="pill">{BOOKING_LABEL[b.status].en}</span></td>
@@ -287,6 +292,12 @@ export default function DealDetail({
             <a href={`/ops/${deal.teardownToken}`}>The teardown →</a>
           </div>
         )}
+        <div className="fact">
+          <a href={`/doc/proposal/${deal.id}`} target="_blank" rel="noreferrer">
+            The proposal →
+          </a>
+          <span>to send</span>
+        </div>
       </aside>
     </div>
   );
