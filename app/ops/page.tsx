@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { opsAuthed } from '@/lib/ops/auth';
 import { listTeardowns } from '@/lib/store/teardowns';
 import RunHandle from '@/components/ops/RunHandle';
+import OpsNav from '@/components/ops/OpsNav';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -54,16 +55,10 @@ export default async function Ops({
 
   return (
     <main className="wrap">
-      <div className="top">
-        <h1>PRAVDA — operator</h1>
-        <span className="sp" />
-        <span className="muted">
-          {counts.draft} draft · {counts.ready} ready · {counts.sent} sent
-        </span>
-        <form method="post" action="/api/ops/logout">
-          <button type="submit">Sign out</button>
-        </form>
-      </div>
+      <OpsNav here="queue" />
+      <p className="muted" style={{ marginBottom: 18 }}>
+        {counts.draft} draft · {counts.ready} ready · {counts.sent} sent
+      </p>
 
       <RunHandle />
 

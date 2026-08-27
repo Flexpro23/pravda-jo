@@ -8,7 +8,8 @@
     "start": "next start",
     "build:local": "NEXT_DIST_DIR=.next-prod next build",
     "start:local": "NEXT_DIST_DIR=.next-prod next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:deals": "node --experimental-strip-types --import ./tests/register.mjs tests/deals.itest.mts"
   },
   "dependencies": {
     "@designcodeio/threeui": "^0.3.0",
