@@ -22,6 +22,7 @@ const EXPLAIN: Record<string, string> = {
 
 export default function RunHandle() {
   const [handle, setHandle] = useState('');
+  const [site, setSite] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ k: 'ok' | 'err'; t: string } | null>(null);
   const router = useRouter();
@@ -31,10 +32,10 @@ export default function RunHandle() {
     setBusy(true);
     setMsg(null);
     try {
-      const res = await fetch('/api/ops/run', {
+      const res = await fetch('/api/ops/sheet', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ handle, force }),
+        body: JSON.stringify({ action: 'run', handle, website: site }),
       });
       const j = await res.json();
       if (!res.ok) {
@@ -46,9 +47,13 @@ export default function RunHandle() {
         });
         router.refresh();
       } else {
-        setHandle('');
-        setMsg({ k: 'ok', t: `Read ${j.posts} posts. Draft created.` });
-        router.refresh();
+        setHandle(''); setSite('');
+        setMsg({
+          k: 'ok',
+          t: `Read ${j.posts} posts${j.site ? ' and their website' : j.siteProblem ? ` (site: ${j.siteProblem})` : ''}`
+            + ` · ${j.findings} findings · five ideas ready.`,
+        });
+        router.push(`/ops/sheet/${j.token}`);
       }
     } catch {
       setMsg({ k: 'err', t: 'The request did not complete.' });
@@ -69,14 +74,18 @@ export default function RunHandle() {
           autoComplete="off" autoCapitalize="none" spellCheck={false}
           disabled={busy}
         />
+        <input
+          value={site} onChange={(e) => setSite(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') run(false); }}
+          placeholder="their website (optional)"
+          aria-label="Website to read"
+          autoComplete="off" autoCapitalize="none" spellCheck={false}
+          disabled={busy}
+        />
         <button className="go" onClick={() => run(false)} disabled={busy || !handle.trim()}>
           {busy ? 'Reading…' : 'Read'}
         </button>
-        {/* Re-reading spends a call against a budget of roughly 200 an hour, so
-            it is deliberately the second button rather than the default. */}
-        <button onClick={() => run(true)} disabled={busy || !handle.trim()}>
-          Read again
-        </button>
+
       </div>
       {msg && <p className="note" data-k={msg.k}>{msg.t}</p>}
     </div>

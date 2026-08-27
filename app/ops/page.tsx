@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { opsAuthed } from '@/lib/ops/auth';
 import { listTeardowns } from '@/lib/store/teardowns';
+import { listSheets } from '@/lib/store/sheets';
 import RunHandle from '@/components/ops/RunHandle';
 import OpsNav from '@/components/ops/OpsNav';
 
@@ -34,9 +35,10 @@ export default async function Ops({
 
   // A store that cannot be read is worth saying plainly rather than crashing
   // the console — the operator can still tell the difference and act on it.
-  let rows;
+  let rows; let sheets: Awaited<ReturnType<typeof listSheets>> = [];
   try {
     rows = await listTeardowns(100);
+    sheets = await listSheets(60).catch(() => []);
   } catch {
     return (
       <main className="wrap">
@@ -61,6 +63,37 @@ export default async function Ops({
       </p>
 
       <RunHandle />
+
+      {sheets.length > 0 && (
+        <>
+          <p className="lab" style={{ marginBottom: 10 }}>Sheets</p>
+          <table style={{ marginBottom: 34 }}>
+            <thead>
+              <tr><th>Business</th><th>Read</th><th>Findings</th><th>Chosen</th><th>Status</th><th /></tr>
+            </thead>
+            <tbody>
+              {sheets.map((sh) => (
+                <tr key={sh.token}>
+                  <td>{sh.clientName}<span className="muted mono"> @{sh.handle}</span></td>
+                  <td className="mono">{sh.signals?.posts ?? '—'}{sh.site ? ' + site' : ''}</td>
+                  <td className="mono">{sh.findings?.findings?.length ?? 0}</td>
+                  <td className="mono">{sh.chosen?.length ?? 0}/3</td>
+                  <td>
+                    <span className="pill" data-s={sh.status === 'approved' ? 'ready' : 'draft'}>
+                      {sh.status}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    <Link className="btn" href={`/ops/sheet/${sh.token}`}>
+                      {sh.status === 'approved' ? 'Open' : 'Review'}
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
 
       {rows.length === 0 ? (
         <p className="muted">

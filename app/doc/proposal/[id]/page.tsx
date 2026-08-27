@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import { getDeal } from '@/lib/store/deals';
+import { getSheet } from '@/lib/store/sheets';
 import { SAMPLE_DEAL } from '@/lib/data/specimens';
+import type { Deal } from '@/lib/data/deals';
 import { VIDEO_JOD } from '@/lib/data/deals';
 import { CO } from '@/lib/data/company';
 import PrintBar from '@/components/doc/PrintBar';
@@ -47,12 +49,35 @@ export default async function ProposalDoc({
   // Served from code, so it works before any deal exists and cannot be edited
   // by whatever can write to the collection.
   const specimen = id === 'sample';
-  const deal = specimen ? SAMPLE_DEAL : await getDeal(id).catch(() => null);
+  // A sheet Khaled approved becomes a proposal without being copied into a
+  // deal first: the offer he composed IS the proposal, so re-entering it would
+  // only be a chance for the two to disagree.
+  const fromSheet = id.startsWith('sheet-') ? await getSheet(id.slice(6)).catch(() => null) : null;
+  const deal: Deal | null = specimen ? SAMPLE_DEAL
+    : fromSheet && fromSheet.offer ? {
+      id: fromSheet.token,
+      clientName: fromSheet.clientName,
+      clientHandle: fromSheet.handle,
+      concepts: fromSheet.recommendations
+        .filter((r) => fromSheet.chosen.includes(r.conceptN))
+        .map((r) => ({ conceptN: r.conceptN, name: r.name, priceJOD: r.priceJOD })),
+      clientTotalJOD: fromSheet.offer.totalJOD,
+      retainerJOD: fromSheet.offer.ads ? fromSheet.offer.adsMonthlyJOD : undefined,
+      perMonth: undefined,
+      status: 'proposed',
+      createdAt: fromSheet.createdAt,
+      updatedAt: fromSheet.updatedAt,
+    }
+      : await getDeal(id).catch(() => null);
   if (!deal) notFound();
+
+  // The sheet prices by video, flat. Show that rather than a per-concept
+  // breakdown the client was never quoted.
+  const flat = fromSheet?.offer;
 
   // Letters and digits only: slicing a raw id leaves a dangling hyphen, and a
   // reference number is something a person reads aloud down a phone.
-  const ref = id.replace(/[^A-Za-z0-9]/g, '').slice(0, 6).toUpperCase();
+  const ref = (fromSheet?.token ?? id).replace(/[^A-Za-z0-9]/g, '').slice(0, 6).toUpperCase();
 
   const perMonthCost = (deal.perMonth ?? 0) * VIDEO_JOD;
   const retainer = (deal.retainerJOD ?? 0) - perMonthCost;
@@ -120,7 +145,24 @@ export default async function ProposalDoc({
             </tr>
           </thead>
           <tbody>
-            {deal.concepts.map((c, i) => (
+            {flat ? (
+              <tr>
+                <td>
+                  <span className="what">
+                    {ar ? `${arNum(flat.videos)} مقاطع فيديو` : `${flat.videos} videos`}
+                  </span>
+                  <span className="sub">
+                    {ar
+                      ? `${arNum(flat.pricePerVideo)} دينار للمقطع · التصوير والمونتاج والطاقم والتسويق`
+                      : `${flat.pricePerVideo} JOD each · shoot, edit, cast and marketing`}
+                  </span>
+                  <span className="sub">
+                    {deal.concepts.map((c) => c.name).join(' · ')}
+                  </span>
+                </td>
+                <td className="amt r">{money(flat.totalJOD, ar)} {ar ? 'دينار' : 'JOD'}</td>
+              </tr>
+            ) : deal.concepts.map((c, i) => (
               <tr key={i}>
                 <td>
                   <span className="what">{c.name}</span>

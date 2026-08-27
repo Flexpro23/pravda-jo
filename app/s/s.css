@@ -1,0 +1,121 @@
+/* The client's sheet. Phone first — it arrives as a WhatsApp link. */
+:root{
+  --void:#1A1A1A; --forest:#1C2A20; --panel:#202220; --rule:#33352F;
+  --bone:#EFECE5; --dim:#A9A499; --ash:#8A857A; --brass:#CDC4B3;
+  --go:#7FA37F; --warn:#C4715A;
+  --display:'Italiana',Georgia,serif; --body:'Lora',Georgia,serif;
+  --ar:'Amiri',serif; --sans:'Inter',system-ui,sans-serif;
+  --s1:8px; --s2:14px; --s3:22px; --s4:34px; --s5:54px; --s6:80px;
+}
+[lang="ar"]{--body:var(--ar);}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;}
+body{margin:0;background:var(--void);color:var(--bone);
+  font:400 17px/1.72 var(--body);-webkit-font-smoothing:antialiased;
+  padding:0 20px calc(var(--s6) + env(safe-area-inset-bottom));overflow-x:clip;}
+.wrap{max-width:720px;margin:0 auto;}
+.u{font-family:var(--sans);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ash);}
+.num{font-family:var(--sans);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;}
+section{padding:var(--s5) 0 0;}
+h2{font-family:var(--body);font-weight:600;font-size:clamp(22px,4.6vw,30px);
+  line-height:1.32;margin:var(--s1) 0 var(--s3);text-wrap:balance;}
+p{margin:0 0 var(--s2);}
+
+/* ── the top ── */
+header{padding:var(--s5) 0 var(--s4);border-bottom:1px solid var(--rule);}
+.mark{font:600 13px/1 var(--sans);letter-spacing:.3em;margin:0 0 var(--s4);}
+.for{color:var(--ash);font-size:15px;margin:0 0 var(--s1);}
+h1{font-family:var(--body);font-weight:600;font-size:clamp(29px,6.4vw,46px);
+  line-height:1.22;letter-spacing:-.01em;margin:0 0 var(--s3);text-wrap:balance;}
+.read{color:var(--dim);font-size:15.5px;margin:0;}
+
+/* ── figures ── */
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
+  gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:5px;
+  margin:var(--s3) 0 0;overflow:hidden;}
+.fig{background:var(--void);padding:16px 18px;}
+.fig b{display:block;font-family:var(--display);font-size:34px;line-height:1;margin-bottom:6px;}
+[lang="ar"] .fig b{font-family:var(--ar);font-weight:700;font-size:29px;}
+.fig b.low{color:var(--warn);}
+.fig span{color:var(--ash);font-family:var(--sans);font-size:11.5px;line-height:1.45;display:block;}
+
+/* ── findings ── */
+.find{border-top:1px solid var(--rule);padding:var(--s3) 0;}
+.find:first-of-type{border-top:none;}
+.find-h{display:flex;align-items:baseline;gap:14px;margin-bottom:var(--s1);flex-wrap:wrap;}
+.find-f{font-family:var(--display);font-size:32px;line-height:1;color:var(--brass);}
+[lang="ar"] .find-f{font-family:var(--ar);font-weight:700;font-size:27px;}
+.find-t{font-weight:600;font-size:18px;line-height:1.35;flex:1;min-width:180px;}
+.find p{color:var(--dim);margin:0 0 var(--s1);}
+.prov{font-family:var(--sans);font-size:11px;color:var(--ash);margin:0;}
+.find[data-s="good"] .find-f{color:var(--go);}
+
+/* ── charts ── */
+.chart{display:flex;flex-direction:column;gap:10px;margin:var(--s2) 0 0;}
+.brow{display:grid;grid-template-columns:minmax(72px,auto) 1fr auto;gap:12px;align-items:center;
+  font-family:var(--sans);font-size:13.5px;}
+.btrack{height:10px;background:var(--panel);border-radius:5px;overflow:hidden;}
+.bfill{display:block;height:100%;background:var(--rule);border-radius:5px;}
+.bfill[data-hi="true"]{background:var(--brass);}
+.bval{font-variant-numeric:tabular-nums;color:var(--dim);}
+.hours{display:flex;align-items:flex-end;gap:2px;height:104px;padding-bottom:18px;margin-top:var(--s2);}
+.hcol{flex:1;height:100%;display:flex;align-items:flex-end;position:relative;border-radius:2px;}
+.hcol[data-peak="true"]{background:rgba(205,196,179,.10);}
+.hcol[data-best="true"]{background:rgba(127,163,127,.18);}
+.hbar{width:100%;background:var(--ash);border-radius:2px 2px 0 0;min-height:1px;}
+.hcol[data-best="true"] .hbar{background:var(--go);}
+.htick{position:absolute;bottom:-17px;inset-inline-start:0;font-family:var(--sans);
+  font-size:9.5px;color:var(--ash);white-space:nowrap;}
+.keys{font-family:var(--sans);font-size:12px;color:var(--ash);margin-top:var(--s3);}
+.kdot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-inline-end:6px;vertical-align:-1px;}
+
+/* ── the three ideas ── */
+.idea{border:1px solid var(--rule);border-radius:6px;padding:var(--s3);margin-bottom:var(--s2);
+  background:linear-gradient(180deg,rgba(28,42,32,.30),transparent 70%);}
+.idea-n{font-family:var(--sans);font-size:11px;letter-spacing:.16em;color:var(--brass);}
+.idea h3{font-family:var(--body);font-weight:600;font-size:clamp(20px,4vw,26px);
+  line-height:1.3;margin:var(--s1) 0 var(--s2);}
+.idea .hook{color:var(--bone);margin:0 0 var(--s2);}
+.idea .what{color:var(--dim);font-size:15.5px;margin:0 0 var(--s2);}
+.cast{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);padding-top:var(--s2);
+  border-top:1px solid var(--rule);}
+.cast div{display:flex;flex-direction:column;gap:2px;}
+.cast b{font-weight:600;font-size:15px;}
+.idea-yield{font-family:var(--sans);font-size:12.5px;color:var(--ash);margin-top:var(--s2);}
+
+/* ── the offer ── */
+.offer{border:1px solid var(--brass);border-radius:6px;padding:var(--s4) var(--s3);
+  background:rgba(205,196,179,.05);}
+.price{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:var(--s2);}
+.price b{font-family:var(--display);font-size:clamp(46px,11vw,74px);line-height:.94;}
+[lang="ar"] .price b{font-family:var(--ar);font-weight:700;font-size:clamp(38px,9vw,60px);}
+.price .unit{color:var(--dim);font-size:16px;}
+.incl{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);margin:var(--s3) 0 0;padding-top:var(--s3);
+  border-top:1px solid var(--rule);font-size:15px;color:var(--dim);}
+.incl span::before{content:"—  ";color:var(--brass);}
+.monthly{margin-top:var(--s3);padding-top:var(--s3);border-top:1px solid var(--rule);
+  display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;}
+.monthly b{font-family:var(--display);font-size:36px;line-height:1;}
+[lang="ar"] .monthly b{font-family:var(--ar);font-weight:700;font-size:30px;}
+
+.cta{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s4);}
+.btn{display:inline-block;font-family:var(--sans);font-size:15px;font-weight:500;
+  padding:16px 26px;border-radius:5px;text-decoration:none;
+  background:var(--brass);color:var(--void);border:1px solid var(--brass);}
+.btn.ghost{background:transparent;color:var(--bone);border-color:var(--rule);}
+.foot{margin-top:var(--s6);padding-top:var(--s3);border-top:1px solid var(--rule);
+  font-family:var(--sans);font-size:12.5px;color:var(--ash);line-height:1.8;}
+.foot a{color:var(--ash);}
+.lang{position:absolute;top:var(--s3);inset-inline-end:20px;font-family:var(--sans);
+  font-size:12px;color:var(--ash);text-decoration:none;}
+
+@media(max-width:560px){
+  body{font-size:16.5px;padding-inline:17px;}
+  .idea,.offer{padding:var(--s3) 18px;}
+  .figs{grid-template-columns:1fr 1fr;}
+}
+
+/* An English run inside the Arabic sheet. It keeps its own direction so the
+   punctuation lands where a reader of English expects it, and its own text
+   alignment so it does not sit ragged against the Arabic column. */
+.ltr{direction:ltr;unicode-bidi:isolate;text-align:left;}
