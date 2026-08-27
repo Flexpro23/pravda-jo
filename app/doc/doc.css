@@ -81,3 +81,10 @@ td.amt{font-family:var(--sans);font-variant-numeric:tabular-nums;white-space:now
   tr{break-inside:avoid;}
   .note,.sign,.totals{break-inside:avoid;}
 }
+
+/* A specimen must never be mistaken for the real thing, on screen or on paper. */
+.stamp{font-family:var(--sans);font-size:11px;letter-spacing:.13em;
+  text-transform:uppercase;color:#8A5A2B;background:#FBF3E6;
+  border:1px solid #E3CBA4;border-radius:3px;
+  padding:9px 13px;margin:0 0 26px;text-align:center;}
+@media print{.stamp{background:none;border-color:#999;color:#555;}}

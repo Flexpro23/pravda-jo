@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getDeal } from '@/lib/store/deals';
+import { SAMPLE_DEAL } from '@/lib/data/specimens';
 import { VIDEO_JOD } from '@/lib/data/deals';
 import { CO } from '@/lib/data/company';
 import PrintBar from '@/components/doc/PrintBar';
@@ -43,7 +44,10 @@ export default async function ProposalDoc({
   const { id } = await params;
   const { lang } = await searchParams;
   const ar = lang !== 'en';
-  const deal = await getDeal(id).catch(() => null);
+  // Served from code, so it works before any deal exists and cannot be edited
+  // by whatever can write to the collection.
+  const specimen = id === 'sample';
+  const deal = specimen ? SAMPLE_DEAL : await getDeal(id).catch(() => null);
   if (!deal) notFound();
 
   // Letters and digits only: slicing a raw id leaves a dangling hyphen, and a
@@ -69,6 +73,13 @@ export default async function ProposalDoc({
       />
 
       <div className="sheet">
+        {specimen && (
+          <p className="stamp">
+            {ar
+              ? 'نموذج — أرقام توضيحية وزبون غير حقيقي. مش عرض سعر.'
+              : 'Specimen — illustrative figures, fictional client. Not a quotation.'}
+          </p>
+        )}
         <div className="head">
           <div>
             <p className="mark">PRAVDA</p>

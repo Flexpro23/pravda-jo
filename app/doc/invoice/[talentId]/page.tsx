@@ -3,6 +3,7 @@ import { getTalent, bookingsForTalent } from '@/lib/store/deals';
 import { currentTalent } from '@/lib/talent/auth';
 import { opsAuthed } from '@/lib/ops/auth';
 import { CO } from '@/lib/data/company';
+import { SAMPLE_TALENT, SAMPLE_BOOKINGS } from '@/lib/data/specimens';
 import PrintBar from '@/components/doc/PrintBar';
 
 export const runtime = 'nodejs';
@@ -57,19 +58,26 @@ export default async function InvoiceDoc({
   const { lang, m } = await searchParams;
   const ar = lang !== 'en';
 
-  const [me, operator] = await Promise.all([currentTalent(), opsAuthed()]);
-  if (!operator && me?.id !== talentId) notFound();
+  // A specimen anyone may read: it names nobody real and holds nobody's
+  // earnings, so it carries none of the trust the real statement does.
+  const specimen = talentId === 'sample';
 
-  const talent = await getTalent(talentId);
+  if (!specimen) {
+    const [me, operator] = await Promise.all([currentTalent(), opsAuthed()]);
+    if (!operator && me?.id !== talentId) notFound();
+  }
+
+  const talent = specimen ? SAMPLE_TALENT : await getTalent(talentId);
   if (!talent) notFound();
 
   // Default to the month just gone, which is when anyone actually invoices.
   const now = new Date();
   const month = /^\d{4}-\d{2}$/.test(m ?? '')
     ? (m as string)
-    : `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+    : specimen ? '2026-08'
+      : `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
 
-  const all = await bookingsForTalent(talentId).catch(() => []);
+  const all = specimen ? SAMPLE_BOOKINGS : await bookingsForTalent(talentId).catch(() => []);
   // Only work that actually happened. An offered or declined day is not owed.
   const rows = all
     .filter((b) => b.date.startsWith(month) && (b.status === 'done' || b.status === 'paid'))
@@ -91,6 +99,11 @@ export default async function InvoiceDoc({
       />
 
       <div className="sheet">
+        {specimen && (
+          <p className="stamp">
+            {ar ? 'نموذج — أرقام توضيحية.' : 'Specimen — illustrative figures.'}
+          </p>
+        )}
         <div className="head">
           <div>
             <p className="mark">PRAVDA</p>
