@@ -3,9 +3,19 @@
 import { useState } from 'react';
 import type { Report, Concept, Fix } from '@/lib/data/report';
 import type { Signals } from '@/lib/teardown/signals';
+import type { Tier, Vertical } from '@/lib/data/concepts';
+import { VERTICAL_LABEL } from '@/lib/data/concepts';
+
+/** Enough of a library entry to choose by. The prose stays on the server. */
+export type LibraryEntry = {
+  n: number; name: string; tier: Tier; verticals: Vertical[];
+  billedJOD: number; originations: number; format: string;
+};
 
 type B = { ar: string; en: string };
 type Status = 'draft' | 'ready' | 'sent';
+
+const TIERS: Record<Tier, number> = { light: 0, standard: 1, premium: 2 };
 
 const isTodo = (b?: B) => !!b && (b.ar.includes('⟦') || b.en.includes('⟦'));
 const blank = (): B => ({ ar: '', en: '' });
@@ -51,8 +61,10 @@ function Block({
 }
 
 export default function Editor({
-  initial, signals, status: status0,
-}: { initial: Report; signals: Signals; status: Status }) {
+  initial, signals, status: status0, library,
+}: { initial: Report; signals: Signals; status: Status; library: LibraryEntry[] }) {
+  const [vert, setVert] = useState<Vertical | 'all'>('all');
+  const [picking, setPicking] = useState(false);
   const [r, setR] = useState<Report>(initial);
   const [status, setStatus] = useState<Status>(status0);
   const [busy, setBusy] = useState(false);
@@ -80,6 +92,28 @@ export default function Editor({
         setStatus(j.status);
         setMsg({ k: 'ok', t: intent === 'save' ? 'Saved.' : `Marked ${j.status}.` });
       }
+    } catch {
+      setMsg({ k: 'err', t: 'The request did not complete.' });
+    } finally { setBusy(false); }
+  };
+
+  /** Pull one adapted concept from the server; the library never ships here. */
+  const addFromLibrary = async (n: number) => {
+    setBusy(true); setMsg(null);
+    try {
+      const res = await fetch('/api/ops/concept', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ n }),
+      });
+      const j = await res.json();
+      if (!res.ok) { setMsg({ k: 'err', t: `Could not load concept ${n}.` }); return; }
+      edit((d) => { d.concepts.push(j.concept as Concept); });
+      setPicking(false);
+      setMsg({
+        k: 'ok',
+        t: `Added "${j.source.name}". The English came from the library — the Arabic is yours to write for this business.`,
+      });
     } catch {
       setMsg({ k: 'err', t: 'The request did not complete.' });
     } finally { setBusy(false); }
@@ -165,6 +199,7 @@ export default function Editor({
         <Block
           title="Concepts"
           hint="Selected and adapted from the library — never invented here. Each carries its own price, and the cast is named."
+          todo={r.concepts.some((c) => isTodo(c.note) || isTodo(c.name))}
         >
           {r.concepts.map((c, i) => (
             <div className="item" key={i}>
@@ -205,12 +240,59 @@ export default function Editor({
               })}>Add cast</button>
             </div>
           ))}
-          <button onClick={() => edit((d) => {
-            d.concepts.push({
-              name: blank(), line: blank(), idea: blank(),
-              cast: [], price: 150, assets: blank(), note: blank(),
-            } as Concept);
-          })}>Add a concept</button>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button className="go" onClick={() => setPicking((p) => !p)}>
+              {picking ? 'Close the library' : 'Add from the library'}
+            </button>
+            {/* Blank stays available, but second — the library is the default
+                because a concept invented here has been costed against nothing
+                and cleared by nobody. */}
+            <button onClick={() => edit((d) => {
+              d.concepts.push({
+                name: blank(), line: blank(), idea: blank(),
+                cast: [], price: 150, assets: blank(), note: blank(),
+              } as Concept);
+            })}>Blank concept</button>
+          </div>
+
+          {picking && (
+            <div style={{ marginTop: 16, borderTop: '1px solid var(--line)', paddingTop: 14 }}>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+                <button onClick={() => setVert('all')}
+                        style={vert === 'all' ? { borderColor: 'var(--brass)' } : undefined}>
+                  All {library.length}
+                </button>
+                {(Object.keys(VERTICAL_LABEL) as Vertical[]).map((v) => {
+                  const n = library.filter((c) => c.verticals.includes(v)).length;
+                  return (
+                    <button key={v} onClick={() => setVert(v)}
+                            style={vert === v ? { borderColor: 'var(--brass)' } : undefined}>
+                      {VERTICAL_LABEL[v].en} {n}
+                    </button>
+                  );
+                })}
+              </div>
+              {library
+                .filter((c) => vert === 'all' || c.verticals.includes(vert))
+                .sort((a, b) => TIERS[a.tier] - TIERS[b.tier] || b.originations - a.originations)
+                .map((c) => (
+                  <div key={c.n} className="item">
+                    <div className="itemhead">
+                      <b className="mono">#{String(c.n).padStart(2, '0')}</b>
+                      <span style={{ fontWeight: 500 }}>{c.name}</span>
+                      <span className="pill">{c.tier}</span>
+                      <span className="sp" />
+                      <span className="muted mono">
+                        {c.originations} pieces · {c.billedJOD} JOD
+                      </span>
+                      <button className="go" disabled={busy}
+                              onClick={() => addFromLibrary(c.n)}>Use</button>
+                    </div>
+                    <p className="hint" style={{ margin: 0 }}>{c.format}</p>
+                  </div>
+                ))}
+            </div>
+          )}
         </Block>
 
         <Block

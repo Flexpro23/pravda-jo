@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { opsAuthed } from '@/lib/ops/auth';
 import { getRaw } from '@/lib/store/teardowns';
 import Editor from '@/components/ops/Editor';
+import { CONCEPTS } from '@/lib/data/concepts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,7 +33,15 @@ export default async function ReviewOne({
         <span className="sp" />
         <Link className="btn" href="/ops">← Queue</Link>
       </div>
-      <Editor initial={t.report} signals={t.signals} status={t.status} />
+      {/* A slim index only — enough to choose by, never the whole library. */}
+      <Editor
+        initial={t.report} signals={t.signals} status={t.status}
+        library={CONCEPTS.map((c) => ({
+          n: c.n, name: c.name, tier: c.tier,
+          verticals: c.verticals, billedJOD: c.economics.billedJOD,
+          originations: c.economics.originations, format: c.format,
+        }))}
+      />
     </main>
   );
 }
