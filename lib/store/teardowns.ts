@@ -3,7 +3,8 @@ import { store } from '@/lib/store/firebase';
 import { SPECIMEN, type Report } from '@/lib/data/report';
 import type { Signals } from '@/lib/teardown/signals';
 
-const COLLECTION = 'teardowns';
+/** Same test seam as the deal store; empty everywhere but a test run. */
+const COLLECTION = `${process.env.FIRESTORE_COLLECTION_PREFIX ?? ''}teardowns`;
 
 /**
  * A token is the only thing standing between a stranger and a document about

@@ -216,6 +216,22 @@ export default function DealDetail({
 
         <h2 style={{ marginTop: 18 }}>Client</h2>
         <div className="fact"><b>{deal.clientName}</b><span>{deal.status}</span></div>
+        {/* A proposal that came through the configurator carries the person who
+            actually filled it in — which is who Khaled rings, not the business. */}
+        {deal.source === 'configurator' && (
+          <>
+            <div className="fact"><b>{deal.contactName}</b><span>submitted this</span></div>
+            {deal.contactPhone && (
+              <div className="fact">
+                <a className="mono" href={`tel:${deal.contactPhone}`}>{deal.contactPhone}</a>
+                <span>their number</span>
+              </div>
+            )}
+            {deal.perMonth ? (
+              <div className="fact"><b>{deal.perMonth}/mo</b><span>videos wanted</span></div>
+            ) : null}
+          </>
+        )}
         {deal.clientHandle && (
           <div className="fact">
             <a href={`https://instagram.com/${deal.clientHandle.replace('@', '')}`}

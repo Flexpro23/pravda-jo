@@ -950,3 +950,70 @@ ol.fixes li{display:grid;grid-template-columns:auto 1fr;gap:var(--s4);
      particles, so on a phone it takes the body colour and a little more size. */
   .scene-entity .u{font-size:10px;color:var(--dim);}
 }
+
+/* ══ the configurator — a teardown you can answer ══════════════════════════ */
+.cfg-lede{color:var(--dim);max-width:56ch;margin-bottom:var(--s4);}
+.cfg-list{display:flex;flex-direction:column;gap:10px;margin-bottom:var(--s5);}
+
+.cfg-item{display:grid;grid-template-columns:auto 1fr;gap:16px;cursor:pointer;
+  padding:20px 22px;border:1px solid var(--rule);border-radius:4px;
+  background:transparent;transition:border-color .18s,background .18s;}
+.cfg-item:hover{border-color:var(--ash);}
+.cfg-item[data-on="true"]{border-color:var(--brass);background:rgba(205,196,179,.06);}
+.cfg-item input{appearance:none;width:20px;height:20px;margin-top:3px;flex:none;
+  border:1px solid var(--ash);border-radius:3px;background:transparent;cursor:pointer;}
+.cfg-item input:checked{background:var(--brass);border-color:var(--brass);}
+.cfg-item input:checked::after{content:"";display:block;width:6px;height:11px;
+  margin:1px auto 0;border:solid var(--void);border-width:0 2px 2px 0;transform:rotate(45deg);}
+.cfg-item input:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+.cfg-body{display:flex;flex-direction:column;gap:7px;min-width:0;}
+.cfg-top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;}
+.cfg-top .c-name{flex:1;min-width:0;}
+.cfg-price{white-space:nowrap;font-weight:500;}
+.cfg-line{color:var(--dim);}
+.cfg-meta{font-family:var(--sans);font-size:12.5px;letter-spacing:.04em;color:var(--ash);}
+.cfg-cast{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;
+  padding-top:8px;border-top:1px solid var(--rule);margin-top:4px;}
+.cfg-cast b{font-weight:500;}
+
+.cfg-ongoing{border-top:1px solid var(--rule);padding-top:var(--s4);margin-bottom:var(--s4);}
+.cfg-opts{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 16px;}
+.cfg-opt{font-family:var(--sans);font-size:14px;padding:13px 18px;border-radius:4px;
+  border:1px solid var(--rule);background:transparent;color:var(--bone);cursor:pointer;
+  display:flex;flex-direction:column;gap:5px;align-items:flex-start;transition:border-color .18s;}
+.cfg-opt:hover{border-color:var(--ash);}
+.cfg-opt[aria-pressed="true"]{border-color:var(--brass);color:var(--brass);}
+.cfg-opt .cfg-sub{font-size:12px;color:var(--ash);}
+.cfg-opt[aria-pressed="true"] .cfg-sub{color:var(--brass);}
+
+.cfg-add{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:start;
+  cursor:pointer;padding:20px 22px;border:1px solid var(--rule);border-radius:4px;}
+.cfg-add[data-on="true"]{border-color:var(--brass);background:rgba(205,196,179,.06);}
+.cfg-add input{appearance:none;width:20px;height:20px;margin-top:2px;flex:none;
+  border:1px solid var(--ash);border-radius:3px;background:transparent;cursor:pointer;}
+.cfg-add input:checked{background:var(--brass);border-color:var(--brass);}
+.cfg-add input:checked::after{content:"";display:block;width:6px;height:11px;
+  margin:1px auto 0;border:solid var(--void);border-width:0 2px 2px 0;transform:rotate(45deg);}
+.cfg-add input:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+.cfg-add > span{display:flex;flex-direction:column;gap:5px;}
+.cfg-add .body{color:var(--dim);}
+
+.cfg-total{position:sticky;bottom:0;background:var(--void);
+  border-top:1px solid var(--brass);padding:18px 0;margin-bottom:var(--s4);z-index:2;}
+.cfg-total[data-empty="true"]{border-top-color:var(--rule);}
+.cfg-figures{display:flex;gap:28px;flex-wrap:wrap;align-items:baseline;margin:6px 0 0;}
+.cfg-none{color:var(--ash);font-family:var(--sans);font-size:14px;}
+
+.cfg-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+@media(max-width:640px){.cfg-fields{grid-template-columns:1fr;}
+  .cfg-item,.cfg-add{padding:16px 17px;}}
+.cfg-fields label{display:flex;flex-direction:column;gap:7px;}
+.cfg-fields input{background:transparent;border:1px solid var(--rule);border-radius:4px;
+  padding:13px 14px;color:var(--bone);font:400 16px/1.4 var(--body);}
+.cfg-fields input:focus{outline:none;border-color:var(--brass);}
+.cfg-submit{border:none;cursor:pointer;font-family:var(--sans);}
+.cfg-submit:disabled{opacity:.4;cursor:not-allowed;}
+.cfg-note{font-family:var(--sans);font-size:13px;line-height:1.65;color:var(--ash);
+  max-width:56ch;margin-top:14px;}
+.cfg-err{color:var(--fail);margin-top:12px;}
+.cfg-sum{display:flex;gap:28px;flex-wrap:wrap;margin:var(--s3) 0;}

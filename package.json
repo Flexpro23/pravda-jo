@@ -9,7 +9,8 @@
     "build:local": "NEXT_DIST_DIR=.next-prod next build",
     "start:local": "NEXT_DIST_DIR=.next-prod next start",
     "lint": "next lint",
-    "test:deals": "node --experimental-strip-types --import ./tests/register.mjs tests/deals.itest.mts"
+    "test:deals": "node --experimental-strip-types --import ./tests/register.mjs tests/deals.itest.mts",
+    "test:proposal": "node --experimental-strip-types --import ./tests/register.mjs tests/proposal.itest.mts"
   },
   "dependencies": {
     "@designcodeio/threeui": "^0.3.0",

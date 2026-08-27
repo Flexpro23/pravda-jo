@@ -53,6 +53,12 @@ export default async function DealsPage() {
               <tr key={d.id}>
                 <td>{d.clientName}
                   {d.clientHandle && <span className="muted mono"> @{d.clientHandle.replace('@', '')}</span>}
+                  {/* Arrived by itself, rather than being typed up afterwards. */}
+                  {d.source === 'configurator' && (
+                    <span className="pill" data-s="ready" style={{ marginInlineStart: 8 }}>
+                      from the client
+                    </span>
+                  )}
                 </td>
                 <td><span className="pill" data-s={d.status === 'paid' ? 'ready' : d.status === 'lost' ? 'draft' : undefined}>
                   {DEAL_LABEL[d.status]}</span></td>

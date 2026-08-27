@@ -4,6 +4,7 @@ import Foot from '@/components/Foot';
 import { CO } from '@/lib/data/company';
 import type { Report } from '@/lib/data/report';
 import { Lang, path, tx } from '@/lib/i18n';
+import Configurator from '@/components/Configurator';
 
 /**
  * The Teardown. This is the surface every cold visitor lands on, so it carries
@@ -117,38 +118,12 @@ export default function ReportView({
           </ol>
         </section>
 
-        <section className="wrap rep-s">
-          <p className="u">{ar ? 'شو منعمل' : 'What we would make'}</p>
-          <h2 className="mid">{ar ? 'تلاتة، بوجوه موجودة فعلًا' : 'Three, cast from people who exist'}</h2>
-          {r.concepts.map((c) => (
-            <article className="concept" key={c.name.en}>
-              <div className="c-head">
-                <h3 className="c-name">{c.name[lang]}</h3>
-                <p className="body">{c.line[lang]}</p>
-              </div>
-              <div className="c-grid">
-                <div>
-                  <span className="u brass">{ar ? 'الفكرة' : 'The idea'}</span>
-                  <p className="body">{c.idea[lang]}</p>
-                </div>
-                <div>
-                  <span className="u brass">{ar ? 'الطاقم' : 'The cast'}</span>
-                  <div className="row-cast">
-                    {c.cast.map((p) => (
-                      <span key={p.name.en}><b>{p.name[lang]}</b><span className="u">{p.role[lang]}</span></span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="c-price">
-                <p className="price num">{c.price.toLocaleString('en-US')}
-                  <span className="price-u">{ar ? 'دينار' : 'JOD'} · {c.assets[lang]}</span>
-                </p>
-                <p className="body c-note">{c.note[lang]}</p>
-              </div>
-            </article>
-          ))}
-        </section>
+        {/* The concepts used to be a list to read. They are a thing to answer
+            now: tick what you want, watch it price itself, send it. */}
+        {r.concepts.length > 0 && (
+          <Configurator r={r} lang={lang} specimen={specimen} />
+        )}
+
 
         <section className="wrap rep-s">
           <p className="u">{ar ? 'لو اشتغلنا سوا' : 'If we worked together'}</p>

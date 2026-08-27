@@ -76,6 +76,47 @@ export type SoldConcept = {
   priceJOD: number;
 };
 
+// ── what a client can choose ────────────────────────────────────────────────
+
+/**
+ * The published rate card, client side.
+ *
+ * "A single video from 150 JOD, ads management from 400 a month" is what the
+ * pricing page says, so those are the numbers here — not a rate invented to
+ * make an arithmetic nicer. A pack is priced at the same per-video figure
+ * because no discounted rate has been published; when one is, it changes here
+ * and nowhere else.
+ */
+export const VIDEO_JOD = 150;
+export const RETAINER_JOD = 400;
+/** Packs a client can subscribe to, as videos per month. */
+export const PACKS = [6, 8] as const;
+export type Pack = (typeof PACKS)[number];
+
+export type Selection = {
+  /** Indexes into the teardown's own concepts array. */
+  concepts: number[];
+  /** Videos a month, ongoing. Zero means no subscription. */
+  perMonth: 0 | Pack;
+  /** Ads management, the thing that is never marketed as AI. */
+  ads: boolean;
+};
+
+/**
+ * Price a selection.
+ *
+ * Exported and pure so the page and the server compute it the same way — the
+ * server recomputes rather than trusting a submitted total, and a second
+ * implementation would eventually disagree with the first.
+ */
+export function priceSelection(
+  sel: Selection, conceptPrices: number[],
+): { onceJOD: number; monthlyJOD: number } {
+  const once = sel.concepts.reduce((a, i) => a + (conceptPrices[i] ?? 0), 0);
+  const monthly = sel.perMonth * VIDEO_JOD + (sel.ads ? RETAINER_JOD : 0);
+  return { onceJOD: once, monthlyJOD: monthly };
+}
+
 export type Deal = {
   id: string;
   /** The teardown this came out of, when it came out of one. */
@@ -88,6 +129,14 @@ export type Deal = {
   clientTotalJOD: number;
   /** Monthly ads management, when taken. Published as "from 400". */
   retainerJOD?: number;
+  /** Ongoing production, as videos a month. Absent means a one-off. */
+  perMonth?: number;
+  /** What the client picked, kept verbatim so a proposal can be re-read. */
+  selection?: Selection;
+  /** How this arrived: a client submitting a teardown, or typed in by hand. */
+  source?: 'configurator' | 'operator';
+  contactName?: string;
+  contactPhone?: string;
   status: DealStatus;
   note?: string;
   createdAt: string;
