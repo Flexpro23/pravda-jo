@@ -33,6 +33,38 @@ export default function DealDetail({
     finally { setBusy(false); }
   };
 
+  /**
+   * Hand the operator the message and the link, then record that it went.
+   * Opened before the await so the tap is what opens the window — a popup
+   * opened after a network round trip is blocked by every browser.
+   */
+  const tell = async (id: string) => {
+    const w = window.open('', '_blank');
+    setBusy(true); setMsg(null);
+    try {
+      const res = await fetch('/api/ops/notify', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ dealId: deal.id, id }),
+      });
+      const j = await res.json();
+      if (!res.ok || !j.link) {
+        w?.close();
+        setMsg({ k: 'err', t: j.link === null ? 'That person has no usable phone number on file.' : `Could not build the message: ${j.error}` });
+        return;
+      }
+      if (w) w.location.href = j.link; else window.open(j.link, '_blank');
+      await fetch('/api/ops/notify', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ dealId: deal.id, id, action: 'mark-sent' }),
+      });
+      setMsg({ k: 'ok', t: `WhatsApp opened for ${j.name}. Marked as told.` });
+      router.refresh();
+    } catch {
+      w?.close();
+      setMsg({ k: 'err', t: 'The request did not complete.' });
+    } finally { setBusy(false); }
+  };
+
   const paidOut = bookings.reduce((a, b) => a + b.feeJOD, 0);
   const spread = deal.clientTotalJOD - paidOut;
   const byId = (id: string) => talent.find((t) => t.id === id);
@@ -92,7 +124,7 @@ export default function DealDetail({
           {bookings.length > 0 && (
             <table style={{ marginBottom: 18 }}>
               <thead>
-                <tr><th>Who</th><th>Date</th><th>Fee</th><th>Status</th><th>Knows client</th><th /></tr>
+                <tr><th>Who</th><th>Date</th><th>Fee</th><th>Status</th><th>Notified</th><th /></tr>
               </thead>
               <tbody>
                 {bookings.map((b) => (
@@ -101,8 +133,17 @@ export default function DealDetail({
                     <td className="mono">{b.date}</td>
                     <td className="mono">{b.feeJOD} JOD</td>
                     <td><span className="pill">{BOOKING_LABEL[b.status].en}</span></td>
-                    <td className="muted">{b.clientName ? 'yes' : 'not yet'}</td>
+                    <td className="muted">
+                      {b.notifiedAt
+                        ? <span style={{ color: 'var(--go)' }}>told</span>
+                        : <span style={{ color: 'var(--warn)' }} title={b.notifyNote}>not told</span>}
+                    </td>
                     <td style={{ textAlign: 'right' }}>
+                      {/* Nobody has heard about this day yet. One tap fixes it. */}
+                      {!b.notifiedAt && (
+                        <button disabled={busy} style={{ marginInlineEnd: 8 }}
+                                onClick={() => tell(b.id)}>Tell them</button>
+                      )}
                       {b.status === 'accepted' && (
                         <button disabled={busy}
                                 onClick={() => post('/api/ops/booking', { action: 'mark', id: b.id, status: 'done' }, 'Marked done.')}>

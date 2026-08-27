@@ -101,6 +101,12 @@ export default function Portal({
         </form>
       </header>
 
+      {!me.phone && (
+        <p className="note" data-k="err" style={{ marginBottom: 18 }}>
+          ما عنا رقمك. احكي مع برافدا ليضيفوه، وإلا رح تشوف الشغل هون بس.
+        </p>
+      )}
+
       <p className="u" style={{ marginBottom: 8 }}>وضعك</p>
       <div className="avail">
         {ORDER.map((a) => (
@@ -141,7 +147,8 @@ export default function Portal({
       {bookings.length === 0 && (
         <p className="empty">
           ما في أيام محجوزة لهلق.<br />
-          بنبعتلك إشعار لما يصير في شغل.
+          لما يصير في شغل، بنبعتلك رسالة واتساب على{' '}
+          <span className="num">{me.phone || '—'}</span>.
         </p>
       )}
     </div>

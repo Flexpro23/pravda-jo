@@ -179,6 +179,14 @@ export type Booking = {
   createdAt: string;
   respondedAt?: string;
   paidAt?: string;
+  /**
+   * When the provider was actually told. Absent means nobody has been — the
+   * console shows that rather than assuming an offer reached anyone, because a
+   * booking somebody never heard about is a missed shoot, not a pending one.
+   */
+  notifiedAt?: string;
+  /** Why it did not send, when it did not. */
+  notifyNote?: string;
 };
 
 // ── arithmetic ──────────────────────────────────────────────────────────────

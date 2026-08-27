@@ -94,6 +94,18 @@ export const ROSTER: CastMember[] = [
       en: 'Reads a script once, then says it the way she would say it. Works weekly, so the same face returns every Thursday.',
     },
   },
+  {
+    key: 'yara',
+    name: { ar: 'يارا', en: 'Yara' },
+    role: { ar: 'تعليق صوتي', en: 'Voiceover' },
+    discipline: 'voiceover',
+    placeholder: true,
+    piece: 'dar-hikma',
+    line: {
+      ar: 'بتسجّل بالعمّاني وبالفصحى، وبتعرف وين الفرق بينهم بيهم. بتبعت أول نسخة بنفس اليوم، وبتعيد أي سطر بدون نقاش.',
+      en: 'Records in Ammani dialect and in MSA, and knows which one a line actually needs. First cut back the same day, and re-reads any line without a discussion.',
+    },
+  },
 ];
 
 /** The image a member is shown with: their portrait, else the plate of their piece. */

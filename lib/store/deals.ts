@@ -3,6 +3,7 @@ import { store } from '@/lib/store/firebase';
 import type {
   Talent, Deal, Booking, DealStatus, BookingStatus, Availability,
 } from '@/lib/data/deals';
+import { notifyOffer } from '@/lib/notify/whatsapp';
 
 /**
  * A prefix so tests can exercise the real code against isolated collections.
@@ -133,6 +134,8 @@ export async function bookingsForTalent(talentId: string): Promise<Booking[]> {
 export async function offerBooking(input: {
   dealId: string; talentId: string; date: string;
   feeJOD: number; brief: string; location?: string; callTime?: string;
+  /** Where the portal lives, for the link in the message. */
+  origin?: string;
 }): Promise<Booking> {
   const deal = await getDeal(input.dealId);
   const booking: Booking = {
@@ -151,6 +154,20 @@ export async function offerBooking(input: {
     createdAt: now(),
   };
   await store().collection(BOOKINGS).doc(booking.id).set(booking);
+
+  // Tell them. A failure here must not undo the booking — the day is still
+  // offered, it just has to be passed on by hand, and the console says which.
+  const talent = await getTalent(input.talentId);
+  if (talent) {
+    const r = await notifyOffer(booking, talent, input.origin ?? '');
+    const patch = r.sent
+      ? { notifiedAt: now() }
+      : { notifyNote: r.reason === 'no-number' ? 'no usable phone number'
+        : r.reason === 'unconfigured' ? 'WhatsApp not configured — send it by hand'
+          : `send failed: ${r.detail ?? 'unknown'}` };
+    await store().collection(BOOKINGS).doc(booking.id).update(patch);
+    Object.assign(booking, patch);
+  }
   return booking;
 }
 

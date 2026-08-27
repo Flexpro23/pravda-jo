@@ -19,8 +19,12 @@ export async function POST(req: Request) {
       dealId: String(b.dealId), talentId: String(b.talentId), date: String(b.date),
       feeJOD: Number(b.feeJOD) || 0, brief: String(b.brief ?? ''),
       location: b.location || undefined, callTime: b.callTime || undefined,
+      origin: new URL(req.url).origin,
     });
-    return NextResponse.json({ ok: true, id: booking.id });
+    return NextResponse.json({
+      ok: true, id: booking.id,
+      notified: !!booking.notifiedAt, note: booking.notifyNote,
+    });
   }
 
   if (b?.action === 'mark') {
