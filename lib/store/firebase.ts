@@ -29,7 +29,14 @@ function app(): App {
       projectId: svc.project_id,
     });
   }
-  return initializeApp({ credential: applicationDefault() });
+  // Pin the project explicitly. App Hosting sets these; a developer machine
+  // often has application-default credentials pointing at some unrelated
+  // project, and an unpinned Admin SDK would quietly read that one instead —
+  // an empty queue that looks like an empty database rather than a wrong one.
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT
+    || process.env.GCLOUD_PROJECT
+    || process.env.FIREBASE_PROJECT_ID;
+  return initializeApp({ credential: applicationDefault(), projectId });
 }
 
 export function store(): Firestore {

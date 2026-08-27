@@ -78,3 +78,32 @@ export async function findByHandle(handle: string): Promise<Teardown | null> {
     .orderBy('createdAt', 'desc').limit(1).get();
   return snap.empty ? null : (snap.docs[0].data() as Teardown);
 }
+
+/**
+ * The whole record, drafts included.
+ *
+ * `getTeardown` deliberately refuses a draft, because it answers the public
+ * routes. The console is the one caller that must see unfinished work — it is
+ * what turns unfinished into finished — so it reads through here instead.
+ */
+export async function getRaw(token: string): Promise<Teardown | null> {
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return null;
+  const snap = await store().collection(COLLECTION).doc(token).get();
+  return snap.exists ? (snap.data() as Teardown) : null;
+}
+
+/**
+ * Save an operator's edits.
+ *
+ * Only the report and the status move. The signals are the arithmetic and stay
+ * exactly as computed — an operator writes the judgement, never the figures,
+ * because a hand-edited number would carry the same provenance line as a
+ * measured one and there would be no way to tell them apart afterwards.
+ */
+export async function saveEdits(
+  token: string, report: Report, status: Teardown['status'],
+): Promise<void> {
+  const patch: Record<string, unknown> = { report, status };
+  if (status === 'sent') patch.sentAt = new Date().toISOString();
+  await store().collection(COLLECTION).doc(token).update(patch);
+}

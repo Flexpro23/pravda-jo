@@ -19,16 +19,23 @@ export const dynamic = 'force-dynamic';
  * budget on behalf of anonymous callers is a denial-of-service on ourselves.
  */
 const authorised = (req: Request): boolean => {
-  const expected = process.env.OPERATOR_KEY;
+  // Trimmed on both sides. `openssl rand -base64 32 | secrets:set --data-file -`
+  // stores the trailing newline openssl emits, while $(...) in the caller's
+  // shell strips it — so the two differ by one invisible byte and every call
+  // fails authentication for a key that is, to any human reading it, correct.
+  const expected = process.env.OPERATOR_KEY?.trim();
   if (!expected) return false;                       // unset means closed, not open
-  const got = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? '';
+  const got = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '').trim();
   const a = Buffer.from(got), b = Buffer.from(expected);
   return a.length === b.length && timingSafeEqual(a, b);
 };
 
 export async function POST(req: Request) {
   if (!authorised(req)) {
-    return NextResponse.json({ error: 'unauthorised' }, { status: 401 });
+    // Distinct from discovery's 'unauthorised', which is about Meta's token
+    // rather than the caller's key. Identical strings for the two sent this
+    // exact call to be debugged as a Meta problem when it was a shell newline.
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   }
 
   const body = await req.json().catch(() => null);
