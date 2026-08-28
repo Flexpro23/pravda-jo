@@ -71,6 +71,7 @@ export default function SheetReview({ sheet, roster }: { sheet: Sheet; roster: T
   });
   const [status, setStatus] = useState(sheet.status);
   const [share, setShare] = useState(sheet.shareToken);
+  const [dealId, setDealId] = useState(sheet.dealId);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ k: 'ok' | 'err'; t: string } | null>(null);
   const router = useRouter();
@@ -86,7 +87,9 @@ export default function SheetReview({ sheet, roster }: { sheet: Sheet; roster: T
       const j = await res.json();
       if (!res.ok) {
         setMsg({ k: 'err', t: j.error === 'pick-three' ? 'Choose exactly three ideas first.'
-          : j.error === 'no-offer' ? 'Set the offer first.' : `Failed: ${j.error}` });
+          : j.error === 'no-offer' ? 'Set the offer first.'
+            : j.error === 'not-approved' ? 'Approve and send it before marking it won.'
+              : `Failed: ${j.error}` });
         return null;
       }
       if (ok) setMsg({ k: 'ok', t: ok });
@@ -275,6 +278,18 @@ export default function SheetReview({ sheet, roster }: { sheet: Sheet; roster: T
                 The proposal PDF
               </a>
               <a className="btn" href={`/s/${share}`} target="_blank" rel="noreferrer">See what they see</a>
+              <span className="sp" />
+              {dealId ? (
+                <a className="btn go" href={`/ops/deals/${dealId}`}>The deal →</a>
+              ) : (
+                <button className="go" disabled={busy}
+                        onClick={async () => {
+                          const j = await post({ action: 'won' });
+                          if (j?.dealId) { setDealId(j.dealId); router.push(`/ops/deals/${j.dealId}`); }
+                        }}>
+                  They said yes
+                </button>
+              )}
             </>
           ) : (
             <button className="go" disabled={busy || chosen.length !== 3}
@@ -288,6 +303,13 @@ export default function SheetReview({ sheet, roster }: { sheet: Sheet; roster: T
           <span className="sp" />
           {status === 'approved' && <span className="muted mono">{shareUrl}</span>}
         </div>
+        {status === 'approved' && !dealId && (
+          <p className="hint" style={{ marginTop: 10 }}>
+            <b>They said yes</b> opens the deal with this offer and these three ideas already
+            on it, and the people you cast waiting on the offer form. It books nobody — a
+            sheet has no dates, and a day nobody agreed is not a day to put on someone&rsquo;s phone.
+          </p>
+        )}
         {msg && <p className="note" data-k={msg.k}>{msg.t}</p>}
       </div>
 

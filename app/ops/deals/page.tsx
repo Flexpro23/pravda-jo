@@ -44,6 +44,7 @@ export default async function DealsPage() {
           No deals yet. One starts when a teardown gets a reply.
         </p>
       ) : (
+        <div className="scroll-x">
         <table>
           <thead>
             <tr><th>Client</th><th>Status</th><th>Client pays</th><th>Crew</th><th>Kept</th><th /></tr>
@@ -72,6 +73,7 @@ export default async function DealsPage() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </main>
   );

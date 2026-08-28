@@ -1,20 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   BOOKING_LABEL, DEAL_LABEL, AVAILABILITY_LABEL,
   type Deal, type Booking, type Talent, type DealStatus,
 } from '@/lib/data/deals';
+import type { CastSlot } from '@/lib/store/convert';
 
 const FLOW: DealStatus[] = ['proposed', 'negotiating', 'signed', 'paid', 'delivered'];
 
 export default function DealDetail({
-  deal, bookings, talent,
-}: { deal: Deal; bookings: Booking[]; talent: Talent[] }) {
+  deal, bookings, talent, plan = [],
+}: { deal: Deal; bookings: Booking[]; talent: Talent[]; plan?: CastSlot[] }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ k: 'ok' | 'err'; t: string } | null>(null);
   const [offer, setOffer] = useState({ talentId: '', date: '', feeJOD: '', brief: '', location: '', callTime: '' });
+  const dateRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   const post = async (url: string, body: Record<string, unknown>, ok: string) => {
@@ -107,7 +109,11 @@ export default function DealDetail({
                   <b className="mono">#{String(c.conceptN).padStart(2, '0')}</b>
                   <span style={{ fontWeight: 500 }}>{c.name}</span>
                   <span className="sp" />
-                  <span className="mono">{c.priceJOD} JOD</span>
+                  {/* A pack sold flat has no per-idea price, and writing one in
+                      would be inventing a number the client never saw. */}
+                  <span className="mono">
+                    {c.priceJOD === undefined ? '—' : `${c.priceJOD} JOD`}
+                  </span>
                 </div>
               </div>
             ))}
@@ -122,7 +128,8 @@ export default function DealDetail({
           </p>
 
           {bookings.length > 0 && (
-            <table style={{ marginBottom: 18 }}>
+            <div className="scroll-x" style={{ marginBottom: 18 }}>
+            <table>
               <thead>
                 <tr><th>Who</th><th>Date</th><th>Fee</th><th>Status</th><th>Notified</th><th /></tr>
               </thead>
@@ -166,6 +173,54 @@ export default function DealDetail({
                 ))}
               </tbody>
             </table>
+            </div>
+          )}
+
+          {plan.length > 0 && (
+            <div className="item" style={{ marginBottom: 14 }}>
+              <div className="itemhead"><b>Cast on the sheet</b></div>
+              <p className="hint" style={{ margin: '0 0 10px' }}>
+                Who was cast, on which idea, at their own published day rate. Take one and
+                the form below is filled except the date — which is the one thing the
+                sheet never knew.
+              </p>
+              {plan.map((slot, i) => {
+                const t = byId(slot.talentId);
+                const days = bookings.filter((b) => b.talentId === slot.talentId).length;
+                return (
+                  <div className="castrow" key={`${slot.conceptN}-${slot.talentId}-${i}`}>
+                    <span className="castwho">
+                      <b>{t?.name.en ?? slot.talentId}</b>
+                      <span className="mono">
+                        {t ? `${t.discipline} · ${t.dayRateJOD} JOD` : 'not on the roster'}
+                      </span>
+                    </span>
+                    {/* Khaled may have written this name in Arabic. Direction
+                        comes from the text itself, not from the console. */}
+                    <span className="castfor" dir="auto">{slot.conceptName}</span>
+                    {days > 0 && (
+                      <span className="muted mono" style={{ fontSize: 12 }}>
+                        {days} day{days === 1 ? '' : 's'} booked
+                      </span>
+                    )}
+                    <button
+                      type="button" disabled={busy || !t}
+                      onClick={() => {
+                        setOffer({
+                          ...offer, talentId: slot.talentId,
+                          feeJOD: t ? String(t.dayRateJOD) : '',
+                          brief: slot.brief,
+                        });
+                        // Straight to the only field left to fill.
+                        dateRef.current?.focus();
+                      }}
+                    >
+                      Use this
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           )}
 
           <div className="item">
@@ -198,7 +253,7 @@ export default function DealDetail({
               </div>
               <div>
                 <label>Date</label>
-                <input type="date" value={offer.date}
+                <input ref={dateRef} type="date" value={offer.date}
                        onChange={(e) => setOffer({ ...offer, date: e.target.value })} />
               </div>
             </div>
@@ -222,7 +277,9 @@ export default function DealDetail({
               </div>
             </div>
             <label>Brief — what they are turning up to do</label>
-            <textarea rows={2} value={offer.brief}
+            {/* This goes into an otherwise entirely Arabic WhatsApp message, and
+                arrives from the sheet in whichever language it was written. */}
+            <textarea rows={2} value={offer.brief} dir="auto"
                       onChange={(e) => setOffer({ ...offer, brief: e.target.value })} />
             <button className="go" style={{ marginTop: 10 }}
                     disabled={busy || !offer.talentId || !offer.date}
@@ -290,6 +347,12 @@ export default function DealDetail({
         {deal.teardownToken && (
           <div className="fact">
             <a href={`/ops/${deal.teardownToken}`}>The teardown →</a>
+          </div>
+        )}
+        {deal.sheetToken && (
+          <div className="fact">
+            <a href={`/ops/sheet/${deal.sheetToken}`}>The sheet →</a>
+            <span>what they agreed to</span>
           </div>
         )}
         <div className="fact">

@@ -11,6 +11,7 @@ import { RETAINER_JOD } from '@/lib/data/deals';
 import {
   saveSheet, getSheet, approveSheet, unapproveSheet, mintToken, type Sheet,
 } from '@/lib/store/sheets';
+import { winSheet } from '@/lib/store/convert';
 import type { Vertical } from '@/lib/data/concepts';
 
 export const runtime = 'nodejs';
@@ -142,6 +143,15 @@ export async function POST(req: Request) {
   if (action === 'unapprove') {
     await unapproveSheet(token);
     return NextResponse.json({ ok: true });
+  }
+
+  // They said yes. The sheet becomes the job, carrying its own numbers with it
+  // rather than being read off a screen and typed into another one.
+  if (action === 'won') {
+    const r = await winSheet(token);
+    return r.ok
+      ? NextResponse.json({ ok: true, dealId: r.dealId, created: r.created })
+      : NextResponse.json({ error: r.why }, { status: 422 });
   }
 
   return NextResponse.json({ error: 'unknown-action' }, { status: 400 });

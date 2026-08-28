@@ -72,12 +72,20 @@ export type DealStatus =
   | 'delivered'
   | 'lost';
 
-/** A concept as sold: what was agreed, and for how much. */
+/** A concept as sold: what was agreed, and — when there is one — for how much. */
 export type SoldConcept = {
   /** Its number in the library, so the brief can be looked up in full. */
   conceptN: number;
   name: string;
-  priceJOD: number;
+  /**
+   * Absent for anything sold off a sheet, and that absence is the truth.
+   *
+   * A sheet sells a pack — so many videos at so much each — and the three
+   * ideas are how those videos get made, not three line items. Splitting the
+   * agreed total across them would write down a per-idea price nobody agreed
+   * to, and the first person to quote it back would be quoting us.
+   */
+  priceJOD?: number;
 };
 
 // ── what a client can choose ────────────────────────────────────────────────
@@ -125,6 +133,8 @@ export type Deal = {
   id: string;
   /** The teardown this came out of, when it came out of one. */
   teardownToken?: string;
+  /** The sheet it was won from, which holds the offer verbatim. */
+  sheetToken?: string;
   clientName: string;
   clientHandle?: string;
   clientPhone?: string;
@@ -137,8 +147,8 @@ export type Deal = {
   perMonth?: number;
   /** What the client picked, kept verbatim so a proposal can be re-read. */
   selection?: Selection;
-  /** How this arrived: a client submitting a teardown, or typed in by hand. */
-  source?: 'configurator' | 'operator';
+  /** How this arrived: won off a sheet, submitted by a client, or typed in. */
+  source?: 'configurator' | 'operator' | 'sheet';
   contactName?: string;
   contactPhone?: string;
   status: DealStatus;

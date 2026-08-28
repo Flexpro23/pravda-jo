@@ -130,6 +130,7 @@ export default function TalentManager({ talent }: { talent: Talent[] }) {
           there is.
         </p>
       ) : (
+        <div className="scroll-x">
         <table>
           <thead>
             <tr>
@@ -159,6 +160,7 @@ export default function TalentManager({ talent }: { talent: Talent[] }) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </>
   );

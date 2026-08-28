@@ -5,7 +5,15 @@
  * from the request. The client half is a browser, and a browser is a place we
  * do not control — a submitted total is a number someone else chose.
  *
- *   npm run test:proposal   (needs the dev/prod server on $BASE)
+ *   FIRESTORE_COLLECTION_PREFIX=_itest_ PORT=3110 npx next dev -p 3110
+ *   npm run test:proposal
+ *
+ * The server on $BASE must carry the SAME collection prefix as this file. A
+ * server without it reads the live collections, never finds the fixture, and
+ * answers every request with a 404 — which shows up as half the suite failing
+ * on `undefined` and the other half passing for the wrong reason, because
+ * "an unknown token 404s" is true when everything 404s. The preflight below
+ * refuses to run in that state rather than reporting it thirteen times.
  */
 process.env.FIRESTORE_COLLECTION_PREFIX = '_itest_';
 process.env.GOOGLE_CLOUD_PROJECT = 'pravda-jo';
@@ -29,6 +37,17 @@ await saveTeardown({
   readAt: '2026-08-27T00:00:00Z', createdAt: '2026-08-27T00:00:00Z',
 });
 // prices: 1500, 600, 1200
+
+// The fixture is written; if the server cannot see it, it is reading a
+// different set of collections and nothing below would mean anything.
+const probe = await post({ token: TOKEN, contactName: 'probe', contactPhone: 'probe',
+  selection: { concepts: [0], perMonth: 0, ads: false } });
+if (probe.status === 404) {
+  console.error(`\n  ${BASE} cannot see the test fixture.`);
+  console.error('  Start it with FIRESTORE_COLLECTION_PREFIX=_itest_ and try again.');
+  process.exit(2);
+}
+
 console.log('\n══ the price is ours, not the browser\'s ══');
 let r = await post({ token: TOKEN, contactName: 'Sami', contactPhone: '+962790000000',
   selection: { concepts: [0, 2], perMonth: 0, ads: false },

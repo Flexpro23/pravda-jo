@@ -63,6 +63,18 @@ export type Sheet = {
 
   offer?: Offer;
   status: 'draft' | 'approved';
+
+  /**
+   * The deal this became, once the client said yes.
+   *
+   * Its presence is what makes winning a sheet happen once. Khaled presses the
+   * button twice — because the first press was slow, or because he came back to
+   * the page a week later — and the second press finds this and opens the deal
+   * that already exists rather than booking the same crew a second time.
+   */
+  dealId?: string;
+  wonAt?: string;
+
   createdAt: string;
   updatedAt: string;
   approvedAt?: string;

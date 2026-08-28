@@ -67,7 +67,8 @@ export default async function Ops({
       {sheets.length > 0 && (
         <>
           <p className="lab" style={{ marginBottom: 10 }}>Sheets</p>
-          <table style={{ marginBottom: 34 }}>
+          <div className="scroll-x" style={{ marginBottom: 34 }}>
+          <table>
             <thead>
               <tr><th>Business</th><th>Read</th><th>Findings</th><th>Chosen</th><th>Status</th><th /></tr>
             </thead>
@@ -79,11 +80,18 @@ export default async function Ops({
                   <td className="mono">{sh.findings?.findings?.length ?? 0}</td>
                   <td className="mono">{sh.chosen?.length ?? 0}/3</td>
                   <td>
-                    <span className="pill" data-s={sh.status === 'approved' ? 'ready' : 'draft'}>
-                      {sh.status}
+                    {/* Won outranks approved: once it is a job, that is what it
+                        is, and a row still reading "approved" invites it to be
+                        approved again. */}
+                    <span className="pill" data-s={sh.dealId ? 'won' : sh.status === 'approved' ? 'ready' : 'draft'}>
+                      {sh.dealId ? 'won' : sh.status}
                     </span>
                   </td>
-                  <td style={{ textAlign: 'right' }}>
+                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    {sh.dealId && (
+                      <Link className="btn go" href={`/ops/deals/${sh.dealId}`}
+                            style={{ marginInlineEnd: 8 }}>The deal</Link>
+                    )}
                     <Link className="btn" href={`/ops/sheet/${sh.token}`}>
                       {sh.status === 'approved' ? 'Open' : 'Review'}
                     </Link>
@@ -92,6 +100,7 @@ export default async function Ops({
               ))}
             </tbody>
           </table>
+          </div>
         </>
       )}
 
@@ -101,6 +110,7 @@ export default async function Ops({
           hundred posts and compose what the arithmetic supports.
         </p>
       ) : (
+        <div className="scroll-x">
         <table>
           <thead>
             <tr>
@@ -125,6 +135,7 @@ export default async function Ops({
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </main>
   );

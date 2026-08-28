@@ -60,7 +60,12 @@ export default async function ProposalDoc({
       clientHandle: fromSheet.handle,
       concepts: fromSheet.recommendations
         .filter((r) => fromSheet.chosen.includes(r.conceptN))
-        .map((r) => ({ conceptN: r.conceptN, name: r.name, priceJOD: r.priceJOD })),
+        // The Arabic he wrote for this client where he wrote it, so the same
+        // idea is not called one thing on the sheet and another on the invoice.
+        .map((r) => ({
+          conceptN: r.conceptN,
+          name: fromSheet.copy?.[String(r.conceptN)]?.name || r.name,
+        })),
       clientTotalJOD: fromSheet.offer.totalJOD,
       retainerJOD: fromSheet.offer.ads ? fromSheet.offer.adsMonthlyJOD : undefined,
       perMonth: undefined,
@@ -71,13 +76,22 @@ export default async function ProposalDoc({
       : await getDeal(id).catch(() => null);
   if (!deal) notFound();
 
+  // A deal won off a sheet is that same flat pack. Read the offer back rather
+  // than printing a per-concept breakdown the client was never quoted — the
+  // page they agreed to said "8 videos at 150", and so must this one.
+  const wonFrom = !fromSheet && deal.sheetToken
+    ? await getSheet(deal.sheetToken).catch(() => null) : null;
+
   // The sheet prices by video, flat. Show that rather than a per-concept
   // breakdown the client was never quoted.
-  const flat = fromSheet?.offer;
+  const flat = fromSheet?.offer ?? wonFrom?.offer;
 
   // Letters and digits only: slicing a raw id leaves a dangling hyphen, and a
-  // reference number is something a person reads aloud down a phone.
-  const ref = (fromSheet?.token ?? id).replace(/[^A-Za-z0-9]/g, '').slice(0, 6).toUpperCase();
+  // reference number is something a person reads aloud down a phone. The
+  // sheet's token wins where there is one, so the quote and the deal it became
+  // carry the same reference down the phone.
+  const ref = (fromSheet?.token ?? wonFrom?.token ?? id)
+    .replace(/[^A-Za-z0-9]/g, '').slice(0, 6).toUpperCase();
 
   const perMonthCost = (deal.perMonth ?? 0) * VIDEO_JOD;
   const retainer = (deal.retainerJOD ?? 0) - perMonthCost;
@@ -168,7 +182,13 @@ export default async function ProposalDoc({
                   <span className="what">{c.name}</span>
                   <span className="sub">{ar ? 'إنتاج، مرة وحدة' : 'Production, one-off'}</span>
                 </td>
-                <td className="amt r">{money(c.priceJOD, ar)} {ar ? 'دينار' : 'JOD'}</td>
+                <td className="amt r">
+                  {/* A concept with no agreed price of its own is left blank
+                      rather than printed as zero. The total below is the
+                      figure; a 0 in this column reads as free. */}
+                  {c.priceJOD === undefined ? '—'
+                    : <>{money(c.priceJOD, ar)} {ar ? 'دينار' : 'JOD'}</>}
+                </td>
               </tr>
             ))}
             {deal.perMonth ? (

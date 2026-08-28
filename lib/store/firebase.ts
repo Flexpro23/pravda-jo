@@ -41,10 +41,21 @@ function app(): App {
 
 export function store(): Firestore {
   if (!db) {
-    db = getFirestore(app());
+    const fresh = getFirestore(app());
     // A teardown is written once and read many times; undefined fields are a
     // normal outcome of an optional section rather than an error.
-    db.settings({ ignoreUndefinedProperties: true });
+    //
+    // Guarded, because Next compiles the server into more than one module
+    // graph — a page and a route handler do not share this file's `db`, but
+    // they do share the one Firestore underneath it. The second graph to get
+    // here finds a handle that is already configured, and settings() throws
+    // rather than no-opping, which turns an already-applied setting into a
+    // 500. The throw is the only thing being swallowed: the setting itself
+    // was applied by whichever graph arrived first.
+    try {
+      fresh.settings({ ignoreUndefinedProperties: true });
+    } catch { /* already configured, same object, same setting */ }
+    db = fresh;
   }
   return db;
 }
