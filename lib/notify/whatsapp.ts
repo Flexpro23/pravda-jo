@@ -75,6 +75,44 @@ export type NotifyResult =
   | { sent: true }
   | { sent: false; reason: 'unconfigured' | 'no-number' | 'failed'; detail?: string };
 
+/** Where the Cloud API lives. One place, so a version bump moves once. */
+const graph = (path: string) =>
+  `https://graph.facebook.com/${process.env.META_API_VERSION || 'v21.0'}/${path}`;
+
+/**
+ * Send a plain message to a number that is already in conversation with us.
+ *
+ * Free-text is only accepted inside an open 24-hour window; outside one, Meta
+ * requires an approved template. That is fine for the operator's own phone,
+ * which is the only caller — he messages the business number, so the window is
+ * effectively always open. It is NOT fine for talent, which is why
+ * `notifyOffer` below sends a template when one is configured.
+ *
+ * Never throws.
+ */
+export async function sendText(to: string, body: string): Promise<NotifyResult> {
+  const token = process.env.WHATSAPP_TOKEN;
+  const phoneId = process.env.WHATSAPP_PHONE_ID;
+  if (!token || !phoneId) return { sent: false, reason: 'unconfigured' };
+
+  try {
+    const res = await fetch(graph(`${phoneId}/messages`), {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp', to, type: 'text', text: { body },
+      }),
+    });
+    if (!res.ok) {
+      const j = await res.json().catch(() => null);
+      return { sent: false, reason: 'failed', detail: j?.error?.message ?? `HTTP ${res.status}` };
+    }
+    return { sent: true };
+  } catch (e) {
+    return { sent: false, reason: 'failed', detail: e instanceof Error ? e.message : 'unknown' };
+  }
+}
+
 /**
  * Send it, if we can.
  *

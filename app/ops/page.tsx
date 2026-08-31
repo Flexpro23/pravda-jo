@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { opsAuthed } from '@/lib/ops/auth';
 import { listTeardowns } from '@/lib/store/teardowns';
 import { listSheets } from '@/lib/store/sheets';
+import { listClients } from '@/lib/store/clients';
+import { owesNotice } from '@/lib/data/clients';
 import RunHandle from '@/components/ops/RunHandle';
 import OpsNav from '@/components/ops/OpsNav';
 
@@ -36,9 +38,13 @@ export default async function Ops({
   // A store that cannot be read is worth saying plainly rather than crashing
   // the console — the operator can still tell the difference and act on it.
   let rows; let sheets: Awaited<ReturnType<typeof listSheets>> = [];
+  // Leads nobody has been told about. Carried onto every tab, because the whole
+  // point of the badge is that it is seen from wherever he happens to be.
+  let waiting = 0;
   try {
     rows = await listTeardowns(100);
     sheets = await listSheets(60).catch(() => []);
+    waiting = (await listClients(200).catch(() => [])).filter(owesNotice).length;
   } catch {
     return (
       <main className="wrap">
@@ -57,7 +63,7 @@ export default async function Ops({
 
   return (
     <main className="wrap">
-      <OpsNav here="queue" />
+      <OpsNav here="queue" waiting={waiting} />
       <p className="muted" style={{ marginBottom: 18 }}>
         {counts.draft} draft · {counts.ready} ready · {counts.sent} sent
       </p>

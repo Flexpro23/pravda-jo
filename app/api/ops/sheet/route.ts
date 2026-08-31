@@ -1,16 +1,14 @@
 import { NextResponse } from 'next/server';
 import { opsAuthed } from '@/lib/ops/auth';
-import { discover, normaliseHandle } from '@/lib/meta/discovery';
-import { readSite, normaliseUrl } from '@/lib/meta/website';
-import { computeSignals } from '@/lib/teardown/signals';
-import { buildFindings } from '@/lib/teardown/findings';
-import { recommend } from '@/lib/teardown/recommend';
-import { listTalent } from '@/lib/store/deals';
+import { normaliseHandle } from '@/lib/meta/discovery';
+import { runRead } from '@/lib/teardown/run';
+import {
+  openClient, attachToClient, setBusinessName, setClientStatus, linkDeal,
+  clientForSheet,
+} from '@/lib/store/clients';
 import { VIDEO_JOD_PER } from '@/lib/data/concepts';
 import { RETAINER_JOD } from '@/lib/data/deals';
-import {
-  saveSheet, getSheet, approveSheet, unapproveSheet, mintToken, type Sheet,
-} from '@/lib/store/sheets';
+import { saveSheet, getSheet, approveSheet, unapproveSheet } from '@/lib/store/sheets';
 import { winSheet } from '@/lib/store/convert';
 import type { Vertical } from '@/lib/data/concepts';
 
@@ -31,50 +29,37 @@ export async function POST(req: Request) {
     const handle = normaliseHandle(str(b?.handle, 40));
     if (!handle) return NextResponse.json({ error: 'handle' }, { status: 400 });
 
-    const read = await discover(handle);
-    if (!read.ok) {
-      const status = read.reason === 'throttled' ? 429
-        : read.reason === 'unauthorised' || read.reason === 'no-data' ? 502 : 404;
-      return NextResponse.json({ error: read.reason }, { status });
-    }
-    const signals = computeSignals(handle, read.profile.followers_count, read.profile.media);
-    if (!signals) return NextResponse.json({ error: 'too-few-posts' }, { status: 422 });
-
-    // The site they gave us, else the one their own bio points at.
-    const wanted = str(b?.website, 300) || read.profile.website || '';
-    const url = wanted ? normaliseUrl(wanted) : null;
-    const siteRead = url ? await readSite(url) : null;
-    const site = siteRead?.ok ? siteRead.site : null;
-
-    const findings = buildFindings(signals, site, !!url);
-    const vertical = (str(b?.vertical, 12) || null) as Vertical | null;
-    const roster = await listTalent().catch(() => []);
-
-    const now = new Date().toISOString();
-    const sheet: Sheet = {
-      token: mintToken(),
+    // The same function the public form runs. One path reads Meta, computes and
+    // stores, so a handle typed here and a handle submitted there can never
+    // produce two different reports of the same business.
+    const run = await runRead({
       handle,
-      clientName: read.profile.name || `@${handle}`,
-      website: url ?? undefined,
-      vertical: vertical ?? undefined,
-      signals, site, findings,
-      recommendations: recommend(findings, roster, vertical, 5),
-      chosen: [],
-      // A sensible starting offer he can change: the cheapest chosen idea's
-      // worth of videos, at the published rate.
-      offer: {
-        videos: 6, pricePerVideo: VIDEO_JOD_PER, ads: true,
-        adsMonthlyJOD: RETAINER_JOD, totalJOD: 6 * VIDEO_JOD_PER,
-      },
-      status: 'draft',
-      createdAt: now, updatedAt: now,
-    };
-    await saveSheet(sheet);
+      website: str(b?.website, 300),
+      vertical: (str(b?.vertical, 12) || null) as Vertical | null,
+    });
+    if (!run.ok) return NextResponse.json({ error: run.reason }, { status: run.status });
+
+    // A handle typed into the console is still a business somebody will be
+    // talked to about, so it gets an account like any other — with no contact
+    // details, because nobody gave us any. Khaled fills those in when he has
+    // them, and until then the account is the place they will go.
+    await openClient({
+      handle,
+      contactName: str(b?.contactName, 120),
+      contactPhone: str(b?.contactPhone, 40),
+      website: run.sheet.website,
+      lang: 'ar',
+      source: 'operator',
+    }).catch(() => null);
+    await attachToClient(handle, 'sheet', run.sheet.token).catch(() => {});
+    if (run.sheet.clientName) await setBusinessName(handle, run.sheet.clientName).catch(() => {});
+    await setClientStatus(handle, 'ready').catch(() => {});
+
     return NextResponse.json({
-      ok: true, token: sheet.token,
-      posts: signals.posts, site: !!site,
-      siteProblem: siteRead && !siteRead.ok ? siteRead.reason : undefined,
-      findings: findings.findings.length,
+      ok: true, token: run.sheet.token,
+      posts: run.sheet.signals.posts, site: run.site,
+      siteProblem: run.siteProblem,
+      findings: run.sheet.findings.findings.length,
     });
   }
 
@@ -135,6 +120,10 @@ export async function POST(req: Request) {
 
   if (action === 'approve') {
     const r = await approveSheet(token);
+    // The account follows the sheet. Approving is the moment there is something
+    // a client can read, so that is where `sent` belongs — the link is minted
+    // here and nowhere else.
+    if (r.ok) await setClientStatus(sheet.handle, 'sent').catch(() => {});
     return r.ok
       ? NextResponse.json({ ok: true, shareToken: r.shareToken })
       : NextResponse.json({ error: r.why }, { status: 422 });
@@ -142,6 +131,8 @@ export async function POST(req: Request) {
 
   if (action === 'unapprove') {
     await unapproveSheet(token);
+    // Back to something only Khaled can see, so the account says so again.
+    await setClientStatus(sheet.handle, 'ready').catch(() => {});
     return NextResponse.json({ ok: true });
   }
 
@@ -149,6 +140,12 @@ export async function POST(req: Request) {
   // rather than being read off a screen and typed into another one.
   if (action === 'won') {
     const r = await winSheet(token);
+    // The account is where the deal is found afterwards. Written after the deal
+    // exists, so an account can never point at a job that was never created.
+    if (r.ok) {
+      const c = await clientForSheet(token).catch(() => null);
+      await linkDeal(c?.id ?? sheet.handle, r.dealId).catch(() => {});
+    }
     return r.ok
       ? NextResponse.json({ ok: true, dealId: r.dealId, created: r.created })
       : NextResponse.json({ error: r.why }, { status: 422 });

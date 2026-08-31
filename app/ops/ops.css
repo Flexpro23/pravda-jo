@@ -171,3 +171,21 @@ a.btn.go{background:var(--go);border-color:var(--go);color:#10210F;}
 .castwho span{font-size:11.5px;color:var(--ash);}
 .castfor{flex:1 1 150px;min-width:0;font-size:12.5px;color:var(--brass);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ── the client book ─────────────────────────────────────────────────────
+   Added with the lead pipeline: an account is created the moment somebody
+   submits the handle form, so the console needs somewhere to hold one. */
+
+/* A `warn` pill for a read that failed. Distinct from `draft`, which is work
+   waiting for Khaled — this is work waiting for an explanation. */
+.pill[data-s="warn"]{color:var(--warn);border-color:var(--warn);}
+
+/* An un-notified lead is the only thing in this console that gets worse on its
+   own, so the count rides on the tab rather than waiting to be found. */
+.badge{display:inline-block;margin-inline-start:7px;min-width:17px;padding:1px 5px;
+  border-radius:99px;background:var(--warn);color:#1A1A1A;
+  font:600 11px/1.45 var(--sans);text-align:center;vertical-align:1px;}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:16px 18px;}
+.panel .lab{margin:0;}
