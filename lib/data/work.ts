@@ -87,6 +87,88 @@ export const WORK: Piece[] = [
     price: 600, assets: 4, date: '2026-03', hue: '#1E3025',
     placeholder: true,
   },
+  {
+    slug: 'mirage-detailing',
+    client: { ar: 'ميراج للعناية بالسيارات', en: 'Mirage Detailing' },
+    sector: { ar: 'سيارات', en: 'Automotive' },
+    idea: { ar: 'قبل وبعد، بدون موسيقى', en: 'Before and after, no music' },
+    concept: {
+      ar: 'كاميرا واحدة مثبّتة، وسيارة بتدخل وسخة وبتطلع نضيفة. ما في مونتاج سريع ولا أغنية — صوت الشغل بس. اللي بيتفرّج بيشوف الوقت الحقيقي اللي بياخده الشغل، وهاد اللي بيبرّر السعر.',
+      en: 'One locked-off camera, a car in dirty and out clean. No fast cuts and no track — just the sound of the work. The viewer sees how long it actually takes, and that is what justifies the price.',
+    },
+    result: { ar: 'ثمن مقاطع، وأول مرة بيتحكى السعر بدون جدال', en: 'Eight clips, and the first month nobody argued about price' },
+    metric: '8', metricLabel: { ar: 'مقاطع من يومين', en: 'clips from two days' },
+    cast: [{ name: { ar: 'عمر', en: 'Omar' }, role: { ar: 'تصوير وتركيب', en: 'Shoot & edit' } }],
+    price: 1200, assets: 8, date: '2026-07', hue: '#1B2C24',
+    placeholder: true,
+  },
+  {
+    slug: 'noor-clinic',
+    client: { ar: 'عيادة نور للجلدية', en: 'Noor Skin Clinic' },
+    sector: { ar: 'عناية', en: 'Body & skin' },
+    idea: { ar: 'الأسئلة اللي بتنسأل بالعيادة', en: 'The questions asked in the room' },
+    concept: {
+      ar: 'الدكتورة بتجاوب على الأسئلة اللي بتتكرّر كل يوم بالعيادة، وحدة بالمقطع. ما في ولا صورة نتيجة، وما في ولا وعد — قاعدة كتبناها قبل ما نصوّر، ومشينا عليها.',
+      en: 'The doctor answers the questions that repeat in the room every day, one per clip. Not a single result photograph and not one promise — a rule written before the shoot and kept to.',
+    },
+    result: { ar: 'اتناشر مقطع، ونص المواعيد صارت تجي من الحساب', en: 'Twelve clips, and half of new bookings started naming one' },
+    metric: '12', metricLabel: { ar: 'سؤال متكرّر، متجاوب', en: 'repeat questions, answered' },
+    cast: [
+      { name: { ar: 'رنا', en: 'Rana' }, role: { ar: 'تصوير', en: 'Camera' } },
+      { name: { ar: 'سيرين', en: 'Sireen' }, role: { ar: 'تعليق صوتي', en: 'Voiceover' } },
+    ],
+    price: 1800, assets: 12, date: '2026-07', hue: '#23342B',
+    placeholder: true,
+  },
+  {
+    slug: 'wadi-properties',
+    client: { ar: 'وادي العقارية', en: 'Wadi Properties' },
+    sector: { ar: 'عقارات', en: 'Property' },
+    idea: { ar: 'المشوار من الباب', en: 'The walk from the door' },
+    concept: {
+      ar: 'ما في لقطات درون وما في زوايا واسعة بتكذب. بنمشي بالشقة زي ما بيمشي فيها اللي بيسكنها — من الباب لآخر غرفة، لقطة وحدة. اللي ما بيعجبه بيعرف من أول عشر ثواني، وهاد بيوفّر معاينات ما إلها لزوم.',
+      en: 'No drone and no wide angle that lies. We walk the flat the way somebody living in it would — from the door to the last room, one take. Anyone it does not suit knows in ten seconds, which saves the viewings that go nowhere.',
+    },
+    result: { ar: 'ستة عقارات، ومعاينات أقل بس أجدى', en: 'Six properties, fewer viewings and better ones' },
+    metric: '6', metricLabel: { ar: 'عقارات بيوم واحد', en: 'properties in one day' },
+    cast: [{ name: { ar: 'رنا', en: 'Rana' }, role: { ar: 'تصوير', en: 'Camera' } }],
+    price: 900, assets: 6, date: '2026-06', hue: '#1F2E26',
+    placeholder: true,
+  },
+  {
+    slug: 'sahn-wa-nus',
+    client: { ar: 'صحن ونص', en: 'Sahn w Nus' },
+    sector: { ar: 'مطاعم', en: 'Restaurant' },
+    idea: { ar: 'الطبق اللي بينباع لحاله', en: 'The dish that sells itself' },
+    concept: {
+      ar: 'اخترنا الطبق الوحيد اللي بيرجّع الزبون، وصوّرناه ستة أشكال — عم بينعمل، عم بينحط، عم بينتاكل، والصحن الفاضي. نفس الطبق، ستة مقاطع، ويوم تصوير واحد.',
+      en: 'We picked the one dish that brings people back and shot it six ways — being made, being put down, being eaten, and the empty plate. Same dish, six clips, one shoot day.',
+    },
+    result: { ar: 'الطبق صار ثلث الطلبات', en: 'That dish became a third of orders' },
+    metric: '33%', metricLabel: { ar: 'من الطلبات، طبق واحد', en: 'of orders, one dish' },
+    cast: [
+      { name: { ar: 'عمر', en: 'Omar' }, role: { ar: 'تصوير وتركيب', en: 'Shoot & edit' } },
+      { name: { ar: 'هلا', en: 'Hala' }, role: { ar: 'أمام الكاميرا', en: 'On camera' } },
+    ],
+    price: 900, assets: 6, date: '2026-05', hue: '#26362B',
+    placeholder: true,
+  },
+  {
+    slug: 'qalam-legal',
+    client: { ar: 'قلم للاستشارات', en: 'Qalam Legal' },
+    sector: { ar: 'خدمات مهنية', en: 'Professional services' },
+    idea: { ar: 'الشغلة اللي بتوقّع الناس', en: 'The thing that catches people out' },
+    concept: {
+      ar: 'المحامي بيشرح خطأ واحد بيشوفه كل أسبوع، وشو بيكلّف اللي بيعمله. بدون مصطلحات، وبدون ما يبيع إشي — والمقطع بينتهي بجملة مش «تواصلوا معنا».',
+      en: 'The lawyer explains one mistake he sees every week and what it costs the person who makes it. No jargon, nothing sold — and the clip ends on a sentence that is not “get in touch”.',
+    },
+    result: { ar: 'عشر مقاطع، وأسئلة أجدّ بالرسائل', en: 'Ten clips, and better questions in the inbox' },
+    metric: '10', metricLabel: { ar: 'مقاطع من يوم ونص', en: 'clips from a day and a half' },
+    cast: [{ name: { ar: 'زيد', en: 'Zaid' }, role: { ar: 'تصوير وتركيب', en: 'Shoot & edit' } }],
+    price: 1500, assets: 10, date: '2026-04', hue: '#1D2B23',
+    placeholder: true,
+  },
 ];
+
 
 export const byslug = (s: string) => WORK.find((w) => w.slug === s);

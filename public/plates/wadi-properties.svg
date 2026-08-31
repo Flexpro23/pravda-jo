@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" width="1200" height="1500">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0.55" y2="1">
+<stop offset="0" stop-color="#1F2E26"/><stop offset="0.55" stop-color="#17231B"/><stop offset="1" stop-color="#1A1A1A"/>
+</linearGradient>
+<radialGradient id="lite" cx="0.327" cy="0.291" r="0.62">
+<stop offset="0" stop-color="#EFECE5" stop-opacity="0.66"/>
+<stop offset="0.35" stop-color="#CDC4B3" stop-opacity="0.20"/>
+<stop offset="1" stop-color="#1A1A1A" stop-opacity="0"/></radialGradient>
+<clipPath id="cp"><rect width="1200" height="1500"/></clipPath>
+<filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="4"/>
+<feColorMatrix type="saturate" values="0"/></filter>
+<filter id="soft"><feGaussianBlur stdDeviation="42"/></filter>
+</defs>
+<g clip-path="url(#cp)">
+<rect width="1200" height="1500" fill="url(#bg)"/>
+<g transform="rotate(16 600 750)"><rect x="0" y="47" width="1200" height="103" fill="#EFECE5" opacity="0.102"/><rect x="0" y="288" width="1200" height="75" fill="#EFECE5" opacity="0.109"/><rect x="0" y="448" width="1200" height="68" fill="#EFECE5" opacity="0.126"/><rect x="0" y="635" width="1200" height="45" fill="#EFECE5" opacity="0.034"/><rect x="0" y="771" width="1200" height="80" fill="#EFECE5" opacity="0.063"/><rect x="0" y="929" width="1200" height="94" fill="#EFECE5" opacity="0.131"/><rect x="0" y="1069" width="1200" height="84" fill="#EFECE5" opacity="0.086"/><rect x="0" y="1313" width="1200" height="75" fill="#EFECE5" opacity="0.066"/><rect x="0" y="1457" width="1200" height="113" fill="#EFECE5" opacity="0.110"/></g>
+<ellipse cx="392" cy="436" rx="552" ry="600" fill="url(#lite)" filter="url(#soft)"/>
+<rect width="1200" height="1500" filter="url(#gr)" opacity="0.13"/>
+<rect x="0" y="888" width="1200" height="2" fill="#CDC4B3" opacity="0.5"/>
+<rect x="143" y="0" width="1" height="1500" fill="#EFECE5" opacity="0.14"/>
+</g></svg>

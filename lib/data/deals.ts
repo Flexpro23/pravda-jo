@@ -55,6 +55,20 @@ export type Talent = {
   availability: Availability;
   /** Set when they marked it, so a stale "available" can be distrusted. */
   availabilitySetAt?: string;
+  /**
+   * What they are actually good for, as trades and traits.
+   *
+   * Discipline alone says "a model"; eight of those are interchangeable to a
+   * sorting function and not remotely interchangeable on a set. Somebody who
+   * works skin clinics and knows which frames cannot be shot is the wrong
+   * person for a car detailer, and casting either into the other's job is how
+   * a shoot day gets bought twice.
+   *
+   * Free-form on purpose: these are matched against concept verticals and
+   * against the words a concept uses about itself, so a tag that matches
+   * nothing simply does not pull, rather than breaking a cast.
+   */
+  tags?: string[];
   /** Their own portal sign-in, hashed. Never the phone number itself. */
   passCodeHash?: string;
   active: boolean;

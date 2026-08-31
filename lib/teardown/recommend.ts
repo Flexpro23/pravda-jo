@@ -130,6 +130,9 @@ export function recommend(
   // justifications and nothing to choose between.
   const freq = new Map<string, number>();
   for (const x of shortlist) for (const a of x.answers) freq.set(a, (freq.get(a) ?? 0) + 1);
+
+  // One counter for the whole shortlist — see castFor.
+  const load = new Map<string, number>();
   const rarest = (answers: string[]) =>
     [...answers].sort((a, b) => (freq.get(a) ?? 0) - (freq.get(b) ?? 0))[0];
 
@@ -148,7 +151,7 @@ export function recommend(
       answers,
       models,
       needsVoice: voice,
-      cast: castFor(c, models, voice, bookable),
+      cast: castFor(c, models, voice, bookable, load),
     };
   });
 }
@@ -214,20 +217,62 @@ function reason(deciding: string | undefined, c: ConceptSource): B {
 
 /** Who from the roster, and why them. Availability is shown, never a filter —
  *  a producer offers the day and the person answers it themselves. */
+/**
+ * How well somebody fits this idea.
+ *
+ * Their tags against the concept's verticals and against the words the concept
+ * uses about itself. Deliberately crude — it only has to beat "whoever the
+ * sort put first", which is what this replaced and which named the same
+ * videographer on all five ideas.
+ */
+const fitOf = (t: Talent, c: ConceptSource): number => {
+  if (!t.tags?.length) return 0;
+  const text = `${c.name} ${c.hook} ${c.premise} ${c.format} ${c.production.cast}`.toLowerCase();
+  let fit = 0;
+  for (const tag of t.tags) {
+    // A vertical match is the strong signal: it is the library's own
+    // classification rather than a word that happened to appear.
+    if ((c.verticals as readonly string[]).includes(tag)) fit += 3;
+    else if (tag.length > 3 && text.includes(tag.replace(/-/g, ' '))) fit += 1;
+  }
+  return fit;
+};
+
+/**
+ * Who is on this one.
+ *
+ * `load` counts how many ideas on this shortlist have already named each
+ * person, and is shared across the five. It is a tie-break rather than a
+ * filter: the same videographer on three ideas is perfectly normal and is
+ * three shooting days, which the conversion to a job already relies on. What
+ * it prevents is five ideas naming one person purely because they sort first,
+ * which gives Khaled nothing to choose between and hides everyone else on the
+ * roster from the client.
+ *
+ * Order: fit, then least-used, then who has said they are free, then id — the
+ * last so the same roster and the same concept always produce the same cast,
+ * because a sheet that re-cast itself on every render would be unreviewable.
+ */
 function castFor(
   c: ConceptSource, models: number, voice: boolean, roster: Talent[],
+  load: Map<string, number>,
 ): CastPick[] {
   const picks: CastPick[] = [];
+  // Per concept, not across the shortlist: one person cannot be two of the
+  // three models on the same shoot.
   const taken = new Set<string>();
 
   const take = (discipline: string, why: B) => {
     const who = roster
       .filter((t) => t.discipline === discipline && !taken.has(t.id))
-      // Whoever has said they are free, first.
-      .sort((a, b) => (a.availability === 'available' ? -1 : 1)
-        - (b.availability === 'available' ? -1 : 1))[0];
+      .sort((a, b) =>
+        fitOf(b, c) - fitOf(a, c)
+        || (load.get(a.id) ?? 0) - (load.get(b.id) ?? 0)
+        || Number(b.availability === 'available') - Number(a.availability === 'available')
+        || a.id.localeCompare(b.id))[0];
     if (!who) return;
     taken.add(who.id);
+    load.set(who.id, (load.get(who.id) ?? 0) + 1);
     picks.push({ talentId: who.id, name: who.name, discipline, why });
   };
 

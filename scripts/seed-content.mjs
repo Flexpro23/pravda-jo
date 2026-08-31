@@ -84,6 +84,10 @@ const talent = ROSTER.map((m) => {
     dayRateJOD: keptRate,
     phone: prior?.phone ?? '',
     availability: prior?.availability ?? 'available',
+    // What they are cast for. The roster card is the source, because that is
+    // the list a person edits — a bookable record edited in the console keeps
+    // whatever it was given, so a hand-tuned set is not overwritten by a rerun.
+    tags: prior?.tags?.length ? prior.tags : (m.suits ?? []),
     passCodeHash,
     // Only a record that was already bookable keeps its own answer; one that
     // was held back for want of a rate is released as soon as there is one.
