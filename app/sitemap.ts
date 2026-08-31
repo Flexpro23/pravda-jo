@@ -1,7 +1,9 @@
 import type { MetadataRoute } from 'next';
 import { getWork } from '@/lib/store/content';
+import { SITE } from '@/lib/data/company';
 
-const BASE = 'https://pravda.jo';
+/* Moves with the domain — see SITE in lib/data/company.ts. */
+const BASE = SITE;
 const PAGES = ['', 'work', 'cast', 'teardown', 'teardown/sample', 'studio',
                'pricing', 'privacy', 'terms', 'notice', 'data',
                'instagram-professional'];

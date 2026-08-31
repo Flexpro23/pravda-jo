@@ -5,22 +5,61 @@
  * approval, which gates both Teardown delivery and the talent booking layer.
  * The legal name here must match the commercial registration exactly.
  */
+
+/**
+ * Where this deployment lives.
+ *
+ * Held as a variable rather than a literal because the domain is not bought
+ * yet and probably will not be the one we first wanted. Everything that has to
+ * name the site absolutely — canonical URLs, the sitemap, robots, the
+ * user-agent we identify ourselves with when reading a prospect's page, the
+ * link in a booking message — reads it from here, so the move is one
+ * environment variable and no code change.
+ *
+ * The fallback is the App Hosting address, which is a real, reachable origin.
+ * A placeholder domain would put a URL that resolves to nothing into a
+ * sitemap and into strangers' server logs.
+ */
+export const SITE = (process.env.NEXT_PUBLIC_SITE_URL
+  || 'https://my-web-app--pravda-jo.europe-west4.hosted.app').replace(/\/$/, '');
+
+/** The bare host, for anywhere a URL would read as noise. */
+export const SITE_HOST = SITE.replace(/^https?:\/\//, '');
+
 export const CO = {
   legalName: { ar: 'برافدا للإنتاج الإبداعي', en: 'PRAVDA Creative Production' },
-  // TODO(ali): replace with the real CR number before submitting to Meta
-  cr: '200-XXXXXX',
+  /**
+   * The commercial registration number.
+   *
+   * Deliberately absent until the real one exists. It was published as
+   * `200-XXXXXX` on every page, on the client sheet, on the proposal a client
+   * keeps and on the statement a provider is paid against — a visible
+   * placeholder on documents that leave the building, from a studio whose
+   * entire pitch is that it only says what it can prove.
+   *
+   * Every render site is guarded on this being set, so restoring it is exactly
+   * one line here and nothing else. It becomes required again the moment we
+   * submit to Meta Business Verification, which is what gates WhatsApp
+   * templates — and, separately, Page Public Content Access, which is the only
+   * route to reading a prospect's Facebook page.
+   */
+  cr: undefined as string | undefined,
   district: { ar: 'جبل عمّان', en: 'Jabal Amman' },
   city: { ar: 'عمّان', en: 'Amman' },
   country: { ar: 'الأردن', en: 'Jordan' },
   street: { ar: 'شارع رينبو', en: 'Rainbow Street' },
   phone: '+962797989818',
   phoneDisplay: '+962 79 798 9818',
-  email: 'hello@pravda.jo',
-  privacyEmail: 'privacy@pravda.jo',
+  /**
+   * Both mailboxes sit on a domain that is not registered yet, so they are
+   * variables too and move with it. Until then the phone is the channel that
+   * actually answers, which is why every page leads with it.
+   */
+  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'hello@pravda.jo',
+  privacyEmail: process.env.NEXT_PUBLIC_PRIVACY_EMAIL || 'privacy@pravda.jo',
   instagram: 'pravda.jo',
   founded: '2026',
 } as const;
-
 export const FOUNDERS = [
   {
     key: 'ali',

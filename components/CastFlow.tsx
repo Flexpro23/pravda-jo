@@ -109,7 +109,7 @@ export default function CastFlow({
           {/* the stage is fixed, so the entity block rides the closing screen */}
           <address className="scene-entity lift" style={{ ["--lift" as string]: 4 }}>
             <span className="u">{CO.legalName[lang]}</span>
-            <span className="u">{lang === 'ar' ? 'س.ت' : 'CR'} <span className="num ltr">{CO.cr}</span></span>
+            {CO.cr && <span className="u">{lang === 'ar' ? 'س.ت' : 'CR'} <span className="num ltr">{CO.cr}</span></span>}
             <a className="u tel ltr" href={`tel:${CO.phone}`}>{CO.phoneDisplay}</a>
             <Link className="u link" href={path(lang, 'studio')}>{tx('navStudio', lang)}</Link>
             <Link className="u link" href={path(lang, 'privacy')}>{tx('navPrivacy', lang)}</Link>

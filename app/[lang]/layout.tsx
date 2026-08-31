@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import './globals.css';
 import type { Lang } from '@/lib/i18n';
 import RouteTransition from '@/components/RouteTransition';
+import { SITE } from '@/lib/data/company';
 
 const LANGS = ['ar', 'en'] as const;
 export function generateStaticParams() { return LANGS.map((lang) => ({ lang })); }
@@ -13,7 +14,7 @@ export async function generateMetadata(
   const { lang } = await params;
   const ar = lang === 'ar';
   return {
-    metadataBase: new URL('https://pravda.jo'),
+    metadataBase: new URL(SITE),
     title: {
       default: ar ? 'برافدا — عمّان' : 'PRAVDA — Amman',
       template: ar ? '%s · برافدا' : '%s · PRAVDA',

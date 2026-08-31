@@ -41,7 +41,7 @@ export default function Foot({ lang }: { lang: Lang }) {
 
       <address className="entity">
         <span className="u">{CO.legalName[lang]}</span>
-        <span className="u">{lang === 'ar' ? 'س.ت' : 'CR'} <span className="num ltr">{CO.cr}</span></span>
+        {CO.cr && <span className="u">{lang === 'ar' ? 'س.ت' : 'CR'} <span className="num ltr">{CO.cr}</span></span>}
         <span className="u">
           {[CO.street, CO.district, CO.city, CO.country].map((f) => f[lang]).join(sep(lang))}
         </span>

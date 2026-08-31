@@ -1,4 +1,5 @@
 import { lookup } from 'node:dns/promises';
+import { SITE } from '@/lib/data/company';
 
 /**
  * Reading a prospect's website.
@@ -132,8 +133,10 @@ export async function readSite(input: string, budgetMs = 12_000): Promise<SiteRe
       signal: AbortSignal.timeout(budgetMs),
       headers: {
         // Say who we are. A studio reading a prospect's public page should be
-        // identifiable in their logs rather than pretending to be a browser.
-        'user-agent': 'PRAVDA-Teardown/1.0 (+https://pravda.jo; reads public pages)',
+        // identifiable in their logs rather than pretending to be a browser —
+        // and the address we leave there has to be one that actually resolves,
+        // so it moves with SITE rather than naming a domain we do not own yet.
+        'user-agent': `PRAVDA-Teardown/1.0 (+${SITE}; reads public pages)`,
         accept: 'text/html,application/xhtml+xml',
       },
     });

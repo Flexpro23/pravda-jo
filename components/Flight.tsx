@@ -211,7 +211,7 @@ export default function Flight({ lang }: { lang: Lang }) {
                 </div>
                 <address className="scene-entity">
                   <span className="u">{CO.legalName[lang]}</span>
-                  <span className="u">{lang === 'ar' ? 'س.ت' : 'CR'} <span className="num ltr">{CO.cr}</span></span>
+                  {CO.cr && <span className="u">{lang === 'ar' ? 'س.ت' : 'CR'} <span className="num ltr">{CO.cr}</span></span>}
                   <span className="u">{CO.district[lang]}، {CO.city[lang]}</span>
                   <a className="u tel ltr" href={`tel:${CO.phone}`}>{CO.phoneDisplay}</a>
                 </address>
@@ -267,7 +267,7 @@ export default function Flight({ lang }: { lang: Lang }) {
                       what Meta Business Verification checks for. */}
                   <address className="scene-entity">
                     <span className="u">{CO.legalName[lang]}</span>
-                    <span className="u">{lang === 'ar' ? 'س.ت' : 'CR'} <span className="num ltr">{CO.cr}</span></span>
+                    {CO.cr && <span className="u">{lang === 'ar' ? 'س.ت' : 'CR'} <span className="num ltr">{CO.cr}</span></span>}
                     <span className="u">{CO.district[lang]}، {CO.city[lang]}</span>
                     <a className="u tel ltr" href={`tel:${CO.phone}`}>{CO.phoneDisplay}</a>
                     <Link className="u link" href={path(lang, 'studio')}>{tx('navStudio', lang)}</Link>

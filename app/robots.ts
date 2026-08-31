@@ -1,15 +1,17 @@
 import type { MetadataRoute } from 'next';
+import { SITE } from '@/lib/data/company';
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [{
       userAgent: '*',
       allow: '/',
-      // A teardown is written for one recipient. It must never surface in search,
-      // and neither must the preview that carries it.
-      disallow: ['/r/', '/p/'],
+      // Everything written for one recipient, plus the two consoles. None of it
+      // may surface in search. Each of these also carries a `noindex` meta tag —
+      // this list is the second lock, not the only one.
+      disallow: ['/r/', '/p/', '/s/', '/ops', '/t', '/doc/'],
     }],
-    sitemap: 'https://pravda.jo/sitemap.xml',
-    host: 'https://pravda.jo',
+    sitemap: `${SITE}/sitemap.xml`,
+    host: SITE,
   };
 }

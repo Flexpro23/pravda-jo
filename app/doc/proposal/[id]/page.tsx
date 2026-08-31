@@ -126,7 +126,7 @@ export default async function ProposalDoc({
           </div>
           <div className="entity">
             <span>{CO.legalName[ar ? 'ar' : 'en']}</span>
-            <span>{ar ? 'س.ت' : 'CR'} <span className="num">{CO.cr}</span></span>
+            {CO.cr && <span>{ar ? 'س.ت' : 'CR'} <span className="num">{CO.cr}</span></span>}
             <span>{CO.street[ar ? 'ar' : 'en']}، {CO.district[ar ? 'ar' : 'en']}</span>
             <span>{CO.city[ar ? 'ar' : 'en']}، {CO.country[ar ? 'ar' : 'en']}</span>
             <span className="num">{CO.phoneDisplay}</span>

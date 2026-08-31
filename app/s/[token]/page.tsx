@@ -269,7 +269,10 @@ export default async function SharedSheet({
       )}
 
       <footer className="foot">
-        <div>{CO.legalName[ar ? 'ar' : 'en']} · {ar ? 'س.ت' : 'CR'} <span className="num">{CO.cr}</span></div>
+        <div>
+          {CO.legalName[ar ? 'ar' : 'en']}
+          {CO.cr && <> · {ar ? 'س.ت' : 'CR'} <span className="num">{CO.cr}</span></>}
+        </div>
         <div>{CO.district[ar ? 'ar' : 'en']}، {CO.city[ar ? 'ar' : 'en']} · <a className="num" href={`tel:${CO.phone}`}>{CO.phoneDisplay}</a></div>
         <div>
           {ar

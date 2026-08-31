@@ -43,8 +43,12 @@ export default function StudioView({ lang }: { lang: Lang }) {
             <dl className="facts">
               <dt className="u">{ar ? 'الاسم القانوني' : 'Registered name'}</dt>
               <dd>{CO.legalName[lang]}</dd>
-              <dt className="u">{ar ? 'السجل التجاري' : 'Commercial registration'}</dt>
-              <dd className="num ltr">{CO.cr}</dd>
+              {/* A definition list must not carry a term with no definition,
+                  so the pair disappears together until the number is real. */}
+              {CO.cr && <>
+                <dt className="u">{ar ? 'السجل التجاري' : 'Commercial registration'}</dt>
+                <dd className="num ltr">{CO.cr}</dd>
+              </>}
               <dt className="u">{ar ? 'العنوان' : 'Address'}</dt>
               <dd>{[CO.street, CO.district, CO.city, CO.country].map((f) => f[lang]).join(sep(lang))}</dd>
               <dt className="u">{ar ? 'الهاتف' : 'Phone'}</dt>

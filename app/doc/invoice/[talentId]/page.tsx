@@ -111,7 +111,7 @@ export default async function InvoiceDoc({
           </div>
           <div className="entity">
             <span>{CO.legalName[ar ? 'ar' : 'en']}</span>
-            <span>{ar ? 'س.ت' : 'CR'} <span className="num">{CO.cr}</span></span>
+            {CO.cr && <span>{ar ? 'س.ت' : 'CR'} <span className="num">{CO.cr}</span></span>}
             <span>{CO.district[ar ? 'ar' : 'en']}، {CO.city[ar ? 'ar' : 'en']}</span>
             <span className="num">{CO.phoneDisplay}</span>
           </div>
