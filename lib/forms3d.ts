@@ -11,23 +11,25 @@
  * the route under its JS budget and means the objects can be tuned in code.
  */
 import {
-  BoxGeometry, CylinderGeometry, TorusGeometry, SphereGeometry, CapsuleGeometry,
-  Mesh, MeshBasicMaterial, BufferGeometry, BufferAttribute, Matrix4, Vector3, Euler, Quaternion,
+  BoxGeometry, CylinderGeometry, TorusGeometry, SphereGeometry, CapsuleGeometry, LatheGeometry,
+  Mesh, MeshBasicMaterial, BufferGeometry, BufferAttribute, Matrix4, Vector2, Vector3, Euler, Quaternion,
 } from 'three';
 import { MeshSurfaceSampler } from 'three/examples/jsm/math/MeshSurfaceSampler.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 type Part = {
   g: BufferGeometry; at?: [number, number, number]; rot?: [number, number, number];
+  /** non-uniform scale, for an ellipsoid head or an oval torso */
+  sc?: [number, number, number];
   /** sampling weight per unit area — a faint skin gets far fewer points than the edges around it */
   w?: number;
 };
 
-const place = ({ g, at = [0, 0, 0], rot = [0, 0, 0], w = 1 }: Part) => {
+const place = ({ g, at = [0, 0, 0], rot = [0, 0, 0], sc = [1, 1, 1], w = 1 }: Part) => {
   const m = new Matrix4().compose(
     new Vector3(...at),
     new Quaternion().setFromEuler(new Euler(...rot)),
-    new Vector3(1, 1, 1),
+    new Vector3(...sc),
   );
   const out = g.index ? g.toNonIndexed() : g.clone();
   out.applyMatrix4(m);   // transforms position and normal both
@@ -104,6 +106,17 @@ const bar = (a: [number, number, number], b: [number, number, number], r = 0.012
   const q = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), to.clone().sub(from).normalize());
   const e = new Euler().setFromQuaternion(q);
   return { g: new CylinderGeometry(r, r, len, 8), at: [mid.x, mid.y, mid.z], rot: [e.x, e.y, e.z] };
+};
+
+/** A limb — a tapered cylinder from one joint to the next. */
+const limb = (a: [number, number, number], b: [number, number, number], r1: number, r2: number): Part => {
+  const from = new Vector3(...a), to = new Vector3(...b);
+  const len = from.distanceTo(to);
+  const mid = from.clone().add(to).multiplyScalar(0.5);
+  // a cylinder's +y runs from radiusBottom to radiusTop, so the wide end sits at `a`
+  const q = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), to.clone().sub(from).normalize());
+  const e = new Euler().setFromQuaternion(q);
+  return { g: new CylinderGeometry(r2, r1, len, 14), at: [mid.x, mid.y, mid.z], rot: [e.x, e.y, e.z] };
 };
 
 /** A box drawn by its twelve edges. A panel in a point cloud is noise; its outline is the object. */
@@ -222,27 +235,58 @@ export const slate = (n = 30000) => {
 };
 
 /**
- * The figure. A model at the mark — head, shoulders, a long stance with the
- * weight on one leg — built as a mannequin, so it reads as a person on set
- * without pretending to be any one of the ninety.
+ * The figure. A woman at the mark in a runway stance — weight on one leg,
+ * the other crossed a little in front, one hand on the hip, long hair, a
+ * fitted dress to the knee, heels. Turned on a lathe so the shoulders, bust,
+ * waist and hips flow into one silhouette, which is what a body reads by in
+ * a point cloud; no face is attempted at this resolution.
  */
-export const figure = (n = 30000) => sample([
-  { g: new SphereGeometry(0.115, 24, 18), at: [0, 0.86, 0] },                         // head
-  { g: new CylinderGeometry(0.045, 0.055, 0.12, 14), at: [0, 0.71, 0] },              // neck
-  { g: new CapsuleGeometry(0.19, 0.30, 6, 18), at: [0, 0.43, 0] },                    // torso
-  { g: new CapsuleGeometry(0.15, 0.10, 6, 16), at: [0, 0.10, 0] },                    // hips
-  { g: new CapsuleGeometry(0.052, 0.36, 4, 12), at: [-0.26, 0.40, 0], rot: [0, 0, 0.16] },   // upper arm L
-  { g: new CapsuleGeometry(0.045, 0.34, 4, 12), at: [-0.33, 0.02, 0.02], rot: [0, 0, 0.10] }, // forearm L
-  { g: new CapsuleGeometry(0.052, 0.36, 4, 12), at: [0.27, 0.42, 0], rot: [0, 0, -0.30] },   // upper arm R, hand on hip
-  { g: new CapsuleGeometry(0.045, 0.30, 4, 12), at: [0.20, 0.08, 0.04], rot: [0, 0, 1.25] }, // forearm R
-  { g: new CapsuleGeometry(0.075, 0.44, 4, 14), at: [-0.10, -0.32, 0], rot: [0, 0, 0.05] },  // thigh L (weight)
-  { g: new CapsuleGeometry(0.060, 0.44, 4, 14), at: [-0.12, -0.82, 0.02] },                  // shin L
-  { g: new CapsuleGeometry(0.075, 0.44, 4, 14), at: [0.16, -0.30, 0.02], rot: [0, 0, -0.22] }, // thigh R (out)
-  { g: new CapsuleGeometry(0.060, 0.44, 4, 14), at: [0.28, -0.80, 0.06], rot: [0, 0, -0.10] }, // shin R
-  { g: new BoxGeometry(0.09, 0.05, 0.22), at: [-0.12, -1.09, 0.06] },                        // foot L
-  { g: new BoxGeometry(0.09, 0.05, 0.22), at: [0.31, -1.07, 0.10], rot: [0, -0.35, 0] },      // foot R
-  { g: new CylinderGeometry(0.42, 0.42, 0.02, 40), at: [0.06, -1.12, 0.04] },               // the mark
-], n, 19);
+export const figure = (n = 32000) => {
+  // the body from the collar to the hem, as (radius, height) — an oval in plan
+  const profile = [
+    [0.055, 1.60], [0.13, 1.56], [0.185, 1.52], [0.175, 1.46], [0.165, 1.40],
+    [0.170, 1.33], [0.150, 1.26], [0.118, 1.19], [0.108, 1.13], [0.125, 1.06],
+    [0.158, 0.98], [0.172, 0.90], [0.168, 0.80], [0.172, 0.68], [0.182, 0.56],
+    [0.190, 0.50],
+  ].map(([r, y]) => new Vector2(r, y));
+  const body: Part = { g: new LatheGeometry(profile, 36), sc: [1, 1, 0.62] };
+  const hem: Part = { g: new TorusGeometry(0.19, 0.008, 6, 40), at: [0, 0.50, 0], rot: [HALF, 0, 0], sc: [1, 0.62, 1] };
+
+  const head: Part = { g: new SphereGeometry(0.10, 28, 20), at: [0, 1.80, 0.01], sc: [0.92, 1.18, 1] };
+  const neck: Part = { g: new CylinderGeometry(0.040, 0.050, 0.12, 16), at: [0, 1.64, 0] };
+  // hair: a fuller ellipsoid behind the crown, and a fall to the shoulder blades
+  const hair: Part[] = [
+    { g: new SphereGeometry(0.115, 28, 20), at: [0, 1.82, -0.035], sc: [1, 1.12, 1.05], w: 0.55 },
+    { g: new CylinderGeometry(0.115, 0.075, 0.46, 24, 1, true), at: [0, 1.55, -0.07], sc: [1, 1, 0.75], w: 0.55 },
+  ];
+
+  // arms — left hangs with a slight bend, right hand rests on the hip
+  const arms: Part[] = [
+    { g: new SphereGeometry(0.055, 16, 12), at: [-0.19, 1.51, 0] },
+    limb([-0.20, 1.50, 0], [-0.25, 1.22, -0.01], 0.046, 0.038),
+    limb([-0.25, 1.22, -0.01], [-0.27, 0.96, 0.03], 0.036, 0.028),
+    { g: new SphereGeometry(0.035, 12, 10), at: [-0.275, 0.91, 0.04], sc: [0.8, 1.4, 0.6] },
+    { g: new SphereGeometry(0.055, 16, 12), at: [0.19, 1.51, 0] },
+    limb([0.20, 1.50, 0], [0.32, 1.26, -0.02], 0.046, 0.038),
+    limb([0.32, 1.26, -0.02], [0.17, 1.02, 0.03], 0.036, 0.028),
+  ];
+
+  // legs from the hem down — the left carries the weight, the right crosses in front
+  const legs: Part[] = [
+    limb([-0.09, 0.52, 0], [-0.10, 0.30, 0.01], 0.062, 0.045),
+    limb([-0.10, 0.30, 0.01], [-0.10, 0.09, 0.0], 0.045, 0.030),
+    { g: new BoxGeometry(0.065, 0.04, 0.20), at: [-0.10, 0.045, 0.06], rot: [0.12, 0, 0] },
+    { g: new BoxGeometry(0.02, 0.07, 0.02), at: [-0.10, 0.035, -0.02] },            // heel
+    limb([0.08, 0.52, 0.03], [0.0, 0.30, 0.09], 0.062, 0.045),
+    limb([0.0, 0.30, 0.09], [0.02, 0.09, 0.12], 0.045, 0.030),
+    { g: new BoxGeometry(0.065, 0.04, 0.20), at: [0.02, 0.045, 0.18], rot: [0.12, -0.25, 0] },
+    { g: new BoxGeometry(0.02, 0.07, 0.02), at: [0.02, 0.035, 0.10] },              // heel
+  ];
+
+  const mark: Part = { g: new CylinderGeometry(0.42, 0.42, 0.015, 40), at: [0, 0.0, 0.06], w: 0.28 };
+
+  return sample([body, hem, head, neck, ...hair, ...arms, ...legs, mark], n, 19);
+};
 
 /** The send. A paper plane drawn by its folds, banked into its turn. */
 export const send = (n = 24000) => {

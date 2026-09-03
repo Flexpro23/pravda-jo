@@ -214,7 +214,7 @@ export const DIAGRAMS: Form[] = [reticle, roster, library, scale, zero, converge
  */
 export const FORMS: FormSpec[] = [
   { kind: 'solid', build: phone,  size: 0.92, yaw: 0.30 },
-  { kind: 'solid', build: figure, size: 1.00, yaw: -0.30 },
+  { kind: 'solid', build: figure, size: 1.12, yaw: 0.28 },
   { kind: 'solid', build: slate,  size: 1.05, yaw: -0.28 },
   { kind: 'solid', build: camera, size: 1.05, yaw: -1.20, pitch: 0.05, lift: -0.12 },
   { kind: 'solid', build: wave,   size: 1.60, yaw: 0.18 },
