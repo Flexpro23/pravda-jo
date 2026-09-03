@@ -7,6 +7,7 @@ import {
 } from 'three';
 import { VERT, FRAG } from './terrain.glsl';
 import { FORMS, sampleForm } from '@/lib/forms';
+import { STRIDE } from '@/lib/forms3d';
 
 const COLS = 300;      // across
 const ROWS = 400;      // into the screen
@@ -71,33 +72,60 @@ export default function Terrain({
     // Offset right of centre: the type is flush left, so a centred form
     // collides with the headline. This puts the image where the eye lands
     // after reading, not underneath the words.
-    const FORM_W = 70, FORM_H = 70, FORM_Y = 10.5, FORM_Z = -44, FORM_X = 19;
+    // aTarget is object-local: centred on the origin, longest side one unit.
+    // The shader scales it, turns it about its own axis, and places it at
+    // uFormPos — so an object can revolve under the pointer without the whole
+    // attribute being rewritten every frame.
+    const FORM_SIZE = 26, FORM_Y = 12.5, FORM_Z = -40, FORM_X = 23;
     const target = new Float32Array(N * 3);
-    const built: Float32Array[] = [];
-    // Points per lit source pixel. Held constant across forms so a bare ring
-    // and a contact sheet draw with the same weight of light.
+    // the surface normal at each target — zero for a drawn form, which has none
+    const normal = new Float32Array(N * 3);
+    const built: { pts: Float32Array; dims: number }[] = [];
+    // Points per source sample. Held constant across forms so a bare ring and
+    // a camera body draw with the same weight of light.
     const PER = 15;
     let join = 0.42;
+    let formYaw = 0, formPitch = 0, formLift = 0, formSize = FORM_SIZE, sizeScale = 1;
+    let portrait = false;
 
     const applyForm = (index: number) => {
-      let pts = built[index];
-      if (!pts) {
-        pts = sampleForm(FORMS[index % FORMS.length]);
-        built[index] = pts;
+      let b = built[index];
+      if (!b) {
+        const spec = FORMS[index % FORMS.length];
+        b = spec.kind === 'draw'
+          ? { pts: sampleForm(spec.draw), dims: 2 }
+          : { pts: spec.build(), dims: STRIDE };
+        built[index] = b;
       }
-      const count = pts.length / 2;
+      const { pts, dims } = b;
+      const count = pts.length / dims;
       if (!count) return;
-      join = 1 - Math.min(0.62, Math.max(0.13, (count * PER) / N));
+      const spec = FORMS[index % FORMS.length];
+      formYaw = spec.kind === 'solid' ? (spec.yaw ?? 0) : 0;
+      formPitch = spec.kind === 'solid' ? (spec.pitch ?? 0) : 0;
+      formLift = spec.kind === 'solid' ? (spec.lift ?? 0) : 0;
+      if (matRef) placeForm();   // the first form is applied before the material exists; resize() places it
+      formSize = FORM_SIZE * (spec.kind === 'solid' ? (spec.size ?? 1) : 1);
+      // a solid object is sampled a few times more densely than a diagram, so
+      // its share of the field is held rather than derived
+      const solid = dims === STRIDE;
+      join = solid ? 0.55 : 1 - Math.min(0.62, Math.max(0.13, (count * PER) / N));
       if (matRef) matRef.uniforms.uJoin.value = join;
       for (let k = 0; k < N; k++) {
         // deterministic pick per point so a form is stable across re-entry
         const j = (k * 2654435761) % count;
-        target[k * 3] = FORM_X + pts[j * 2] * FORM_W + (rnd[k] - 0.5) * 0.55;
-        target[k * 3 + 1] = FORM_Y + pts[j * 2 + 1] * FORM_H + (rnd[(k + 7) % N] - 0.5) * 0.55;
-        target[k * 3 + 2] = FORM_Z + (rnd[(k + 13) % N] - 0.5) * 3.2;
+        const o = j * dims;
+        target[k * 3] = pts[o] + (rnd[k] - 0.5) * 0.006;
+        target[k * 3 + 1] = pts[o + 1] + (rnd[(k + 7) % N] - 0.5) * 0.006;
+        target[k * 3 + 2] = solid ? pts[o + 2] : (rnd[(k + 13) % N] - 0.5) * 0.05;
+        normal[k * 3] = solid ? pts[o + 3] : 0;
+        normal[k * 3 + 1] = solid ? pts[o + 4] : 0;
+        normal[k * 3 + 2] = solid ? pts[o + 5] : 0;
       }
-      const attr = geo.getAttribute('aTarget') as BufferAttribute | undefined;
-      if (attr) attr.needsUpdate = true;
+      for (const name of ['aTarget', 'aNormal']) {
+        const attr = geo.getAttribute(name) as BufferAttribute | undefined;
+        if (attr) attr.needsUpdate = true;
+      }
     };
 
     let matRef: RawShaderMaterial | null = null;
@@ -106,6 +134,7 @@ export default function Terrain({
     geo.setAttribute('position', new BufferAttribute(pos, 3));
     geo.setAttribute('aRand', new BufferAttribute(rnd, 1));
     geo.setAttribute('aTarget', new BufferAttribute(target, 3));
+    geo.setAttribute('aNormal', new BufferAttribute(normal, 3));
     applyForm(0);
     geo.boundingSphere = new Sphere(new Vector3(0, 0, -DEPTH / 2), DEPTH);
 
@@ -118,6 +147,8 @@ export default function Terrain({
         uJoin: { value: join },
         uTime: { value: 0 }, uZ: { value: 0 }, uDepth: { value: DEPTH },
         uAmp: { value: 9.6 }, uIn: { value: 0 }, uMorph: { value: 0 }, uPointer: { value: pointer }, uDpr: { value: 1 },
+        uFormPos: { value: new Vector3(FORM_X, FORM_Y, FORM_Z) }, uFormSize: { value: FORM_SIZE },
+        uSpin: { value: new Vector2(0, 0) },
         uBone: { value: new Color('#EFECE5') },
         uBrass: { value: new Color('#CDC4B3') },
         uDeep: { value: new Color('#17231B') },
@@ -144,12 +175,25 @@ export default function Terrain({
     matRef = mat;
     mat.uniforms.uDpr.value = dpr;
 
+    // Landscape: the object sits to the right of the type, where the eye
+    // lands after reading. Portrait: there is no right; it sits below. Each
+    // object may also ride a little higher or lower than the stage position.
+    const placeForm = () => {
+      sizeScale = portrait ? 0.62 : 1;
+      const size = formSize * sizeScale;
+      (mat.uniforms.uFormPos.value as Vector3).set(
+        portrait ? 1.5 : FORM_X, (portrait ? 3.5 : FORM_Y) + formLift * size, FORM_Z);
+      mat.uniforms.uFormSize.value = size;
+    };
+
     const resize = () => {
       if (!renderer || dead) return;
       const r = el.getBoundingClientRect();
       renderer.setSize(r.width, r.height, false);
       cam.aspect = r.width / Math.max(1, r.height);
       cam.updateProjectionMatrix();
+      portrait = cam.aspect < 1;
+      placeForm();
     };
     const ro = new ResizeObserver(resize); ro.observe(el); resize();
 
@@ -164,7 +208,7 @@ export default function Terrain({
     window.addEventListener('pointermove', onMove, { passive: true });
 
     const t0 = performance.now();
-    let z = 0;
+    let z = 0, last = t0;
 
     // round-robin ripple slots so overlapping strikes coexist
     let slot = 0;
@@ -186,16 +230,25 @@ export default function Terrain({
       raf = requestAnimationFrame(tick);
       if (!visible || dead || !renderer) return;
       const t = (now - t0) / 1000;
+      // Easing is done against the clock, not the frame: the same settle on a
+      // 120Hz display, a 60Hz one, and a phone that has dropped to 30.
+      const dt = Math.min(0.1, (now - last) / 1000);
+      last = now;
+      const k = 1 - Math.exp(-dt * 3.4);   // ≈ 0.055 per frame at 60Hz
 
       // travel = a constant drift plus the scroll position, so it never dies
       const target = t * 2.2 + progressRef.current * DEPTH * 2.35;
-      z += (target - z) * 0.055;
+      z += (target - z) * k;
 
       mat.uniforms.uTime.value = t;
       mat.uniforms.uIn.value = Math.min(1, t / 2.2);
-      mat.uniforms.uMorph.value += (morphRef.current - mat.uniforms.uMorph.value) * 0.055;
+      mat.uniforms.uMorph.value += (morphRef.current - mat.uniforms.uMorph.value) * k;
       mat.uniforms.uZ.value = z;
-      pointer.lerp(aim, 0.03);
+      pointer.lerp(aim, 1 - Math.exp(-dt * 1.8));
+      // The object turns slowly on its own and follows the pointer: yaw from
+      // x, a little pitch from y — held, not played.
+      const spin = mat.uniforms.uSpin.value as Vector2;
+      spin.set(formYaw + Math.sin(t * 0.21) * 0.16 + pointer.x * 0.50, formPitch - 0.06 + pointer.y * 0.20);
 
       // fly ABOVE the dunes and look down the corridor, so the field recedes
       // instead of collapsing into a band at eye level

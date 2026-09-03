@@ -1,20 +1,18 @@
 /**
  * Source forms for the point field to resolve into.
  *
- * Every form is a diagram, not a picture. A drawn person — silhouette, head
- * and shoulders, two figures at a shoot — reads as a pictogram: signage, not
- * photography. It is also the one thing a roster of ninety distinct people
- * would not recognise as itself. So nothing here depicts. The field resolves
- * into the instruments of the work instead: a frame being measured, ninety
- * marks with four of them cast, thirty cells, a published rate, an open
- * aperture, a convergence.
- *
- * One grammar throughout — light lines on nothing. No filled mass, no anatomy,
- * no icon a stock library would sell you.
+ * Two families. The diagrams below are drawn on a plane and sampled as
+ * outlines — light lines on nothing. The solid forms in `forms3d.ts` are
+ * objects sampled across their surface: the instruments of the work with a
+ * front, a back and a silhouette, which is what survives being seen through
+ * a hundred thousand points. FORMS at the bottom decides which set the flight
+ * uses.
  *
  * Replace these with real PRAVDA photography when it exists: `sampleForm`
  * takes any drawable source, so an <img> of a real frame drops straight in.
  */
+import { phone, figure, slate, camera, wave, send } from '@/lib/forms3d';
+
 export type Form = (c: CanvasRenderingContext2D, w: number, h: number) => void;
 
 /** One optical weight across the set, so no form shouts over another. */
@@ -188,8 +186,40 @@ export const converge: Form = (c, w, h) => {
   c.beginPath(); c.arc(nx, ny, R * 0.14, 0, Math.PI * 2); c.stroke();
 };
 
-/** One per scene, in order: read, roster, library, rate, nothing, send. */
-export const FORMS: Form[] = [reticle, roster, library, scale, zero, converge];
+/**
+ * A form is either drawn (a diagram, sampled as an outline on a plane) or
+ * solid (an object, sampled across its surface in three dimensions). Both
+ * arrive at the field as a list of target positions; the solid ones also turn.
+ */
+export type FormSpec =
+  | { kind: 'draw'; draw: Form }
+  | {
+      kind: 'solid'; build: () => Float32Array;
+      /** multiplier on the stage's object size — a wide, flat object needs more */
+      size?: number;
+      /** resting yaw and pitch in radians, so each object is met at its best angle */
+      yaw?: number;
+      pitch?: number;
+      /** vertical offset from the stage's object position, as a fraction of its size */
+      lift?: number;
+    };
+
+/** The diagrams, kept — drop any of them back into FORMS to compare. */
+export const DIAGRAMS: Form[] = [reticle, roster, library, scale, zero, converge];
+
+/**
+ * One per scene, in order: read, roster, library, rate, nothing, send.
+ * The instruments of the work as objects: the phone under review, a model at
+ * the mark, the slate, the camera, the voice, the send.
+ */
+export const FORMS: FormSpec[] = [
+  { kind: 'solid', build: phone,  size: 0.92, yaw: 0.30 },
+  { kind: 'solid', build: figure, size: 1.00, yaw: -0.30 },
+  { kind: 'solid', build: slate,  size: 1.05, yaw: -0.28 },
+  { kind: 'solid', build: camera, size: 1.05, yaw: -1.20, pitch: 0.05, lift: -0.12 },
+  { kind: 'solid', build: wave,   size: 1.60, yaw: 0.18 },
+  { kind: 'solid', build: send,   size: 0.88, yaw: -0.45, pitch: 0.95, lift: -0.36 },
+];
 
 /**
  * Draw a form and return the coordinates of every lit pixel, normalised to

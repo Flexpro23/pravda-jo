@@ -91,26 +91,40 @@ and the type, so they can never drift apart.
   which gives texture between the structural points. Colour cools with
   distance as well as darkening.
 
-- **The field resolves into images.** Every point carries a second address —
+- **The field resolves into objects.** Every point carries a second address —
   `aTarget` — and `uMorph` blends between the terrain and a form. The field
   disperses while travelling between sections and resolves once it settles, so
-  raw material becomes a picture at each moment of the story. That is the
+  raw material becomes a thing at each moment of the story. That is the
   business, stated in the medium.
 
-  Forms live in `lib/forms.ts`, drawn on an offscreen canvas rather than
-  loaded: a 9:16 frame with thirds, a head-and-shoulders portrait, a camera
-  aperture, a photographer and model at work. **`sampleForm` takes any
-  drawable source, so real PRAVDA photography drops straight in** — pass an
-  `<img>` instead of a draw function.
+  The forms are the instruments of the work, one per scene: the phone under
+  review, a model at the mark, the slate, the cinema camera, a voice waveform,
+  the send. They live in `lib/forms3d.ts` as a handful of Three.js primitives
+  each — nothing is loaded — sampled across their surface with
+  `MeshSurfaceSampler`, normals included. `lib/forms.ts` maps scenes to forms
+  and keeps the earlier drawn diagrams, which drop back in through the same
+  `FormSpec` type. `aTarget` is object-local: the shader scales it, turns it
+  under the pointer (`uSpin`), and sets it down at `uFormPos`, so the object
+  revolves without the attribute being rewritten.
 
-  Two rules keep it elegant rather than a white mass:
+  Four things decide whether a point-cloud object reads or turns to fog:
 
-  1. **Sample edges, not fills.** A solid silhouette concentrates every point
-     into a small area and additive blending clips it to white. Forms are the
-     outline plus 7% of the interior, so they read as a drawing.
-  2. **Only 58% of the field joins.** The rest stays as terrain, so the image
-     sits *in* the material rather than replacing it, and density never spikes.
-     Per-point alpha also drops as the form resolves, because density rises.
+  1. **Edges, not panels.** A flat face is noise in a point cloud; its outline
+     is the object. Bodies are drawn by their twelve edges (`wireBox`),
+     screens and slates by their frames (`frame`), with a faint fill weighted
+     at a tenth of the sampling density.
+  2. **Rim light, back faces dimmed.** Each point carries its normal. Faces
+     seen edge-on go bright, faces square to the eye go thin, and the far side
+     drops to a third — so the object has a front, and never burns to white.
+  3. **A clearing.** Terrain points under and behind the object go quiet while
+     it is resolved, so it is read against dark rather than through whichever
+     bright ridge it shares the screen with.
+  4. **Its own angle.** Each form carries a resting yaw, pitch, size and lift:
+     the camera is met in profile, the plane from above, the waveform wide.
+     On portrait screens the object moves below the type and shrinks.
+
+  Easing is against the clock, not the frame: the same settle on a 120Hz
+  display and a phone that has dropped to 30.
 - `components/Flight.tsx` — virtual scroll, scene envelopes, the HUD.
 - **Ripples.** Four round-robin slots, each a wave packet struck on every
   section change. Two things decide whether it reads as a wave or as noise:
