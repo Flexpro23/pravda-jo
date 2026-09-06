@@ -765,116 +765,6 @@ ol.steps li:first-child{border-top:none;}
 [lang="ar"] .rate-u{font-family:var(--ar);font-size:14px;letter-spacing:0;text-transform:none;}
 .rate-note{font-size:14px;}
 
-/* ══════ REPORT ══════ */
-.specimen{background:var(--warn);color:var(--void);padding:var(--s3) var(--s5);
-  text-align:center;font-size:11.5px;line-height:1.5;letter-spacing:.1em;font-weight:500;
-  position:relative;z-index:95;}
-[lang="ar"] .specimen{letter-spacing:0;font-family:var(--ar);font-size:14px;}
-/* The banner must be read, and a fixed difference-blended masthead lands on top
-   of it. On a specimen the masthead joins the flow underneath instead. */
-body:has(.specimen) .mast{position:static;mix-blend-mode:normal;}
-body:has(.specimen) .mast .wm,body:has(.specimen) .mast-nav a{color:var(--bone);}
-body:has(.specimen) .rep{padding-block-start:clamp(32px,5vh,64px);}
-.rep{padding-block:clamp(110px,16vh,180px) clamp(60px,9vh,110px);}
-.rep-date{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s5);
-  padding-bottom:var(--s5);border-bottom:1px solid var(--rule);}
-.rep-hero{padding-block:clamp(36px,5vw,70px);}
-.rep-plate{aspect-ratio:4/5;max-width:420px;
-  background:radial-gradient(70% 55% at 40% 30%, #33493A 0%, #1C2A20 62%, #1A1A1A 100%);
-  border:1px solid var(--rule);display:flex;align-items:flex-end;padding:var(--s4);
-  margin-block:var(--s5) var(--s6);}
-.rep-s{padding-block:clamp(32px,4.5vw,64px);border-top:1px solid var(--rule);}
-.rep-s > .u:first-child{display:block;margin-bottom:var(--s4);}
-.rep-s .body{max-width:60ch;margin-bottom:var(--s4);}
-.verdict-q{border-inline-start:2px solid var(--brass);padding-inline-start:var(--s5);
-  margin:var(--s4) 0 0;max-width:46ch;}
-
-.vitals{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);}
-.vital{background:var(--void);padding:clamp(18px,2.6vw,32px);
-  display:grid;grid-template-columns:auto 1fr;gap:var(--s2) var(--s5);align-items:baseline;}
-.v-fig{font-family:var(--display);font-size:clamp(32px,4.4vw,58px);line-height:1;color:var(--bone);}
-[lang="ar"] .v-fig{font-family:var(--ar);}
-.v-fig.low{color:var(--fail);}
-.v-lbl{align-self:baseline;}
-.v-cmp{grid-column:1/-1;margin:0;font-size:14.5px;}
-.prov{display:inline-block;font-family:var(--sans);font-size:9.5px;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--ash);border:1px solid var(--rule);
-  padding:2px 7px;margin-inline-start:var(--s2);white-space:nowrap;}
-[lang="ar"] .prov{letter-spacing:0;text-transform:none;}
-
-.finding{border:1px solid var(--edge);padding:clamp(20px,3vw,36px);}
-.bars{margin:var(--s5) 0;}
-.bar-row{display:grid;grid-template-columns:clamp(90px,12vw,140px) 1fr auto;
-  gap:var(--s4);align-items:center;padding-block:var(--s2);}
-.bar-track{height:9px;background:var(--petrol);border:1px solid var(--rule);}
-.bar-fill{display:block;height:100%;background:var(--ash);}
-.bar-fill.hi{background:var(--brass);}
-.bar-val{font-family:var(--sans);font-size:12.5px;color:var(--bone);}
-
-.ads{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);
-  border:1px solid var(--rule);margin-bottom:var(--s5);}
-.ads > div{background:var(--void);padding:clamp(20px,3vw,36px);text-align:center;}
-.ads-big{font-family:var(--display);font-size:clamp(44px,6vw,88px);line-height:1;
-  color:var(--bone);margin:0 0 var(--s3);}
-[lang="ar"] .ads-big{font-family:var(--ar);}
-.ads-big.low{color:var(--fail);}
-
-ol.fixes{list-style:none;padding:0;margin:var(--s5) 0 0;}
-ol.fixes li{display:grid;grid-template-columns:auto 1fr;gap:var(--s4);
-  padding-block:var(--s4);border-top:1px solid var(--rule);}
-.fix-n{font-family:var(--sans);font-size:11px;color:var(--brass);padding-top:5px;}
-.fix-h{display:block;font-size:16px;color:var(--bone);margin-bottom:var(--s2);}
-[lang="ar"] .fix-h{font-family:var(--ar);font-size:18px;}
-
-.concept{border:1px solid var(--edge);margin-top:var(--s5);}
-.c-head{padding:clamp(20px,3vw,32px);border-bottom:1px solid var(--rule);}
-.c-name{font-family:var(--body);font-weight:600;font-size:clamp(20px,2.5vw,30px);
-  margin:0 0 var(--s3);color:var(--bone);}
-[lang="ar"] .c-name{font-family:var(--ar);line-height:1.45;}
-.c-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);}
-@media(max-width:640px){.c-grid{grid-template-columns:1fr;}}
-.c-grid > div{background:var(--void);padding:clamp(18px,2.6vw,30px);}
-.c-grid .u{display:block;margin-bottom:var(--s3);}
-.c-price{padding:clamp(18px,2.6vw,30px);border-top:1px solid var(--rule);
-  display:flex;justify-content:space-between;gap:var(--s5);flex-wrap:wrap;align-items:baseline;}
-.price{font-family:var(--display);font-size:clamp(34px,4.4vw,56px);line-height:1;
-  color:var(--brass);margin:0;}
-[lang="ar"] .price{font-family:var(--ar);}
-.price-u{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--dim);margin-top:var(--s2);}
-[lang="ar"] .price-u{font-family:var(--ar);font-size:14px;letter-spacing:0;text-transform:none;}
-.c-note{max-width:30ch;margin:0;font-size:13.5px;}
-
-.plan .pl{display:grid;grid-template-columns:clamp(90px,11vw,150px) 1fr;gap:var(--s5);
-  padding-block:var(--s4);border-top:1px solid var(--rule);}
-@media(max-width:560px){.plan .pl{grid-template-columns:1fr;gap:var(--s2);}}
-.plan .body{margin:0;}
-
-.rep-cta{padding-block:clamp(48px,7vw,100px);border-top:1px solid var(--edge);text-align:center;}
-.rep-cta .big{margin-bottom:var(--s4);}
-.rep-cta .body{margin-inline:auto;}
-.rep-cta .hero-actions{justify-content:center;margin-top:var(--s6);}
-.rep-prov{border-top:1px solid var(--rule);padding-block:clamp(32px,4vw,56px);}
-.prov-p{font-size:13.5px;max-width:66ch;}
-.routes{display:flex;gap:var(--s5);flex-wrap:wrap;margin-top:var(--s5);}
-.routes a{font-size:13px;color:var(--dim);text-decoration:none;
-  border-bottom:1px solid var(--rule);padding-bottom:2px;}
-.routes a:hover{color:var(--bone);border-color:var(--edge);}
-
-/* ══════ PREVIEW — one screen, in the DM ══════ */
-.prev{min-height:100svh;display:grid;place-items:center;padding:clamp(28px,6vw,64px) clamp(20px,5vw,48px);
-  background:radial-gradient(120% 90% at 50% 8%, #1C2A2000 0%, #1A1A1A 70%), var(--void);}
-.prev-in{max-width:56ch;width:100%;}
-.prev-for{display:block;margin:var(--s2) 0 clamp(24px,4vw,44px);color:var(--bone);}
-.prev-head{margin-bottom:var(--s5);}
-.prev-vitals{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s4);
-  margin-block:clamp(28px,4vw,48px);padding-block:var(--s5);
-  border-block:1px solid var(--rule);}
-.prev-vitals > div{display:grid;gap:var(--s2);}
-.prev-vitals .v-fig{font-size:clamp(26px,4vw,42px);}
-.prev-tail{margin-bottom:clamp(24px,3.5vw,40px);}
-.prev-foot{display:block;margin-top:clamp(32px,5vw,56px);opacity:.85;}
-
 /* ══════ loading ══════ */
 .skel-stack{display:grid;gap:var(--s3);margin-top:var(--s6);max-width:var(--measure);}
 .skel{display:block;border-radius:2px;
@@ -951,69 +841,74 @@ ol.fixes li{display:grid;grid-template-columns:auto 1fr;gap:var(--s4);
   .scene-entity .u{font-size:10px;color:var(--dim);}
 }
 
-/* ══ the configurator — a teardown you can answer ══════════════════════════ */
-.cfg-lede{color:var(--dim);max-width:56ch;margin-bottom:var(--s4);}
-.cfg-list{display:flex;flex-direction:column;gap:10px;margin-bottom:var(--s5);}
+/* ══════ G2 additions — wave 1 (additive only; see docs/rtl-qa.md) ══════ */
 
-.cfg-item{display:grid;grid-template-columns:auto 1fr;gap:16px;cursor:pointer;
-  padding:20px 22px;border:1px solid var(--rule);border-radius:4px;
-  background:transparent;transition:border-color .18s,background .18s;}
-.cfg-item:hover{border-color:var(--ash);}
-.cfg-item[data-on="true"]{border-color:var(--brass);background:rgba(205,196,179,.06);}
-.cfg-item input{appearance:none;width:20px;height:20px;margin-top:3px;flex:none;
-  border:1px solid var(--ash);border-radius:3px;background:transparent;cursor:pointer;}
-.cfg-item input:checked{background:var(--brass);border-color:var(--brass);}
-.cfg-item input:checked::after{content:"";display:block;width:6px;height:11px;
-  margin:1px auto 0;border:solid var(--void);border-width:0 2px 2px 0;transform:rotate(45deg);}
-.cfg-item input:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
-.cfg-body{display:flex;flex-direction:column;gap:7px;min-width:0;}
-.cfg-top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;}
-.cfg-top .c-name{flex:1;min-width:0;}
-.cfg-price{white-space:nowrap;font-weight:500;}
-.cfg-line{color:var(--dim);}
-.cfg-meta{font-family:var(--sans);font-size:12.5px;letter-spacing:.04em;color:var(--ash);}
-.cfg-cast{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;
-  padding-top:8px;border-top:1px solid var(--rule);margin-top:4px;}
-.cfg-cast b{font-weight:500;}
+/* A standard visually-hidden utility: off-screen but present to assistive
+   tech, unlike `display:none`/`aria-hidden`, which remove it entirely. Used
+   to carry a <legend>'s accessible name without duplicating the visible
+   step digits for sighted readers. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 
-.cfg-ongoing{border-top:1px solid var(--rule);padding-top:var(--s4);margin-bottom:var(--s4);}
-.cfg-opts{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 16px;}
-.cfg-opt{font-family:var(--sans);font-size:14px;padding:13px 18px;border-radius:4px;
-  border:1px solid var(--rule);background:transparent;color:var(--bone);cursor:pointer;
-  display:flex;flex-direction:column;gap:5px;align-items:flex-start;transition:border-color .18s;}
-.cfg-opt:hover{border-color:var(--ash);}
-.cfg-opt[aria-pressed="true"]{border-color:var(--brass);color:var(--brass);}
-.cfg-opt .cfg-sub{font-size:12px;color:var(--ash);}
-.cfg-opt[aria-pressed="true"] .cfg-sub{color:var(--brass);}
+/* The intake honeypot (item 7 / D10). Visually hidden rather than
+   `display:none` or `aria-hidden`, so a script that only skips
+   `display:none` fields still finds and fills it — and out of the tab order
+   already via `tabindex="-1"` in the markup, so a keyboard user never lands
+   on it either way. */
+.hp{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 
-.cfg-add{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:start;
-  cursor:pointer;padding:20px 22px;border:1px solid var(--rule);border-radius:4px;}
-.cfg-add[data-on="true"]{border-color:var(--brass);background:rgba(205,196,179,.06);}
-.cfg-add input{appearance:none;width:20px;height:20px;margin-top:2px;flex:none;
-  border:1px solid var(--ash);border-radius:3px;background:transparent;cursor:pointer;}
-.cfg-add input:checked{background:var(--brass);border-color:var(--brass);}
-.cfg-add input:checked::after{content:"";display:block;width:6px;height:11px;
-  margin:1px auto 0;border:solid var(--void);border-width:0 2px 2px 0;transform:rotate(45deg);}
-.cfg-add input:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
-.cfg-add > span{display:flex;flex-direction:column;gap:5px;}
-.cfg-add .body{color:var(--dim);}
+/* Resets the browser default fieldset box so it reads as the intake's own
+   layout rather than a bordered form group, and carries the step line. */
+.intake-fieldset{border:0;margin:0;padding:0;min-width:0;}
+.intake-step{display:block;font-family:var(--sans);font-size:11px;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--ash);margin-bottom:var(--s3);}
+[lang="ar"] .intake-step{font-family:var(--ar);font-size:14px;letter-spacing:0;text-transform:none;}
+.intake-reassure{color:var(--brass);}
+.intake-fail{margin-top:var(--s3);}
 
-.cfg-total{position:sticky;bottom:0;background:var(--void);
-  border-top:1px solid var(--brass);padding:18px 0;margin-bottom:var(--s4);z-index:2;}
-.cfg-total[data-empty="true"]{border-top-color:var(--rule);}
-.cfg-figures{display:flex;gap:28px;flex-wrap:wrap;align-items:baseline;margin:6px 0 0;}
-.cfg-none{color:var(--ash);font-family:var(--sans);font-size:14px;}
+/* A record that never happened, named where a reader can see it before they
+   read the rest of the card (item 9 — PieceView, WorkRows). */
+.demo-chip{display:inline-block;font-family:var(--sans);font-size:10px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--dim);
+  border:1px solid var(--edge);border-radius:3px;padding:4px 10px;margin-bottom:var(--s3);}
+[lang="ar"] .demo-chip{font-family:var(--ar);font-size:13px;letter-spacing:0;text-transform:none;}
 
-.cfg-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
-@media(max-width:640px){.cfg-fields{grid-template-columns:1fr;}
-  .cfg-item,.cfg-add{padding:16px 17px;}}
-.cfg-fields label{display:flex;flex-direction:column;gap:7px;}
-.cfg-fields input{background:transparent;border:1px solid var(--rule);border-radius:4px;
-  padding:13px 14px;color:var(--bone);font:400 16px/1.4 var(--body);}
-.cfg-fields input:focus{outline:none;border-color:var(--brass);}
-.cfg-submit{border:none;cursor:pointer;font-family:var(--sans);}
-.cfg-submit:disabled{opacity:.4;cursor:not-allowed;}
-.cfg-note{font-family:var(--sans);font-size:13px;line-height:1.65;color:var(--ash);
-  max-width:56ch;margin-top:14px;}
-.cfg-err{color:var(--fail);margin-top:12px;}
-.cfg-sum{display:flex;gap:28px;flex-wrap:wrap;margin:var(--s3) 0;}
+/* Pricing (11c): the free teardown is the conversion path, not a fourth rate
+   equal to the other two — an oak border and its own way in, inside the card. */
+.rate-free{border:2px solid var(--brass);}
+.rate-cta{display:inline-flex;margin-top:var(--s4);}
+
+/* Teardown page (11b): a CSS-only mock of the sheet's top screen. No number
+   here is a real figure — it names the same four things the evidence rows
+   above already promise, echoing app/s/s.css's header/.figs shape without
+   importing it (the two stylesheets deliberately do not mix — see
+   docs/03-client-facing.md's "Risks" section). Decorative: aria-hidden. */
+.td-arrives-lede{max-width:56ch;margin-bottom:var(--s5);}
+.td-mock{background:var(--lift);border:1px solid var(--rule);border-radius:6px;
+  padding:clamp(18px,2.6vw,28px);max-width:440px;margin-bottom:clamp(28px,4vw,48px);}
+.td-mock-mark{display:block;font-family:var(--sans);font-size:10px;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--ash);}
+[lang="ar"] .td-mock-mark{font-family:var(--ar);font-size:13px;letter-spacing:0;text-transform:none;}
+.td-mock-h{font-family:var(--body);font-size:18px;line-height:1.3;margin:var(--s2) 0 var(--s4);}
+[lang="ar"] .td-mock-h{font-family:var(--ar);}
+.td-mock-figs{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;
+  background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden;}
+.td-mock-fig{background:var(--void);padding:14px;display:flex;flex-direction:column;gap:8px;}
+.td-mock-bar{display:block;width:56%;height:6px;border-radius:3px;background:var(--brass);}
+.td-mock-fig span:last-child{font-family:var(--sans);font-size:10.5px;line-height:1.4;color:var(--ash);}
+[lang="ar"] .td-mock-fig span:last-child{font-family:var(--ar);font-size:13px;}
+
+/* Mobile masthead (11a): the compact link is the CTA, the toggle is the menu —
+   a filled pill on the first reads as an action, distinct from the plain
+   icon+label button beside it. Layered onto the existing ≤760px rules rather
+   than editing them. */
+@media(max-width:760px){
+  .mast-compact{background:var(--brass);color:var(--void);border-radius:999px;
+    padding:8px 16px;font-size:10px;}
+  [lang="ar"] .mast-compact{font-size:13px;}
+  .mast-compact:hover{background:var(--bone);}
+  /* A filled pill needs no underline-on-hover — that treatment is for a bare
+     text link, not a CTA-shaped control. */
+  .mast-compact::after{content:none;}
+}

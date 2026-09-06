@@ -102,6 +102,37 @@ export const t: Dict = {
     en: 'Public business accounts only. We send a link on WhatsApp within one working day.',
   },
   tdSwitch:    { ar: 'حسابكم لسّا شخصي؟', en: 'Account still personal?' },
+  /* The artefact itself, named — so the promise before the handle is handed
+     over is a page, not a vague "we will read your account". Rendered above
+     the intake (item 7) and again in the teardown page's "what arrives"
+     section (item 11b). */
+  tdDeliver: {
+    ar: 'وبيرجعلكم صفحة وحدة: كل الأرقام، تلات أفكار لحسابكم، وسعر مكتوب.',
+    en: 'You get back one page: every figure, three ideas for your account, and one published price.',
+  },
+
+  /* `/specimen/[lang]` — the public sheet, fictional client. */
+  specimenStamp: {
+    ar: 'نموذج — منشأة غير حقيقية وأرقام تمثيلية',
+    en: 'Specimen — fictional business, illustrative figures',
+  },
+  specimenBack: { ar: 'رجوع لبرافدا', en: 'Back to PRAVDA' },
+  specimenCta:  { ar: 'هاد نموذج. اطلبوا تحقيقكم', en: 'This is a specimen. Get your own teardown' },
+
+  /* Intake (item 7): the step line's connector word. Combined with a number on
+     each side — arNum'd in Arabic — rather than a full sentence per step,
+     because the two things that change are the numbers, not the words. */
+  intakeStep:      { ar: 'من', en: 'of' },
+  intakeReassure: {
+    ar: 'مجاني · بيوصلكم خلال يوم عمل · الرقم للتواصل بس',
+    en: 'Free · arrives within one working day · the number is for contact only',
+  },
+  intakeReady:     { ar: 'تحقيقكم جاهز — افتحوه', en: 'Your teardown is ready — open it' },
+  intakeTooMany: {
+    ar: 'طلبات كتير خلال وقت قصير. جرّبوا بعد شوي.',
+    en: 'Too many attempts in a short time. Try again shortly.',
+  },
+  intakeWhatsApp:  { ar: 'راسلوا خالد هلق', en: 'Message Khaled now' },
 
   scrollIn:    { ar: 'انزل لتبدأ',      en: 'Scroll to begin' },
   keepGoing:   { ar: 'كمّل',            en: 'Keep going' },

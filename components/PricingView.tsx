@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Page from '@/components/Page';
 import { RATES } from '@/lib/data/company';
+import { num } from '@/lib/format/num';
 import { Lang, path, tx } from '@/lib/i18n';
 
 export default function PricingView({ lang }: { lang: Lang }) {
@@ -20,14 +21,18 @@ export default function PricingView({ lang }: { lang: Lang }) {
         <div className="wrap">
           <div className="rates">
             {RATES.map((r) => (
-              <div key={r.key} className="rate rate-card riseIn">
+              <div key={r.key} className={`rate rate-card riseIn${r.key === 'teardown' ? ' rate-free' : ''}`}>
                 <p className="u">{r.label[lang]}</p>
                 <p className="rate-v num">
-                  {/* every other figure on the site is Western-digit, in both locales */}
-                  {r.price.toLocaleString('en-US')}
+                  {/* D13: Arabic-Indic on every Arabic surface, this one included —
+                      reverses the earlier deliberate Western-digit choice below. */}
+                  {num(r.price, ar)}
                   <span className="rate-u">{r.unit[lang]}</span>
                 </p>
                 <p className="body rate-note">{r.note[lang]}</p>
+                {r.key === 'teardown' && (
+                  <Link className="btn rate-cta" href={path(lang, 'teardown')}>{tx('heroCta', lang)}</Link>
+                )}
               </div>
             ))}
           </div>

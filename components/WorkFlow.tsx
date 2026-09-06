@@ -6,6 +6,7 @@ import Plate from '@/components/webgl/Plate';
 import WorkRows from '@/components/WorkRows';
 import { type Piece } from '@/lib/data/work';
 import { CO } from '@/lib/data/company';
+import { anyPlaceholder } from '@/lib/data/placeholder';
 import { Lang, path, tx, fwd, back, sep } from '@/lib/i18n';
 
 type Scene = { kind: 'intro' } | { kind: 'piece'; p: Piece; n: number } | { kind: 'outro' };
@@ -23,7 +24,7 @@ export default function WorkFlow({
   lang, pieces,
 }: { lang: Lang; pieces: Piece[] }) {
   /* One invented record is enough to make the archive's claim false. */
-  const demo = pieces.some((p) => p.placeholder);
+  const demo = anyPlaceholder(pieces);
 
   const scenes: Scene[] = [
     { kind: 'intro' },

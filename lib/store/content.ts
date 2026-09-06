@@ -66,8 +66,7 @@ export const getPiece = async (slug: string) =>
  * when the last placeholder is replaced, the copy asserts itself again, and
  * nobody has to remember to go and change a sentence.
  */
-export const anyPlaceholder = (rows: { placeholder?: boolean }[]) =>
-  rows.some((r) => r.placeholder);
+export { anyPlaceholder } from '@/lib/data/placeholder';
 
 /** Everything the cast page needs, in one round trip. */
 export async function getCastPage() {

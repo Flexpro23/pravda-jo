@@ -4,7 +4,9 @@ import { SITE } from '@/lib/data/company';
 
 /* Moves with the domain — see SITE in lib/data/company.ts. */
 const BASE = SITE;
-const PAGES = ['', 'work', 'cast', 'teardown', 'teardown/sample', 'studio',
+/* `teardown/sample` is gone: it 308s to /specimen/[lang], which is listed
+   below on its own because it lives outside the /[lang] tree. */
+const PAGES = ['', 'work', 'cast', 'teardown', 'studio',
                'pricing', 'privacy', 'terms', 'notice', 'data',
                'instagram-professional'];
 
@@ -28,9 +30,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         },
       });
     }
-    for (const w of work) {
+    // Invented pieces are never submitted to Google under our domain.
+    for (const w of work.filter((x) => !x.placeholder)) {
       out.push({ url: `${BASE}/${lang}/work/${w.slug}`, changeFrequency: 'yearly', priority: 0.5 });
     }
+    // The specimen is the proof the teardown page sends every cold visitor to,
+    // so it ranks just under the teardown page itself.
+    out.push({
+      url: `${BASE}/specimen/${lang}`,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+      alternates: {
+        languages: { ar: `${BASE}/specimen/ar`, en: `${BASE}/specimen/en` },
+      },
+    });
   }
   return out;
 }

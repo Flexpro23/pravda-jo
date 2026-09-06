@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="PRAVDA">
+  <!--
+    The link preview for /s and nothing else.
+
+    Deliberately carries no client name, no figure and no price: this card is
+    rendered by WhatsApp the instant the URL is pasted, and again for every
+    person the thread is forwarded to. A brand card is the only thing that is
+    safe to hand a crawler on a page written for one business.
+  -->
+  <rect width="1200" height="630" fill="#1A1A1A"/>
+  <rect x="48" y="48" width="1104" height="534" fill="none" stroke="#33352F" stroke-width="2"/>
+  <text x="100" y="300" fill="#EFECE5" font-family="Inter, Helvetica, Arial, sans-serif"
+        font-size="96" font-weight="600" letter-spacing="28">PRAVDA</text>
+  <rect x="100" y="346" width="132" height="3" fill="#CDC4B3"/>
+  <text x="100" y="416" fill="#A9A499" font-family="Inter, Helvetica, Arial, sans-serif"
+        font-size="34">Your account, read.</text>
+  <text x="100" y="466" fill="#8A857A" font-family="Inter, Helvetica, Arial, sans-serif"
+        font-size="26" letter-spacing="4">AMMAN</text>
+</svg>

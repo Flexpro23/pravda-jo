@@ -1,4 +1,5 @@
 'use client';
+import { arNum } from '@/lib/format/num';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -201,7 +202,7 @@ export default function Flight({ lang }: { lang: Lang }) {
         {SCENES.map((s, i) => (
           <section className="flat-scene" key={i}>
             {s.pre && <p className="u">{s.pre[lang]}</p>}
-            <h2 className="mega">{s.head[lang]}{s.sup && <span className="sup num">{s.sup}</span>}</h2>
+            <h2 className="mega">{s.head[lang]}{s.sup && <span className="sup num">{lang === 'ar' ? arNum(s.sup) : s.sup}</span>}</h2>
             <p className="body">{s.sub[lang]}</p>
             {s.outro && (
               <>
@@ -250,7 +251,7 @@ export default function Flight({ lang }: { lang: Lang }) {
               )}
               <h2 className="scene-head mega"
                   style={{ transform: `translate3d(0,${headY}px,0) scale(${headScale})` }}>
-                {s.head[lang]}{s.sup && <span className="sup num">{s.sup}</span>}
+                {s.head[lang]}{s.sup && <span className="sup num">{lang === 'ar' ? arNum(s.sup) : s.sup}</span>}
               </h2>
               <p className="scene-sub body"
                  style={{ opacity: clamp(e * 1.8 - 0.7), transform: `translate3d(0,${headY * 0.42}px,0)` }}>

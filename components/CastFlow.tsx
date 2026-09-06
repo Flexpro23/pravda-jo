@@ -9,6 +9,7 @@ import {
 } from '@/lib/data/roster';
 import type { Piece } from '@/lib/data/work';
 import { CO } from '@/lib/data/company';
+import { anyPlaceholder } from '@/lib/data/placeholder';
 import { Lang, path, tx, fwd, back } from '@/lib/i18n';
 
 type Filter = Discipline | 'all';
@@ -31,7 +32,7 @@ export default function CastFlow({
   lang, roster, work,
 }: { lang: Lang; roster: CastMember[]; work: Piece[] }) {
   const [filter, setFilter] = useState<Filter>('all');
-  const demo = roster.some((m) => m.placeholder);
+  const demo = anyPlaceholder(roster);
   const shown = filter === 'all' ? roster : roster.filter((m) => m.discipline === filter);
 
   /* Resolved here rather than imported, because the roster and the archive are

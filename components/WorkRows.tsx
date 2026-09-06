@@ -22,6 +22,7 @@ export default function WorkRows({
               <span className="u">{p.sector[lang]}</span>
               <span className="u num ltr">{p.date}</span>
             </div>
+            {p.placeholder && <p className="demo-chip">{tx('demoNote', lang)}</p>}
             <h3 className="big">{p.idea[lang]}</h3>
             <p className="body">{p.concept[lang]}</p>
 

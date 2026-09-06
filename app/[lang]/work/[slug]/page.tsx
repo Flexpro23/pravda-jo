@@ -17,7 +17,13 @@ export async function generateStaticParams() {
 }
 export async function generateMetadata({ params }: { params: Promise<{ lang: Lang; slug: string }> }) {
   const { lang, slug } = await params;
-  return { title: (await getPiece(slug))?.idea[lang] ?? '' };
+  const piece = await getPiece(slug);
+  return {
+    title: piece?.idea[lang] ?? '',
+    // A worked example is not a client to submit to Google — see the chip on
+    // PieceView and lib/store/content.ts's anyPlaceholder.
+    ...(piece?.placeholder ? { robots: { index: false } } : {}),
+  };
 }
 export default async function P({ params }: { params: Promise<{ lang: Lang; slug: string }> }) {
   const { lang, slug } = await params;

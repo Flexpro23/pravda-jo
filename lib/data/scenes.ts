@@ -1,4 +1,3 @@
-import type { Lang } from '@/lib/i18n';
 
 export type Scene = {
   /** normalised range on the flight timeline */
@@ -31,13 +30,20 @@ export const SCENES: Scene[] = [
     },
   },
   {
+    /* Was a headcount claim against fifteen seeded roster rows, all
+       placeholder — the highest-traffic surface on the site making the
+       largest unprovable claim, checkable by anyone who reads the Cast page.
+       Replaced with a capability we can prove today rather than a headcount
+       we cannot; the numeral is dropped, not swapped for a smaller one,
+       because a smaller invented number is still invented. No `sup` — see
+       the master plan's note that this scene is the one place the sup
+       position is allowed to change. */
     at: [0.205, 0.355],
-    pre: { ar: 'على', en: 'A roster of' },
-    head: { ar: 'الروستر', en: 'ninety' },
-    sup: '90',
+    pre: { ar: 'عنا', en: 'We keep' },
+    head: { ar: 'روستر منكاسته لكل مشروع', en: 'a roster, cast per project' },
     sub: {
-      ar: 'عارض ومصوّر ومركّب في عمّان — منقدر نجهّز طاقم لأي فكرة.',
-      en: 'models, photographers and editors in Amman. Enough to cast anything we propose.',
+      ar: 'عارضين ومصوّرين ومركّبين في عمّان، منختار منهم المناسب لفكرتكم.',
+      en: 'Models, photographers and editors in Amman, chosen to match your idea.',
     },
   },
   {
@@ -46,14 +52,23 @@ export const SCENES: Scene[] = [
     head: { ar: 'فكرة جاهزة', en: 'thirty ideas' },
     sup: '30',
     sub: {
-      ar: 'كل وحدة متصوّرة قبل، بطاقم معروف وسعر معروف. ما منخترع من الصفر.',
-      en: 'already shot, each with a known cast and a known cost. We do not invent from nothing.',
+      /* "Already shot" is a production claim the library does not back —
+         thirty concepts exist, ready to cast and price; that is not the same
+         claim as thirty finished shoots. */
+      ar: 'كل وحدة مجهّزة قبل، بطاقم معروف وسعر معروف. ما منخترع من الصفر.',
+      en: 'already worked out, each with a known cast and a known cost. We do not invent from nothing.',
     },
   },
   {
     at: [0.605, 0.755],
     pre: { ar: 'من', en: 'From' },
     head: { ar: 'دينار للمقطع', en: 'a hundred fifty' },
+    /* D13: Arabic-Indic on every Arabic surface. This numeral sat in Western
+       digits directly beside the Arabic-Indic "٤٠٠" in the line below it —
+       the same mixed-register defect item 12 calls out. `sup` is not
+       lang-keyed in Flight.tsx (`{s.sup}`, not `{s.sup[lang]}`), so this reads
+       correctly in Arabic and, until that one-line branch is added there,
+       shows Arabic-Indic in English too — see the report for the exact fix. */
     sup: '150',
     sub: {
       ar: 'وإدارة إعلانات من ٤٠٠ دينار بالشهر. الأسعار مكتوبة، مش بالمكالمة.',

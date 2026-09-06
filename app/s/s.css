@@ -1,6 +1,29 @@
 /* The client's sheet. Phone first — it arrives as a WhatsApp link. */
+
+/* ── the four Arabic rules ──────────────────────────────────────────────────
+   Mirrored, deliberately, from the block at the head of app/[lang]/globals.css
+   (search for `[lang="ar"],[lang="ar"] *`). This stylesheet is standalone: /s
+   and /specimen do not load globals.css, because the two files give .wrap, .u,
+   .num, .btn and .foot different meanings and a nested <html> is impossible.
+   Changing one of these four rules means changing both files. Without them the
+   sheet — the single most important page in the business — tracks out every
+   Arabic section kicker, which shatters the cursive joins.                   */
+[lang="ar"],[lang="ar"] *{letter-spacing:0 !important;}
+[lang="ar"] .u,[lang="ar"] .btn{text-transform:none !important;}
+[lang="ar"] em,[lang="ar"] i{font-style:normal;}
+/* The forked Arabic scale. Amiri sets a size small and a step tight against
+   Lora at the same metric, so Arabic gets its own body size and leading. */
+[lang="ar"] body{font-size:19px;line-height:1.9;}
+[lang="ar"] .u{font-size:13px;}
+[lang="ar"] .find-t{font-size:20px;line-height:1.5;}
+[lang="ar"] .prov,[lang="ar"] .keys,[lang="ar"] .idea-yield{font-size:13.5px;}
+/* ────────────────────────────────────────────────────────────────────────── */
+
 :root{
   --void:#1A1A1A; --forest:#1C2A20; --panel:#202220; --rule:#33352F;
+  /* One step up from --rule. An unfilled bar on --panel at --rule is ~1.2:1,
+     which is a chart nobody can read except for its single highlighted bar. */
+  --edge:#6B655B;
   --bone:#EFECE5; --dim:#A9A499; --ash:#8A857A; --brass:#CDC4B3;
   --go:#7FA37F; --warn:#C4715A;
   --display:'Italiana',Georgia,serif; --body:'Lora',Georgia,serif;
@@ -55,10 +78,15 @@ h1{font-family:var(--body);font-weight:600;font-size:clamp(29px,6.4vw,46px);
 .brow{display:grid;grid-template-columns:minmax(72px,auto) 1fr auto;gap:12px;align-items:center;
   font-family:var(--sans);font-size:13.5px;}
 .btrack{height:10px;background:var(--panel);border-radius:5px;overflow:hidden;}
-.bfill{display:block;height:100%;background:var(--rule);border-radius:5px;}
+.bfill{display:block;height:100%;background:var(--edge);border-radius:5px;}
 .bfill[data-hi="true"]{background:var(--brass);}
 .bval{font-variant-numeric:tabular-nums;color:var(--dim);}
-.hours{display:flex;align-items:flex-end;gap:2px;height:104px;padding-bottom:18px;margin-top:var(--s2);}
+/* The axis runs earliest to latest, left to right, in both languages. Every
+   clock, calendar and chart a Jordanian business owner has read is drawn
+   that way; mirroring it with the document turns the ص/م ticks into a
+   riddle. Only the direction is forced — the labels stay Arabic. */
+.hours{display:flex;align-items:flex-end;gap:2px;height:104px;padding-bottom:18px;
+  margin-top:var(--s2);direction:ltr;}
 .hcol{flex:1;height:100%;display:flex;align-items:flex-end;position:relative;border-radius:2px;}
 .hcol[data-peak="true"]{background:rgba(205,196,179,.10);}
 .hcol[data-best="true"]{background:rgba(127,163,127,.18);}
@@ -66,6 +94,7 @@ h1{font-family:var(--body);font-weight:600;font-size:clamp(29px,6.4vw,46px);
 .hcol[data-best="true"] .hbar{background:var(--go);}
 .htick{position:absolute;bottom:-17px;inset-inline-start:0;font-family:var(--sans);
   font-size:9.5px;color:var(--ash);white-space:nowrap;}
+[lang="ar"] .htick{font-size:11px;}
 .keys{font-family:var(--sans);font-size:12px;color:var(--ash);margin-top:var(--s3);}
 .kdot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-inline-end:6px;vertical-align:-1px;}
 
@@ -106,8 +135,11 @@ h1{font-family:var(--body);font-weight:600;font-size:clamp(29px,6.4vw,46px);
 .foot{margin-top:var(--s6);padding-top:var(--s3);border-top:1px solid var(--rule);
   font-family:var(--sans);font-size:12.5px;color:var(--ash);line-height:1.8;}
 .foot a{color:var(--ash);}
+/* Padded out to a real tap target and pulled back by the same amount, so it
+   meets 24×24 without moving a pixel of the layout around it. */
 .lang{position:absolute;top:var(--s3);inset-inline-end:20px;font-family:var(--sans);
-  font-size:12px;color:var(--ash);text-decoration:none;}
+  font-size:12px;color:var(--ash);text-decoration:none;
+  padding:10px 12px;margin:-10px -12px;}
 
 @media(max-width:560px){
   body{font-size:16.5px;padding-inline:17px;}
@@ -119,3 +151,98 @@ h1{font-family:var(--body);font-weight:600;font-size:clamp(29px,6.4vw,46px);
    punctuation lands where a reader of English expects it, and its own text
    alignment so it does not sit ragged against the Arabic column. */
 .ltr{direction:ltr;unicode-bidi:isolate;text-align:left;}
+
+/* ── the dateline, and the deciding sentence under each hook ── */
+.dateline{color:var(--ash);font-family:var(--sans);font-size:12px;margin:0 0 var(--s3);}
+.idea-why{color:var(--brass);font-size:15.5px;margin:0 0 var(--s2);}
+[lang="ar"] .idea-why{font-size:17px;}
+/* An idea whose cast is still open. Said plainly rather than left blank, so
+   nobody reads the absence as a cast we forgot to name. */
+.cast-tbc{font-family:var(--sans);font-size:12.5px;color:var(--ash);
+  padding-top:var(--s2);border-top:1px solid var(--rule);margin:0;}
+
+/* ── keyboard ──
+   There was no focus ring at all on this page, and the UA default is a thin
+   blue on a near-black ground. */
+:focus-visible{outline:2px solid var(--brass);outline-offset:3px;}
+main:focus{outline:none;}
+.skip{position:fixed;inset-block-start:14px;inset-inline-start:14px;z-index:200;
+  padding:12px 20px;background:var(--bone);color:var(--void);text-decoration:none;
+  font-family:var(--sans);font-size:12px;border-radius:4px;
+  transform:translateY(-250%);transition:transform .18s ease;}
+[lang="ar"] .skip{font-family:var(--ar);font-size:15px;}
+.skip:focus{transform:none;}
+
+/* ── the print bar ──
+   Reused verbatim from the proposal documents. Its language link is hidden
+   here because the sheet already carries one, floating in the header, where a
+   thumb finds it after the bar has scrolled away. */
+.bar{max-width:720px;margin:var(--s3) auto 0;display:flex;gap:10px;align-items:center;
+  flex-wrap:wrap;}
+.bar button{font:500 13px/1 var(--sans);padding:11px 16px;border-radius:5px;
+  border:1px solid var(--rule);background:transparent;color:var(--bone);cursor:pointer;}
+.bar button:hover{border-color:var(--brass);}
+.bar a{display:none;}
+.bar .sp{flex:1;}
+.bar .hint{font-family:var(--sans);font-size:12px;color:var(--ash);}
+@media(max-width:560px){.bar .hint{display:none;}}
+
+/* ── the sticky reply ──
+   No JavaScript anywhere in this. `.stick-zone` opens after the findings and
+   runs to the end of the document, and a sticky box cannot be painted outside
+   its own containing block — so the bar is simply absent until the reader has
+   passed the evidence, and then follows them down the ideas and the price. */
+.stick-zone{position:relative;}
+/* content-box, a pinned line height and a negative bottom margin that is
+   exactly its own height: the bar hovers over the page without reserving a
+   band of empty space where it sits in the flow. */
+.reply-stick{position:sticky;bottom:0;z-index:6;display:block;box-sizing:content-box;
+  height:26px;margin:0 -20px calc(-58px - env(safe-area-inset-bottom));
+  padding:16px 20px calc(16px + env(safe-area-inset-bottom));
+  background:var(--brass);color:var(--void);text-align:center;text-decoration:none;
+  font:500 15px/26px var(--sans);box-shadow:0 -10px 22px rgba(26,26,26,.55);}
+[lang="ar"] .reply-stick{font-family:var(--ar);font-size:17px;}
+/* Above this the page reads as a document rather than as a message, and the
+   closing call to action is on screen with the price it belongs to. */
+@media(min-width:720px){.reply-stick{display:none;}}
+
+/* ── the specimen ──
+   The stamp treatment is lifted from app/doc/doc.css, where the same problem
+   was already solved: a specimen must never be mistaken for the real thing, on
+   screen or on paper. */
+.stamp{font-family:var(--sans);font-size:11px;letter-spacing:.13em;
+  text-transform:uppercase;color:#8A5A2B;background:#FBF3E6;
+  border:1px solid #E3CBA4;border-radius:3px;
+  padding:10px 13px;margin:var(--s3) 0 0;text-align:center;}
+[lang="ar"] .stamp{font-family:var(--ar);font-size:14px;}
+.spec-back{display:inline-block;font-family:var(--sans);font-size:12px;
+  color:var(--ash);text-decoration:none;padding:10px 12px;margin:var(--s3) -12px 0;}
+.spec-back:hover{color:var(--bone);}
+
+@media print{
+  @page{margin:14mm;}
+  /* Ink on paper, and the charts are the reason anybody prints this — so the
+     fills are forced through rather than dropped as "background graphics". */
+  html,body{background:#fff;color:#1A1A1A;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{padding:0;font-size:11pt;}
+  .wrap{max-width:none;}
+  .lang,.cta,.reply-stick,.bar,.skip{display:none !important;}
+  .for,.read,.dateline,.prov,.keys,.fig span,.idea-yield,.cast-tbc{color:#55534D;}
+  .find p{color:#33352F;}
+  .idea-why{color:#6B5A38;}
+  .find-f,.idea-n{color:#8A7B5F;}
+  .find[data-s="good"] .find-f{color:#3F6B45;}
+  .figs,.fig{background:#fff;border-color:#C9C5BB;}
+  .find,.foot,.incl,.monthly,.cast,.cast-tbc{border-color:#C9C5BB;}
+  .idea{border-color:#C9C5BB;background:none;}
+  .offer{border-color:#8A7B5F;background:none;}
+  .btrack{background:#EAE7DF;}
+  .bfill{background:#B9B3A5;}
+  .bfill[data-hi="true"]{background:#8A7B5F;}
+  .hbar{background:#B9B3A5;}
+  .hcol[data-best="true"] .hbar{background:#3F6B45;}
+  .foot{color:#55534D;}
+  .foot a{color:#55534D;}
+  .find,.idea,.offer,section,.figs{break-inside:avoid;}
+}

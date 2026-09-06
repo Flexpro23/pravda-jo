@@ -22,6 +22,10 @@ export default async function PieceView({ lang, slug }: { lang: Lang; slug: stri
             <span className="u">{p.sector[lang]}</span>
             <span className="u num ltr">{p.date}</span>
           </div>
+          {/* An invented client, sector, date, metric and price rendered as fact
+              on the page a cold prospect is most likely to land on from search —
+              see anyPlaceholder in lib/store/content.ts. */}
+          {p.placeholder && <p className="demo-chip">{tx('demoNote', lang)}</p>}
           <h1 className="mega" style={{ marginBottom: 'clamp(32px,5vw,72px)' }}>
             <span className="cut"><span className="d1">{p.idea[lang]}</span></span>
           </h1>
