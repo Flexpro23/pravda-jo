@@ -1,6 +1,6 @@
 # Firebase App Hosting. Plain Firebase Hosting serves static files only, and
-# this app needs a Node runtime for the operator endpoint, the Firestore reads
-# behind /r and /p, and Next's own server rendering.
+# this app needs a Node runtime for the console, the Firestore reads behind
+# /s and /t, the cron sweeper, and Next's own server rendering.
 #
 # The runtime service account supplies Application Default Credentials, so no
 # Firebase key is configured here — lib/store/firebase.ts falls back to a
@@ -14,19 +14,22 @@ runConfig:
   maxInstances: 4
   concurrency: 80
 
-# Every `secret:` below must exist in Cloud Secret Manager before the next
-# deploy — App Hosting resolves them at build time and fails the rollout if one
-# is missing. Create each with, e.g.:
-#   firebase apphosting:secrets:set CRON_SECRET
-# A secret that is not wanted yet should be created holding an empty string
-# rather than deleted from this file: every consumer treats blank as "not
-# configured" and degrades honestly, which is the behaviour lib/config/check.ts
-# reports in the console.
+# Every `secret:` below MUST already exist in Cloud Secret Manager, with at
+# least one version. App Hosting resolves secrets before the build starts and
+# fails the rollout in seconds if one is missing — and Secret Manager refuses
+# an empty payload, so a placeholder is not an option either. The rollout of
+# 6 Sep 2026 failed exactly this way, on eight secrets declared before they
+# were created.
 #
-# NEXT_PUBLIC_* carry BUILD as well as RUNTIME. Next inlines them into the
-# browser bundle at build time, so a RUNTIME-only declaration would leave every
-# client-side reference holding the fallback from lib/data/company.ts while the
-# server used the real value — the worst kind of half-configured.
+# So the rule is: create the secret first, then add its stanza here. A channel
+# that is not configured is simply absent from this file; every consumer
+# treats an unset variable as "not configured" and lib/config/check.ts reports
+# it in the console. Recipes for the channels not yet wired are at the bottom.
+#
+# NEXT_PUBLIC_* would carry BUILD as well as RUNTIME: Next inlines them into
+# the browser bundle at build time, so a RUNTIME-only declaration would leave
+# every client-side reference holding the fallback from lib/data/company.ts
+# while the server used the real value.
 
 env:
   # Values live in Cloud Secret Manager, never in this file.
@@ -54,90 +57,81 @@ env:
     secret: CRON_SECRET
     availability: [RUNTIME]
 
-  # Khaled's own number, not the studio's published line. A personal number is
-  # a secret even though it is only ever used to build a wa.me link.
-  - variable: OPERATOR_PHONE
-    secret: OPERATOR_PHONE
-    availability: [RUNTIME]
-
-  # The recommended operator channel: no 24-hour window, no template approval.
-  - variable: TELEGRAM_BOT_TOKEN
-    secret: TELEGRAM_BOT_TOKEN
-    availability: [RUNTIME]
-
-  # A chat id is an addressee, not a credential.
-  - variable: TELEGRAM_CHAT_ID
-    value: ""
-    availability: [RUNTIME]
-
-  # WhatsApp stays for talent: a booked contractor being told about their own
-  # booking, sent as an approved template.
-  - variable: WHATSAPP_TOKEN
-    secret: WHATSAPP_TOKEN
-    availability: [RUNTIME]
-
-  - variable: WHATSAPP_PHONE_ID
-    secret: WHATSAPP_PHONE_ID
-    availability: [RUNTIME]
-
-  # A template name, which is public by nature.
-  - variable: WHATSAPP_TEMPLATE
-    value: ""
-    availability: [RUNTIME]
-
-  # The day-before reminder template. Optional; absent, reminders go as free
-  # text and only reach a provider inside an open 24-hour window.
-  - variable: WHATSAPP_REMINDER_TEMPLATE
-    value: ""
-    availability: [RUNTIME]
-
   # Signs provider sessions on their own, so rotating SESSION_SECRET does not
-  # sign every provider out on the morning of a shoot. Falls back to
-  # SESSION_SECRET, then OPERATOR_KEY, when unset.
+  # sign every provider out on the morning of a shoot.
   - variable: TALENT_SESSION_SECRET
     secret: TALENT_SESSION_SECRET
     availability: [RUNTIME]
-
-  # Email notices. Dormant until the domain is registered and verified.
-  - variable: RESEND_API_KEY
-    secret: RESEND_API_KEY
-    availability: [RUNTIME]
-
-  - variable: NOTIFY_EMAIL_TO
-    value: ""
-    availability: [RUNTIME]
-
-  - variable: NOTIFY_EMAIL_FROM
-    value: ""
-    availability: [RUNTIME]
-
-  # Where this deployment lives. Everything that names the site absolutely reads
-  # it: canonical URLs, the sitemap, the user-agent we identify ourselves with,
-  # and the link at the bottom of every notification.
-  - variable: NEXT_PUBLIC_SITE_URL
-    value: ""
-    availability: [BUILD, RUNTIME]
-
-  - variable: NEXT_PUBLIC_CONTACT_EMAIL
-    value: ""
-    availability: [BUILD, RUNTIME]
-
-  - variable: NEXT_PUBLIC_PRIVACY_EMAIL
-    value: ""
-    availability: [BUILD, RUNTIME]
-
-  # The optional bot challenge, off until abuse is observed. The site key is
-  # public by design and must be inlined at build time; the secret is not.
-  - variable: TURNSTILE_SECRET_KEY
-    secret: TURNSTILE_SECRET_KEY
-    availability: [RUNTIME]
-
-  - variable: NEXT_PUBLIC_TURNSTILE_SITE_KEY
-    value: ""
-    availability: [BUILD, RUNTIME]
 
   # Pinned deliberately: a Graph version bump can change field availability on
   # the business_discovery edge, so it moves when we have tested it moving.
   - variable: META_API_VERSION
     value: v21.0
     availability: [RUNTIME]
+
+# ── Not configured yet. Create the secret, then uncomment its stanza. ────────
+#
+# Khaled's own number, for the wa.me fallback link. A personal number is a
+# secret even though it is only ever used to build a link.
+#   firebase apphosting:secrets:set OPERATOR_PHONE
+#  - variable: OPERATOR_PHONE
+#    secret: OPERATOR_PHONE
+#    availability: [RUNTIME]
+#
+# The recommended operator channel: no 24-hour window, no template approval.
+#   firebase apphosting:secrets:set TELEGRAM_BOT_TOKEN
+#  - variable: TELEGRAM_BOT_TOKEN
+#    secret: TELEGRAM_BOT_TOKEN
+#    availability: [RUNTIME]
+#  - variable: TELEGRAM_CHAT_ID
+#    value: "<chat id — an addressee, not a credential>"
+#    availability: [RUNTIME]
+#
+# WhatsApp Cloud API for talent offers and reminders (approved templates).
+#   firebase apphosting:secrets:set WHATSAPP_TOKEN
+#   firebase apphosting:secrets:set WHATSAPP_PHONE_ID
+#  - variable: WHATSAPP_TOKEN
+#    secret: WHATSAPP_TOKEN
+#    availability: [RUNTIME]
+#  - variable: WHATSAPP_PHONE_ID
+#    secret: WHATSAPP_PHONE_ID
+#    availability: [RUNTIME]
+#  - variable: WHATSAPP_TEMPLATE
+#    value: "<approved offer template name>"
+#    availability: [RUNTIME]
+#  - variable: WHATSAPP_REMINDER_TEMPLATE
+#    value: "<approved reminder template name>"
+#    availability: [RUNTIME]
+#
+# Email notices, once the domain is registered and verified with Resend.
+#   firebase apphosting:secrets:set RESEND_API_KEY
+#  - variable: RESEND_API_KEY
+#    secret: RESEND_API_KEY
+#    availability: [RUNTIME]
+#  - variable: NOTIFY_EMAIL_TO
+#    value: "<mailbox>"
+#    availability: [RUNTIME]
+#  - variable: NOTIFY_EMAIL_FROM
+#    value: "<verified sender>"
+#    availability: [RUNTIME]
+#
+# The day the domain is bought. BUILD as well as RUNTIME — see the header.
+#  - variable: NEXT_PUBLIC_SITE_URL
+#    value: "https://<domain>"
+#    availability: [BUILD, RUNTIME]
+#  - variable: NEXT_PUBLIC_CONTACT_EMAIL
+#    value: "hello@<domain>"
+#    availability: [BUILD, RUNTIME]
+#  - variable: NEXT_PUBLIC_PRIVACY_EMAIL
+#    value: "privacy@<domain>"
+#    availability: [BUILD, RUNTIME]
+#
+# The optional bot challenge, only once abuse is observed. Never set a
+# placeholder: a present key switches verification on and locks the form.
+#   firebase apphosting:secrets:set TURNSTILE_SECRET_KEY
+#  - variable: TURNSTILE_SECRET_KEY
+#    secret: TURNSTILE_SECRET_KEY
+#    availability: [RUNTIME]
+#  - variable: NEXT_PUBLIC_TURNSTILE_SITE_KEY
+#    value: "<site key — public by design>"
+#    availability: [BUILD, RUNTIME]

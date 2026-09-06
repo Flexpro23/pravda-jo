@@ -97,27 +97,47 @@ gcloud scheduler jobs create http pravda-read-queue \
 Without this job, `/api/cron/read` is never called and the sweeper is dead
 code — the read guarantee (D8) depends entirely on this job existing.
 
-## 6. Create every secret Secret Manager needs before deploying
+## 6. Create a secret before you declare it
 
-`apphosting.yaml` resolves every `secret:` reference **at build time** and
-**fails the whole rollout** if one does not exist in Secret Manager yet — not
-just the ones with a real value. Before the first deploy to a backend, create
-each one, even the ones you are not using yet (empty string is a valid,
-intentional value — `lib/config/check.ts` reports blank as "not configured"
-rather than crashing):
+`apphosting.yaml` resolves every `secret:` reference **before the build
+starts** and **fails the whole rollout within seconds** if one does not exist in
+Secret Manager with at least one version. Secret Manager also refuses an empty
+payload, so there is no such thing as a placeholder secret — and a placeholder
+*value* would be worse, because a present key switches its feature on (a fake
+Turnstile key locks the lead form). The rollout of 6 September 2026 failed
+exactly this way, on eight secrets declared before they were created.
+
+The rule, therefore: **create the secret, then add its stanza to
+`apphosting.yaml`.** A channel that is not configured is absent from the file;
+every consumer treats an unset variable as "not configured", and
+`lib/config/check.ts` reports it in the console. The stanzas for every channel
+not yet wired are kept, commented out, at the bottom of `apphosting.yaml` with
+the command that creates each secret.
+
+To create one — the CLI prompts for the value and grants the backend access:
 
 ```bash
-for s in META_ACCESS_TOKEN META_IG_USER_ID OPERATOR_KEY SESSION_SECRET \
-         TALENT_SESSION_SECRET CRON_SECRET OPERATOR_PHONE \
-         TELEGRAM_BOT_TOKEN WHATSAPP_TOKEN WHATSAPP_PHONE_ID \
-         RESEND_API_KEY TURNSTILE_SECRET_KEY; do
-  firebase apphosting:secrets:set "$s"
-done
+firebase apphosting:secrets:set OPERATOR_PHONE
 ```
 
-(Non-`secret:` variables in `apphosting.yaml` — `TELEGRAM_CHAT_ID`,
-`WHATSAPP_TEMPLATE`, `NEXT_PUBLIC_*`, `META_API_VERSION` — are plain `value:`
-entries, not secrets, and need no Secret Manager setup; edit the file directly.)
+For a secret the system should generate itself (`SESSION_SECRET`,
+`CRON_SECRET`, `TALENT_SESSION_SECRET`), pass a random value from a file so it
+is never typed or echoed:
+
+```bash
+openssl rand -base64 32 | tr -d '\n' > /tmp/s && firebase apphosting:secrets:set CRON_SECRET --data-file /tmp/s && rm /tmp/s
+```
+
+If a secret was created through the console rather than the CLI, grant the
+backend access once:
+
+```bash
+firebase apphosting:secrets:grantaccess SESSION_SECRET --backend my-web-app --location europe-west4
+```
+
+(Non-`secret:` variables — `TELEGRAM_CHAT_ID`, `WHATSAPP_TEMPLATE`,
+`NEXT_PUBLIC_*`, `META_API_VERSION` — are plain `value:` entries and need no
+Secret Manager setup; edit the file directly.)
 
 Run `node scripts/check-env.mjs` (or `npm run check-env`) against a shell with
 the intended production values sourced to sanity-check what is and is not set
