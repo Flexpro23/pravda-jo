@@ -1,4 +1,5 @@
 import { currentTalent } from '@/lib/talent/auth';
+import { publicOrigin } from '@/lib/origin';
 import { bookingsForTalent } from '@/lib/store/deals';
 import type { Booking } from '@/lib/data/deals';
 
@@ -120,7 +121,7 @@ export async function GET(req: Request) {
     .filter((b) => b.status === 'accepted' || b.status === 'done' || b.status === 'paid')
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  const domain = new URL(req.url).hostname || 'pravda.jo';
+  const domain = new URL(publicOrigin(req)).hostname || 'pravda.jo';
   const body = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',

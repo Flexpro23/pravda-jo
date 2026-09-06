@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { absolute } from '@/lib/origin';
 import {
   OPS_COOKIE, OPS_RETRY_COOKIE, OPS_TTL_MS,
   keyMatches, mintSession, opsNext, refreshedCookie, sameOrigin, verifySession,
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
   // place the rolling window can actually be extended.
   const current = held(req, OPS_COOKIE);
   if (verifySession(current)) {
-    const res = NextResponse.redirect(new URL(next, req.url), 303);
+    const res = NextResponse.redirect(absolute(req, next), 303);
     const rolled = refreshedCookie(current);
     if (rolled) session(res, rolled);
     clearRetry(res);
@@ -73,7 +74,7 @@ export async function POST(req: Request) {
     // Back to the page he was trying to open, still gated. What the gate needs
     // to know — refused, and where he was going — cannot travel in a query
     // string a layout will never read, so it travels in a ten-second cookie.
-    const res = NextResponse.redirect(new URL(next, req.url), 303);
+    const res = NextResponse.redirect(absolute(req, next), 303);
     res.cookies.set(OPS_RETRY_COOKIE, next, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -84,7 +85,7 @@ export async function POST(req: Request) {
     return res;
   }
 
-  const res = session(NextResponse.redirect(new URL(next, req.url), 303), mintSession());
+  const res = session(NextResponse.redirect(absolute(req, next), 303), mintSession());
   clearRetry(res);
   return res;
 }

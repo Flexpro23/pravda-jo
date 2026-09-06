@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { absolute } from '@/lib/origin';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,5 +14,5 @@ export const dynamic = 'force-dynamic';
  */
 export function GET(req: Request, ctx: { params: Promise<{ lang: string }> }) {
   return ctx.params.then(({ lang }) =>
-    NextResponse.redirect(new URL(`/specimen/${lang === 'en' ? 'en' : 'ar'}`, req.url), 308));
+    NextResponse.redirect(absolute(req, `/specimen/${lang === 'en' ? 'en' : 'ar'}`), 308));
 }

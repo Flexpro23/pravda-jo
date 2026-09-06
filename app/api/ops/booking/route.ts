@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { publicOrigin } from '@/lib/origin';
 import { opsAuthed, sameOrigin } from '@/lib/ops/auth';
 import { offerBooking, markBooking } from '@/lib/store/deals';
 import { BOOKING_LABEL, type BookingStatus } from '@/lib/data/deals';
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
       location: b.location || undefined, callTime: b.callTime || undefined,
       rescheduledFrom: b.rescheduledFrom ? String(b.rescheduledFrom) : undefined,
       force: !!b.force,
-      origin: new URL(req.url).origin,
+      origin: publicOrigin(req),
     });
 
     if (!r.ok) {

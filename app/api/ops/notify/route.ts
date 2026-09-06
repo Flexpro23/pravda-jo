@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { publicOrigin } from '@/lib/origin';
 import { opsAuthed, sameOrigin } from '@/lib/ops/auth';
 import { store } from '@/lib/store/firebase';
 import { bookingsForDeal, getTalent, recordReminder } from '@/lib/store/deals';
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
       : NextResponse.json({ error: 'not-found' }, { status: 404 });
   }
 
-  const origin = new URL(req.url).origin;
+  const origin = publicOrigin(req);
   const text = b?.action === 'remind'
     ? composeReminder(booking, talent, origin)
     : compose(booking, talent, origin);

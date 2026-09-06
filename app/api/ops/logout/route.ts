@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { absolute } from '@/lib/origin';
 import { OPS_COOKIE, sameOrigin } from '@/lib/ops/auth';
 
 export const runtime = 'nodejs';
@@ -13,7 +14,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'origin' }, { status: 403 });
   }
 
-  const res = NextResponse.redirect(new URL('/ops', req.url), 303);
+  const res = NextResponse.redirect(absolute(req, '/ops'), 303);
   res.cookies.delete(OPS_COOKIE);
   return res;
 }

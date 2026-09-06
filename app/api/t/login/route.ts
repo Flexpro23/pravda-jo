@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { absolute } from '@/lib/origin';
 import { talentByCode } from '@/lib/store/deals';
 import { T_COOKIE, T_TTL_MS, epochOf, sessionValue } from '@/lib/talent/auth';
 import { sameOrigin } from '@/lib/ops/auth';
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'origin' }, { status: 403 });
   }
 
-  const bad = () => NextResponse.redirect(new URL('/t?bad=1', req.url), 303);
+  const bad = () => NextResponse.redirect(absolute(req, '/t?bad=1'), 303);
 
   const ip = clientIp(req);
   const [perIp, global] = await Promise.all([
@@ -83,7 +84,7 @@ export async function POST(req: Request) {
     return bad();
   }
 
-  const res = NextResponse.redirect(new URL('/t', req.url), 303);
+  const res = NextResponse.redirect(absolute(req, '/t'), 303);
   res.cookies.set(T_COOKIE, sessionValue(t.id, epochOf(t)), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { publicOrigin } from '@/lib/origin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -24,7 +25,7 @@ export async function GET(req: Request) {
   const safe = /^\/doc\/[A-Za-z0-9._~\-/]*$/.test(raw) && !raw.startsWith('//')
     ? raw : '/doc';
 
-  const dest = new URL(safe, req.url);
+  const dest = new URL(safe, publicOrigin(req));
   dest.searchParams.set('lang', to);
 
   const res = NextResponse.redirect(dest, 303);

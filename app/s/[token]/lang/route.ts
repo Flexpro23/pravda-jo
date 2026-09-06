@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { absolute } from '@/lib/origin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,7 +27,7 @@ export async function GET(
   // Built from the validated token rather than from a header, so nothing a
   // caller sends can turn this into an open redirect.
   const safe = /^[A-Za-z0-9_-]{10,64}$/.test(token) ? token : '';
-  const res = NextResponse.redirect(new URL(`/s/${safe}`, req.url), 303);
+  const res = NextResponse.redirect(absolute(req, `/s/${safe}`), 303);
   res.cookies.set('pravda_lang', to, {
     path: '/', maxAge: 31_536_000, sameSite: 'lax', httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
