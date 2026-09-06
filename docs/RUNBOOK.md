@@ -104,8 +104,10 @@ starts** and **fails the whole rollout within seconds** if one does not exist in
 Secret Manager with at least one version. Secret Manager also refuses an empty
 payload, so there is no such thing as a placeholder secret — and a placeholder
 *value* would be worse, because a present key switches its feature on (a fake
-Turnstile key locks the lead form). The rollout of 6 September 2026 failed
-exactly this way, on eight secrets declared before they were created.
+Turnstile key locks the lead form). App Hosting also rejects a plain
+`value: ""` entry as "not formatted properly". The two failed rollouts of
+6 September 2026 were exactly these: first the empty values, then a secret that
+existed but had never been given a version.
 
 The rule, therefore: **create the secret, then add its stanza to
 `apphosting.yaml`.** A channel that is not configured is absent from the file;

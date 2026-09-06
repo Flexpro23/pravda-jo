@@ -21,6 +21,10 @@ runConfig:
 # 6 Sep 2026 failed exactly this way, on eight secrets declared before they
 # were created.
 #
+# App Hosting also rejects a plain `value: ""` as "not formatted properly" —
+# the first failed rollout — so an unset variable is the only honest way to
+# say "not configured".
+#
 # So the rule is: create the secret first, then add its stanza here. A channel
 # that is not configured is simply absent from this file; every consumer
 # treats an unset variable as "not configured" and lib/config/check.ts reports
