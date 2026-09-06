@@ -1,13 +1,42 @@
 {
   "indexes": [
     {
-      "collectionGroup": "teardowns",
+      "collectionGroup": "clients",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "handle", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "queuedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "clients",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "readLeaseUntil", "order": "ASCENDING" }
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {
+      "collectionGroup": "sheets",
+      "fieldPath": "signals",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "sheets",
+      "fieldPath": "site",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "sheets",
+      "fieldPath": "findings",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "sheets",
+      "fieldPath": "recommendations",
+      "indexes": []
+    }
+  ]
 }

@@ -9,10 +9,14 @@
     "build:local": "NEXT_DIST_DIR=.next-prod next build",
     "start:local": "NEXT_DIST_DIR=.next-prod next start",
     "lint": "next lint",
+    "lint:eslint": "eslint .",
+    "check-env": "node --experimental-strip-types --import ./tests/register.mjs scripts/check-env.mjs",
     "test:lead": "node --experimental-strip-types --import ./tests/register.mjs tests/lead.itest.mts",
     "test:deals": "node --experimental-strip-types --import ./tests/register.mjs tests/deals.itest.mts",
-    "test:proposal": "node --experimental-strip-types --import ./tests/register.mjs tests/proposal.itest.mts",
-    "test:sheet-deal": "node --experimental-strip-types --import ./tests/register.mjs tests/sheet-deal.itest.mts"
+    "test:sheet-deal": "node --experimental-strip-types --import ./tests/register.mjs tests/sheet-deal.itest.mts",
+    "test:unit": "NODE_OPTIONS='--experimental-strip-types --import ./tests/register.mjs' node --test tests/unit/*.test.mts",
+    "test:itest": "node --experimental-strip-types --import ./tests/register.mjs tests/lead.itest.mts && node --experimental-strip-types --import ./tests/register.mjs tests/deals.itest.mts && node --experimental-strip-types --import ./tests/register.mjs tests/sheet-deal.itest.mts && node --experimental-strip-types --import ./tests/register.mjs tests/ratelimit.itest.mts && node --experimental-strip-types --import ./tests/register.mjs tests/queue.itest.mts && node --experimental-strip-types --import ./tests/register.mjs tests/status.itest.mts && node --experimental-strip-types --import ./tests/register.mjs tests/contact.itest.mts",
+    "test": "npx firebase-tools emulators:exec --only firestore \"npm run test:unit && npm run test:itest\""
   },
   "dependencies": {
     "@designcodeio/threeui": "^0.3.0",
@@ -27,6 +31,8 @@
     "@types/node": "22.10.7",
     "@types/react": "19.0.7",
     "@types/three": "0.172.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.24",
     "typescript": "5.7.3"
   }
 }

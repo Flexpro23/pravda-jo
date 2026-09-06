@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # The Firestore emulator (invoked below via firebase-tools) needs a
+      # JDK — ubuntu-latest's preinstalled JRE is not guaranteed to be new
+      # enough for whatever firebase-tools version npx resolves, so pin one
+      # explicitly rather than hoping the runner image already has it.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx next lint
+
+      # Same rules as `next lint`, run through ESLint 9's own flat-config CLI
+      # (eslint.config.mjs), which is what an editor's ESLint extension and a
+      # pre-commit hook actually call. Kept as its own step rather than folded
+      # into Lint above so a divergence between the two is visible by name.
+      - name: Lint (eslint.config.mjs)
+        run: npm run lint:eslint
+
+      # Informational only — see scripts/check-env.mjs's own header. This
+      # runner carries no secrets by design, so most rows report MISSING; the
+      # point is a human glancing at a CI run, not a gate.
+      - name: Environment matrix (informational)
+        run: node --experimental-strip-types --import ./tests/register.mjs scripts/check-env.mjs || true
+
+      - name: Unit tests (pure engine, no network, no Firestore)
+        run: npm run test:unit
+
+      - name: Integration tests against the Firestore emulator
+        env:
+          FIRESTORE_COLLECTION_PREFIX: _itest_
+          GOOGLE_CLOUD_PROJECT: pravda-jo-emulator
+        run: npx firebase-tools emulators:exec --only firestore --project pravda-jo-emulator "npm run test:itest"
+
+      # No secrets on this runner — a build that quietly required one would
+      # be a regression in itself (App Router only statically analyses route
+      # handlers; nothing in lib/store/*.ts calls store() at module scope).
+      - name: Build (no secrets)
+        run: npm run build | tee .next-build-output.log
+
+      - name: Bundle budget check
+        run: node scripts/check-bundle.mjs --from .next-build-output.log

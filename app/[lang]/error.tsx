@@ -1,5 +1,6 @@
 'use client';
 import { useEffect } from 'react';
+import { CO } from '@/lib/data/company';
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => { console.error(error); }, [error]);
@@ -15,7 +16,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       </p>
       <div className="hero-actions">
         <button className="btn" type="button" onClick={reset}>جرّب مرة تانية · Try again</button>
-        <a className="btn btn-s" href="tel:+962797989818">+962 79 798 9818</a>
+        <a className="btn btn-s" href={`tel:${CO.phone}`}>{CO.phoneDisplay}</a>
       </div>
     </main>
   );

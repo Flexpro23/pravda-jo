@@ -16,6 +16,16 @@ function app(): App {
   const existing = getApps()[0];
   if (existing) return existing;
 
+  // CI and a developer's `node --test` run against the Firestore emulator,
+  // which needs no credential at all — resolving one is not just wasted work,
+  // `applicationDefault()` can fail hard on a runner with no ADC configured,
+  // even though the emulator never asks it for anything.
+  if (process.env.FIRESTORE_EMULATOR_HOST) {
+    return initializeApp({
+      projectId: process.env.GOOGLE_CLOUD_PROJECT || 'pravda-jo-emulator',
+    });
+  }
+
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (raw) {
     const svc = JSON.parse(raw);

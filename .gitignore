@@ -7,3 +7,6 @@ out
 next-env.d.ts
 
 .next-prod
+
+# Firestore emulator writes this next to firebase.json on every npm test
+firestore-debug.log
