@@ -8,12 +8,19 @@
  *
  *   node scripts/seed-content.mjs
  *   node scripts/seed-content.mjs --voiceover-rate 40
+ *   node scripts/seed-content.mjs --promote rana
  *
  * The rate argument exists because there is no published voiceover rate. PRAVDA
  * sets rates and talent never proposes them, so this script will not invent
  * one: without the argument the voiceover record is seeded inactive, which
  * keeps them off the booking list rather than letting someone be offered a day
  * at nothing a day.
+ *
+ * `--promote <key>` says a seeded person is a real one. Everybody here starts
+ * invented, because everybody here IS invented until somebody has met them,
+ * and `recommend` refuses to put an invented person on a client's sheet. That
+ * flag is the only thing that clears it, and it clears it for one person at a
+ * time on purpose.
  */
 import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -23,6 +30,21 @@ const PROJECT = process.env.GOOGLE_CLOUD_PROJECT || 'pravda-jo';
 const PREFIX = process.env.FIRESTORE_COLLECTION_PREFIX || '';
 const rateArg = process.argv.indexOf('--voiceover-rate');
 const VO_RATE = rateArg > -1 ? Number(process.argv[rateArg + 1]) || 0 : 0;
+const promoteArg = process.argv.indexOf('--promote');
+const PROMOTE = promoteArg > -1 ? (process.argv[promoteArg + 1] || '').trim() : '';
+const FORCE = process.argv.includes('--force');
+
+// A seed is a development tool that happens to hold production credentials.
+// Without a prefix it writes straight over the live collections, and the one
+// place that is never what somebody meant is a production shell.
+if (process.env.NODE_ENV === 'production' && !PREFIX && !FORCE) {
+  console.error(
+    'Refusing to seed: NODE_ENV=production and no FIRESTORE_COLLECTION_PREFIX.\n'
+    + '  This would overwrite live records. Set a prefix (staging_) or pass --force\n'
+    + '  if rewriting production is genuinely what you mean.',
+  );
+  process.exit(1);
+}
 
 initializeApp({ credential: applicationDefault(), projectId: PROJECT });
 const db = getFirestore();
@@ -92,11 +114,28 @@ const talent = ROSTER.map((m) => {
     // Only a record that was already bookable keeps its own answer; one that
     // was held back for want of a rate is released as soon as there is one.
     active: wasUnbookable ? bookable : prior.active,
-    placeholder: true,
+    // Never downgrade somebody an operator has promoted. This was an
+    // unconditional `true` inside a `{merge: true}` set, so a rerun re-flagged
+    // a real person as invented — and `recommend` refuses to cast an invented
+    // person, which means a rerun could quietly empty a live sheet's cast.
+    //
+    // A record that has never been seen before is invented. A record that
+    // already exists is not mentioned at all: `prior.placeholder ?? true` still
+    // wrote `true` onto anyone whose flag had been deleted rather than set to
+    // false, which is the same downgrade by a different route. `undefined` is
+    // dropped by `put`'s merge, so saying nothing leaves the record's own
+    // answer exactly where it was.
+    placeholder: m.key === PROMOTE ? false : (prior ? prior.placeholder : true),
     createdAt: prior?.createdAt ?? new Date().toISOString(),
   };
 });
+if (PROMOTE && !talent.some((t) => t.id === PROMOTE)) {
+  console.error(`--promote ${PROMOTE}: no roster key by that name.`);
+  console.error(`  Keys: ${talent.map((t) => t.id).join(', ')}`);
+  process.exit(1);
+}
 await put('talent', talent, (t) => t.id);
+if (PROMOTE) console.log(`  promoted ${PROMOTE} — no longer a placeholder.`);
 
 if (reactivated.length) {
   console.log('\nReleased for booking:');
@@ -120,4 +159,19 @@ if (unbookable.length) {
 const ph = [...WORK, ...ROSTER].filter((r) => r.placeholder).length;
 console.log(`\n${ph} of ${WORK.length + ROSTER.length} archive and roster records are placeholders.`);
 console.log('Both pages say so while any remain.');
+
+// The number that actually gates a sheet. `recommend` casts nobody who is
+// still flagged, so a roster that is bookable on paper and entirely
+// placeholder produces five ideas marked "cast to confirm" and no names —
+// which is correct, and is worth seeing at the end of every seed rather than
+// discovering on a client's sheet.
+const bookablePlaceholders = talent.filter((t) => t.active && t.dayRateJOD > 0 && t.placeholder);
+const bookableTotal = talent.filter((t) => t.active && t.dayRateJOD > 0).length;
+console.log(
+  `\n${bookablePlaceholders.length} of ${bookableTotal} bookable talent are still placeholders.`,
+);
+if (bookablePlaceholders.length) {
+  console.log('  No sheet will name them until each is promoted:');
+  console.log(`    node scripts/seed-content.mjs --promote ${bookablePlaceholders[0].id}`);
+}
 process.exit(0);

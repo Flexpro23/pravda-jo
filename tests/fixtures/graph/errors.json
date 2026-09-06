@@ -1,0 +1,31 @@
+{
+  "alias-not-found": {
+    "error": { "message": "Alias not found", "type": "OAuthException", "code": 803 }
+  },
+  "no-such-object": {
+    "error": {
+      "message": "Unsupported get request. Object does not exist or is not supported",
+      "type": "GraphMethodException",
+      "code": 100,
+      "error_subcode": 33
+    }
+  },
+  "rate-limited": {
+    "error": { "message": "Application request limit reached", "type": "OAuthException", "code": 4 }
+  },
+  "bad-token": {
+    "error": { "message": "Invalid OAuth access token", "type": "OAuthException", "code": 190 }
+  },
+  "transient-110": {
+    "error": {
+      "message": "Requires business_management permission to manage the object",
+      "type": "OAuthException",
+      "code": 110,
+      "error_subcode": 2207013,
+      "is_transient": false
+    }
+  },
+  "server-error": {
+    "error": { "message": "An unknown error occurred", "type": "OAuthException", "code": 1 }
+  }
+}

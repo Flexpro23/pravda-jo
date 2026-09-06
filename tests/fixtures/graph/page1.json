@@ -1,0 +1,38 @@
+{
+  "business_discovery": {
+    "username": "ammanleather",
+    "name": "Amman Leather",
+    "followers_count": 8420,
+    "follows_count": 310,
+    "media_count": 260,
+    "biography": "حقائب جلد مصنوعة يدوياً في عمان · شحن لكل الأردن",
+    "website": "https://shop.example.com/",
+    "profile_picture_url": "https://scontent.example.com/pp.jpg",
+    "ig_id": 17841400000000000,
+    "media": {
+      "data": [
+        {
+          "id": "1",
+          "caption": "حقيبة الأسبوع",
+          "media_type": "IMAGE",
+          "media_product_type": "FEED",
+          "permalink": "https://www.instagram.com/p/AAA/",
+          "timestamp": "2026-08-30T17:00:00+0000",
+          "like_count": 140,
+          "comments_count": 6
+        },
+        {
+          "id": "2",
+          "caption": "خلف الكواليس",
+          "media_type": "VIDEO",
+          "media_product_type": "REELS",
+          "permalink": "https://www.instagram.com/p/BBB/",
+          "timestamp": "2026-08-28T18:30:00+0000",
+          "like_count": 310,
+          "comments_count": 22
+        }
+      ],
+      "paging": { "cursors": { "after": "CURSOR_ONE" } }
+    }
+  }
+}

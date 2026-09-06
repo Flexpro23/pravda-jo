@@ -9,9 +9,11 @@
  *
  * English only, and deliberately so. This is source material for an operator,
  * not copy for a recipient: a concept becomes bilingual when it is adapted
- * into a specific teardown, where the Arabic is written for that business
- * rather than translated from stock. `toReportConcept` seeds the English and
- * marks the Arabic unwritten, so an untranslated concept cannot ship.
+ * into a specific sheet, where the Arabic is written for that business rather
+ * than translated from stock. The sheet keeps it in `Sheet.copy`, per client
+ * and per concept, and renders the English correctly isolated until somebody
+ * has written it — which is honest, and better than machine-translating an
+ * idea written for a different shop.
  *
  * The economics are the library's own modelling at the published rate card —
  * 35 JOD a videographer-editor, 50 per model per day. They are a guide to what
@@ -39,11 +41,33 @@ export const VERTICAL_LABEL: Record<Vertical, { ar: string; en: string }> = {
   pro:      { ar: 'خدمات مهنية',     en: 'Professional services' },
 };
 
+/**
+ * The visual grammar of a piece — how it is shot, not what it is about.
+ *
+ * It exists so the shortlist cannot hand a client five versions of the same
+ * film. Five client-fronted one-setup talking heads is a defensible ranking and
+ * an indefensible sheet: there is nothing in it to choose between, which is the
+ * only thing the five are there to give.
+ */
+export type Shape =
+  | 'talking-head' | 'ugc' | 'screen-record' | 'product'
+  | 'observational' | 'documentary' | 'graphics';
+
 export type ConceptSource = {
   /** Its number in the library, so a conversation can name one unambiguously. */
   n: number;
   name: string;
   tier: Tier;
+  /** How it is shot. Used to keep the five offered ideas actually different. */
+  shape: Shape;
+  /**
+   * May this be one of the ideas a Teardown leads with?
+   *
+   * False where the library's own text forbids it — a piece it calls retainer
+   * filler or an ads add-on must not be priced as a shot video on a sheet, and
+   * the engine used to sell one at eight videos × 150.
+   */
+  headline: boolean;
   verticals: Vertical[];
   /** What actually gets shot, and in how many days. */
   format: string;
@@ -67,6 +91,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 1, name: "The Inbox Twelve",
     tier: "light", verticals: ["body", "property", "auto", "edu", "pro"],
+    shape: "talking-head", headline: true,
     format: "Talking-head batch. 10-12 Reels of 20-40s plus 5 twelve-second price cutdowns, all from one half-day (5-6 hours) on one setup. Budget 1.5 editor days for the batch.",
     economics: { costJOD: 35, originations: 10, billedJOD: 1500, grossJOD: 1465, marginPct: 98 },
     hook: "A full-screen card carrying the customer's own question in their own words, zero branding — then the person is already talking before second two.",
@@ -84,6 +109,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 2, name: "The Forty Fils Number",
     tier: "light", verticals: ["food", "retail", "auto", "edu", "pro"],
+    shape: "ugc", headline: true,
     format: "Reel 15-45s shot to look self-filmed. 4-6 originations per visit; 15s and 8s retargeting trims bundled free, not counted as assets.",
     economics: { costJOD: 35, originations: 4, billedJOD: 600, grossJOD: 565, marginPct: 94 },
     hook: "An owner mid-sentence in an unglamorous back room, phone-height and off-centre, opening on a concession: 'بصراحة، إحنا مش الأرخص بعمّان.' Cut hard, let the silence sit.",
@@ -101,6 +127,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 3, name: "We Say No To This",
     tier: "light", verticals: ["body", "fitness", "property", "edu", "pro"],
+    shape: "talking-head", headline: true,
     format: "Talking-head Reel 30-45s with two inserts. Sold only as a same-setup add-on to an Inbox Twelve day, where its marginal cost is thirty minutes. 1-2 per client.",
     economics: { costJOD: 35, originations: 1, billedJOD: 150, grossJOD: 115, marginPct: 77 },
     hook: "Straight to lens, unblinking, first words: 'ما بنشتغل مع كل حدا.' No music, no motion, no titles — stillness as the pattern interrupt.",
@@ -118,6 +145,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 4, name: "The Thread",
     tier: "light", verticals: ["food", "body", "property", "auto", "pro"],
+    shape: "screen-record", headline: false,
     format: "Screen-recorded WhatsApp video 10-15s. 8-10 in one editor afternoon, no camera and no cast. Priced visibly below a shot video and normally bundled into the ads retainer.",
     economics: { costJOD: 35, originations: 8, billedJOD: 1200, grossJOD: 1165, marginPct: 97 },
     hook: "A WhatsApp thread already open and mid-scroll with the three dots pulsing — the most familiar visual in Jordanian daily life, appearing where an ad should be.",
@@ -135,6 +163,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 5, name: "Send Us Your Contract",
     tier: "light", verticals: ["property", "edu", "pro"],
+    shape: "product", headline: true,
     format: "Overhead vertical 20-35s, hands only. Series of 10-12 from one three-hour desk session, built from audience-submitted documents. Booking gated on the signed document pack.",
     economics: { costJOD: 85, originations: 10, billedJOD: 1500, grossJOD: 1415, marginPct: 94 },
     hook: "A bare desk, then a hand slides a contract in and a red pen circles one clause hard before a word is spoken. Text: 'هاي الفقرة كلّفت واحد ٤٠٠٠ دينار.'",
@@ -152,6 +181,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 6, name: "Five Dinars Gets You",
     tier: "light", verticals: ["food", "retail", "body", "fitness"],
+    shape: "product", headline: true,
     format: "Reel 12-18s with an on-screen running counter. Endless series at different price points. Loop and counter template built once, then amortised across every client.",
     economics: { costJOD: 85, originations: 6, billedJOD: 900, grossJOD: 815, marginPct: 91 },
     hook: "A 5 JD note slapped on the counter and pushed toward the lens, and a counter starting to tick.",
@@ -169,6 +199,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 7, name: "Phone Kit Friday",
     tier: "light", verticals: ["food", "retail", "body", "auto", "pro"],
+    shape: "ugc", headline: true,
     format: "No crew day at all. PRAVDA ships a kit and directs over WhatsApp; the client shoots on their own phone. 6-10 assets per cycle, edit-only cost, the floor product below every shot concept.",
     economics: { costJOD: 35, originations: 6, billedJOD: 900, grossJOD: 865, marginPct: 96 },
     hook: "Whatever the client's own hands are doing, framed correctly for the first time in their life — the difference is legible in frame one because the tape does the directing.",
@@ -186,6 +217,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 8, name: "The Menu Day",
     tier: "light", verticals: ["food", "retail", "body", "auto"],
+    shape: "product", headline: true,
     format: "Stills-led half day: 30-40 finished stills plus 8-10 six-second locked-off loops from one lighting setup. The photographer is the deliverable, not a secondary.",
     economics: { costJOD: 85, originations: 8, billedJOD: 1200, grossJOD: 1115, marginPct: 93 },
     hook: "An audible slam of the product hitting a hard surface in frame one, no logo, no face, no intro — and the still of the same item is already on the client's grid.",
@@ -203,6 +235,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 9, name: "Status Thirty",
     tier: "light", verticals: ["food", "retail", "body", "auto", "pro"],
+    shape: "ugc", headline: true,
     format: "Vertical 20-30s built for WhatsApp Status and broadcast lists, not for the feed. 6-8 per cycle, cut from footage already shot on any other concept day.",
     economics: { costJOD: 35, originations: 6, billedJOD: 900, grossJOD: 865, marginPct: 96 },
     hook: "No hook, deliberately. A familiar face already talking to you as if you had asked — the pattern interrupt is that it does not behave like an ad.",
@@ -220,6 +253,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 10, name: "The Bad Review, Answered",
     tier: "light", verticals: ["food", "body", "fitness", "auto", "pro"],
+    shape: "talking-head", headline: true,
     format: "Reel 25-40s, single take plus one insert. 2-3 per client, shot on any existing talking-head setup.",
     economics: { costJOD: 35, originations: 2, billedJOD: 300, grossJOD: 265, marginPct: 88 },
     hook: "A real one-star complaint about the business held silent and legible on screen for three seconds, published by the business itself.",
@@ -237,6 +271,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 11, name: "Order Direct",
     tier: "light", verticals: ["food", "retail", "auto"],
+    shape: "graphics", headline: true,
     format: "Graphics-led vertical 20-30s over counter footage. Set of 3-4 per client, built largely in post from a template.",
     economics: { costJOD: 85, originations: 3, billedJOD: 450, grossJOD: 365, marginPct: 81 },
     hook: "Two phones side by side on a counter showing the same dish at two different prices, before anyone has said a word.",
@@ -254,6 +289,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 12, name: "What 95K Buys",
     tier: "light", verticals: ["property"],
+    shape: "talking-head", headline: true,
     format: "Vertical Reel 30-45s, price-first walkthrough. Two properties per crew day, three to four assets.",
     economics: { costJOD: 35, originations: 3, billedJOD: 450, grossJOD: 415, marginPct: 92 },
     hook: "The real, unflattering view out of the master bedroom window, held for three seconds, with the price stamped across it — the shot nobody else in the category will publish.",
@@ -271,6 +307,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 13, name: "Curtain Cut",
     tier: "light", verticals: ["retail"],
+    shape: "product", headline: true,
     format: "Reel 12-18s plus five stills and five story cutdowns from one 90-minute setup. Anchored as a fixed weekly Thursday restock ritual.",
     economics: { costJOD: 85, originations: 1, billedJOD: 150, grossJOD: 65, marginPct: 43 },
     hook: "A hand yanks the fitting-room curtain closed and it reopens on a completely different outfit, with the remaining sizes already on screen.",
@@ -288,6 +325,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 14, name: "Hook Farm",
     tier: "light", verticals: ["food", "retail", "body", "fitness", "edu"],
+    shape: "ugc", headline: false,
     format: "Creative-refill pack for the ads retainer, not a Teardown concept. 12 finished ads welded from one 90-minute block plus a full editor day. Never sold as twelve separate videos.",
     economics: { costJOD: 85, originations: 12, billedJOD: 1800, grossJOD: 1715, marginPct: 95 },
     hook: "The model is already mid-sentence when the frame lands, client's real space over their shoulder: 'لا تدفع فلسك بأي [كوفي/جيم/عيادة] بعمّان قبل ما تشوف هالشي.'",
@@ -305,6 +343,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 15, name: "No Face, Real Proof",
     tier: "standard", verticals: ["body", "fitness"],
+    shape: "observational", headline: true,
     format: "Reel 15-25s, one continuous unbroken move, no face above the jawline. 3-4 assets per session, 15-25 takes budgeted for the reveal move.",
     economics: { costJOD: 85, originations: 3, billedJOD: 450, grossJOD: 365, marginPct: 81 },
     hook: "A single pin coming out and hair dropping in slow motion filling the whole frame — then a before-photo tilting down into the live after in one unbroken shot. No cut means no edit trickery, and viewers read that instantly.",
@@ -322,6 +361,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 16, name: "Out The Door Number",
     tier: "standard", verticals: ["property", "auto", "pro"],
+    shape: "graphics", headline: true,
     format: "Graphics-led vertical 25-40s over slow-push car footage. Set of 6-8, one per model on the lot. One-time template build charged as a setup fee, then cheap per car.",
     economics: { costJOD: 35, originations: 6, billedJOD: 900, grossJOD: 865, marginPct: 96 },
     hook: "The showroom sticker price fills the whole screen for three seconds, then a red line is drawn straight through it and the VO says, flat: 'هاد مش السعر.'",
@@ -339,6 +379,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 17, name: "Inside The Skin",
     tier: "standard", verticals: ["body", "fitness", "pro"],
+    shape: "graphics", headline: true,
     format: "AI-generated explainer 20-30s, practitioner voice-over with live-action bookends. Four to six built from one 30-minute VO session and one ten-minute bookend visit.",
     economics: { costJOD: 35, originations: 4, billedJOD: 600, grossJOD: 565, marginPct: 94 },
     hook: "An abstract macro interior nobody can identify, over the practitioner's own voice asking 'بتعرف شو بصير تحت الجلد لما...'",
@@ -356,6 +397,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 18, name: "The Silent Inspection",
     tier: "standard", verticals: ["property", "auto"],
+    shape: "observational", headline: true,
     format: "Observational near-ASMR vertical 45-75s, diegetic sound only. Four to five cars in one crew day, sold as a dealer inventory service where the inspection sheet is a deliverable.",
     economics: { costJOD: 35, originations: 4, billedJOD: 600, grossJOD: 565, marginPct: 94 },
     hook: "Black frame, then a torch beam sweeps across the underside of a car in a dark workshop and the only sound is a socket wrench.",
@@ -373,6 +415,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 19, name: "Ten Minute Radius",
     tier: "standard", verticals: ["food", "body", "fitness", "property", "auto", "edu"],
+    shape: "observational", headline: true,
     format: "Driver-POV vertical 20-60s with a live unbroken timer. Four to five routes per crew day, published as rush-hour and off-peak pairs. Owned by PRAVDA as a catchment library and licensed to multiple clients in the same area.",
     economics: { costJOD: 85, originations: 4, billedJOD: 600, grossJOD: 515, marginPct: 86 },
     hook: "A named Amman landmark on screen with a live timer punching to 00:00 and one line: 'من باب العمارة — عشر دقايق.' No face, no agent, no intro.",
@@ -390,6 +433,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 20, name: "The Free Minute",
     tier: "standard", verticals: ["body", "edu"],
+    shape: "talking-head", headline: true,
     format: "Single-take instructional vertical 45-70s. Six to eight lessons from one classroom half-day.",
     economics: { costJOD: 35, originations: 6, billedJOD: 900, grossJOD: 865, marginPct: 96 },
     hook: "Instructor mid-sentence, marker already moving, no titles, value inside two seconds and no throat-clearing.",
@@ -407,6 +451,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 21, name: "Sixty Days",
     tier: "standard", verticals: ["food", "retail", "body"],
+    shape: "documentary", headline: true,
     format: "Wedding-season series: one hero Reel 30-45s plus six 15s countdown cutdowns, shot across two suppliers in one day. Runs March-September, sold as a season package in January.",
     economics: { costJOD: 135, originations: 1, billedJOD: 150, grossJOD: 15, marginPct: 10 },
     hook: "'٦٠ يوم' stamped over a hand pinning a seam, and a bride's voice off camera asking whether there is still time.",
@@ -424,6 +469,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 22, name: "After Dark",
     tier: "standard", verticals: ["food", "retail", "fitness", "auto"],
+    shape: "observational", headline: true,
     format: "Low-light vertical 20-35s shot on practicals only, 7pm-midnight. Winter and night-trade concept. Four to six assets per evening block.",
     economics: { costJOD: 35, originations: 4, billedJOD: 600, grossJOD: 565, marginPct: 94 },
     hook: "Warm light spilling out of an open door onto wet night pavement, with the room's real noise arriving before any image of the product.",
@@ -441,6 +487,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 23, name: "Six Weeks Only",
     tier: "standard", verticals: ["food", "body", "property", "auto", "edu"],
+    shape: "observational", headline: true,
     format: "Reel 25-35s, single-location checklist film. Runs May-August, sold in March-April as a pre-booked seasonal slot. One outdoor half-day covers the arrival plate for every client that season.",
     economics: { costJOD: 85, originations: 2, billedJOD: 300, grossJOD: 215, marginPct: 72 },
     hook: "A Gulf licence plate and four suitcases hitting Amman pavement. The target audience identifies itself in frame one and everyone else scrolls past, which is the point.",
@@ -458,6 +505,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 24, name: "Mama's Verdict",
     tier: "premium", verticals: ["food", "retail", "body", "edu", "pro"],
+    shape: "observational", headline: true,
     format: "PRAVDA-owned recurring review show, 'امتحان امي'. Reel 25-40s, near-single-take. Sold only as a dated monthly kitchen day with pre-paid slots, minimum four clients per day.",
     economics: { costJOD: 135, originations: 2, billedJOD: 300, grossJOD: 165, marginPct: 55 },
     hook: "The bag hitting the counter with a caption already on screen: 'وديت الأكل لإمي'. The tension of an unimpressed mother about to judge needs no setup.",
@@ -475,6 +523,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 25, name: "The Booked Model",
     tier: "premium", verticals: ["body", "fitness"],
+    shape: "product", headline: true,
     format: "Productised asset day, not a single video: three Reels, one hero, 20-30 stills from one real appointment. Paid-media buy-out is a visible line item, and a maximum treatment length is stated in the package.",
     economics: { costJOD: 85, originations: 4, billedJOD: 600, grossJOD: 515, marginPct: 86 },
     hook: "Gloved hands entering frame on the model's face in the first half second, tight enough that you cannot yet tell what is about to happen.",
@@ -492,6 +541,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 26, name: "Room Full At Six",
     tier: "premium", verticals: ["fitness"],
+    shape: "observational", headline: true,
     format: "One-time launch package: hero 45-60s plus four cutdowns and a stills set, priced as a footage library covering a year of the gym's paid creative. Two gyms booked into the same talent day to halve cast cost.",
     economics: { costJOD: 435, originations: 1, billedJOD: 150, grossJOD: -285, marginPct: -190 },
     hook: "The wide shot of a visibly full room with the class's real sound running before a single frame of music.",
@@ -509,6 +559,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 27, name: "The Whole Visit",
     tier: "premium", verticals: ["body", "property", "auto", "edu", "pro"],
+    shape: "observational", headline: true,
     format: "Continuous POV single-take vertical 60-90s, street to chair, no cuts. A full crew day of its own, sold as a premium bolt-on to an Inbox Twelve booking. One deliverable.",
     economics: { costJOD: 135, originations: 1, billedJOD: 150, grossJOD: 15, marginPct: 10 },
     hook: "A hand pushes the door open from the pavement and reception looks straight down the lens and says your name — 'أهلاً أستاذ، تفضل، الدكتورة جاهزة.' You are inside the building in second two.",
@@ -526,6 +577,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 28, name: "Five Doors On This Street",
     tier: "premium", verticals: ["food", "retail", "body", "fitness", "pro"],
+    shape: "documentary", headline: true,
     format: "Neighbourhood co-op piece: one Reel 25-45s naming five real businesses on one street, sold jointly to all five. Two golden-hour evenings, roughly 45-60 minutes of usable matched light each.",
     economics: { costJOD: 85, originations: 1, billedJOD: 150, grossJOD: 65, marginPct: 43 },
     hook: "Talent already walking, already mid-sentence, naming a street a local will recognise inside two seconds.",
@@ -543,6 +595,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 29, name: "The Last 60 Seconds",
     tier: "premium", verticals: ["food", "retail", "body", "auto", "pro"],
+    shape: "product", headline: true,
     format: "Reel 15-25s with a real-time countdown. Ramadan seasonal, sold only inside a priced Ramadan campaign bundle alongside the ads retainer. Finished three to four weeks before the month starts.",
     economics: { costJOD: 285, originations: 1, billedJOD: 150, grossJOD: -135, marginPct: -90 },
     hook: "A countdown number burned over an empty plate at an untouched iftar table. Time pressure is the most literal hook available and needs zero explanation during Ramadan.",
@@ -560,6 +613,7 @@ export const CONCEPTS: ConceptSource[] = [
   {
     n: 30, name: "The Receipt at Six Months",
     tier: "premium", verticals: ["body", "fitness", "property", "edu", "pro"],
+    shape: "documentary", headline: true,
     format: "Documentary vertical 60-90s, two locations, plus three static pull-quote crops. One asset per subject, released fortnightly. Never sold with a fixed shoot date until the subject and the workplace are confirmed in writing.",
     economics: { costJOD: 35, originations: 1, billedJOD: 150, grossJOD: 115, marginPct: 77 },
     hook: "Cold open, mid-sentence, on the number: 'قبل سنة كنت أخذ ٣٠٠. هلأ ٧٥٠.' The face is already talking when the frame appears. No name card, no logo, no music.",
@@ -618,36 +672,3 @@ export const crewDayCost = (models: number) => 35 + 50 * Math.max(0, models);
  * a client never sees a crew day or a rate card.
  */
 export const VIDEO_JOD_PER = 150;
-
-// ── adaptation ──────────────────────────────────────────────────────────────
-
-type B = { ar: string; en: string };
-
-/** The marker the console and `needsWriting` both look for. */
-const unwritten = (what: string): B => ({
-  ar: `⟦يحتاج كتابة: ${what}⟧`,
-  en: `⟦Needs writing: ${what}⟧`,
-});
-
-/**
- * Seed a report concept from a library entry.
- *
- * English arrives filled from the library; Arabic arrives marked unwritten, on
- * purpose. A teardown is read in Arabic by most of the people it is sent to,
- * and a stock translation of a concept written for a different business reads
- * exactly like what it is. Marking it unwritten means the report cannot be
- * released until someone has written it for this one — `needsWriting` blocks
- * the promotion and the console disables the button.
- */
-export function toReportConcept(src: ConceptSource) {
-  return {
-    name: { ar: '', en: src.name },
-    line: { ar: '', en: src.hook },
-    idea: { ar: '', en: src.premise },
-    cast: [] as { name: B; role: B }[],
-    // The library's modelled figure, as a starting number to argue with.
-    price: src.economics.billedJOD,
-    assets: { ar: '', en: src.format },
-    note: unwritten(`الفكرة بالعربي — ${src.name}`),
-  };
-}
