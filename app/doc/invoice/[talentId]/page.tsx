@@ -5,37 +5,11 @@ import { opsAuthed } from '@/lib/ops/auth';
 import { CO } from '@/lib/data/company';
 import { SAMPLE_TALENT, SAMPLE_BOOKINGS } from '@/lib/data/specimens';
 import PrintBar from '@/components/doc/PrintBar';
+import { arNum, num as money } from '@/lib/format/num';
+import { AR_MONTHS, EN_MONTHS, dayOf, days } from '@/lib/format/date';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-const AR_MONTHS = ['كانون الثاني', 'شباط', 'آذار', 'نيسان', 'أيار', 'حزيران',
-  'تموز', 'آب', 'أيلول', 'تشرين الأول', 'تشرين الثاني', 'كانون الأول'];
-const EN_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'];
-const arNum = (s: string | number) =>
-  String(s).replace(/(?<=\d),(?=\d)/g, '٬').replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d]);
-const money = (n: number, ar: boolean) =>
-  ar ? arNum(n.toLocaleString('en-US')) : n.toLocaleString('en-US');
-/**
- * Arabic counts in five shapes, not two. One is the noun alone, two has its own
- * dual form, three to ten takes the plural, and eleven up returns to an
- * accusative singular. "١ يوم" is none of them.
- */
-const days = (n: number, ar: boolean) => {
-  if (!ar) return `${n} day${n === 1 ? '' : 's'}`;
-  if (n === 1) return 'يوم واحد';
-  if (n === 2) return 'يومين';
-  if (n <= 10) return `${arNum(n)} أيام`;
-  return `${arNum(n)} يومًا`;
-};
-
-const dayOf = (iso: string, ar: boolean) => {
-  const d = new Date(`${iso}T00:00:00`);
-  return ar
-    ? `${arNum(d.getDate())} ${AR_MONTHS[d.getMonth()]}`
-    : `${d.getDate()} ${EN_MONTHS[d.getMonth()]}`;
-};
 
 /**
  * What a provider is owed for a month, and what they were paid.
@@ -70,12 +44,26 @@ export default async function InvoiceDoc({
   const talent = specimen ? SAMPLE_TALENT : await getTalent(talentId);
   if (!talent) notFound();
 
-  // Default to the month just gone, which is when anyone actually invoices.
-  const now = new Date();
+  /*
+   * Default to the month just gone, which is when anyone actually invoices —
+   * the comment said this all along while the code computed the *current*
+   * month, so a provider opening their statement on the 3rd got a nearly empty
+   * September instead of the August they were asking to be paid for.
+   *
+   * Amman-local, not UTC: Jordan is UTC+3 year-round with no DST since 2022, so
+   * a fixed offset is exact and needs no timezone database. It only matters at
+   * a month boundary — for the first three hours of the 1st in Amman, UTC is
+   * still on the last day of the month before, and the "previous month" would
+   * be the one before that.
+   *
+   * `?m=` stays an explicit override, including for the current month.
+   */
+  const amman = new Date(Date.now() + 3 * 3600_000);
+  const prev = new Date(Date.UTC(amman.getUTCFullYear(), amman.getUTCMonth() - 1, 1));
   const month = /^\d{4}-\d{2}$/.test(m ?? '')
     ? (m as string)
     : specimen ? '2026-08'
-      : `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+      : `${prev.getUTCFullYear()}-${String(prev.getUTCMonth() + 1).padStart(2, '0')}`;
 
   const all = specimen ? SAMPLE_BOOKINGS : await bookingsForTalent(talentId).catch(() => []);
   // Only work that actually happened. An offered or declined day is not owed.

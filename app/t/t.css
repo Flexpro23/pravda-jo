@@ -31,8 +31,17 @@ input{width:100%;background:#191919;color:var(--ink);border:1px solid var(--line
   border-radius:9px;padding:14px;font:500 22px/1 var(--sans);
   letter-spacing:.3em;text-align:center;direction:ltr;}
 
-.avail{display:flex;gap:8px;margin-bottom:26px;}
+.state{margin-bottom:26px;}
+.avail{display:flex;gap:8px;}
 .avail button{flex:1;padding:12px 6px;font-size:14px;}
+/* The return date, which only exists once "busy" or "abroad" is chosen. Its own
+   row rather than a fourth cell, so the three-way toggle keeps its thumb-sized
+   targets on a narrow phone. */
+.until{display:flex;align-items:center;gap:12px;margin-top:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:9px;
+  background:var(--panel);}
+.until input{flex:1;width:auto;padding:8px 10px;font:500 15px/1 var(--sans);
+  letter-spacing:0;text-align:start;border-radius:7px;min-height:40px;}
 
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
   padding:16px 18px;margin-bottom:14px;}
@@ -46,12 +55,29 @@ input{width:100%;background:#191919;color:var(--ink);border:1px solid var(--line
    became margin-left inside an RTL card and pushed the fee toward the date
    instead of away from it. The fee is Arabic digits and an Arabic word; it
    belongs in the document's direction. Only genuinely Latin runs get .num. */
+/* A day that will never be paid for. The figure stays — they should be able to
+   see what it was worth — but green there reads as money still coming. */
+.card .fee.dead{color:var(--ash);opacity:.55;text-decoration:line-through;}
 .card p{margin:0 0 8px;}
 .card .meta{color:var(--ash);font-size:14px;}
 .acts{display:flex;gap:8px;margin-top:12px;}
 .acts button{flex:1;}
+
+/* Why they said no. Inline rather than a modal: screen space on a phone is
+   scarce and a modal over a card hides the day being answered. */
+.why{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+.why .u{margin:0 0 8px;}
+.chips{display:flex;gap:8px;flex-wrap:wrap;}
+.chips button{flex:1 1 auto;min-width:72px;padding:10px 12px;font-size:14px;
+  min-height:42px;}
+.why .free{margin-top:10px;padding:12px 14px;font:400 16px/1.5 var(--ar);
+  letter-spacing:0;text-align:start;direction:rtl;}
 .pill{font:500 10.5px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;
   padding:5px 9px;border-radius:999px;border:1px solid var(--line);color:var(--dim);}
+
+/* Everything they can take away with them: the calendar and their statements. */
+.tools{margin-top:22px;display:flex;gap:8px;flex-wrap:wrap;}
+.tools a{text-decoration:none;}
 
 .gate{max-width:320px;margin:18vh auto;text-align:center;}
 .gate h1{font:600 13px/1 var(--sans);letter-spacing:.2em;margin:0 0 24px;}

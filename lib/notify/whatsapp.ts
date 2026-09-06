@@ -19,18 +19,8 @@
  */
 
 import type { Booking, Talent } from '@/lib/data/deals';
-
-const AR_MONTHS = ['كانون الثاني', 'شباط', 'آذار', 'نيسان', 'أيار', 'حزيران',
-  'تموز', 'آب', 'أيلول', 'تشرين الأول', 'تشرين الثاني', 'كانون الأول'];
-const AR_DAYS = ['الأحد', 'الاثنين', 'الثلاثا', 'الأربعا', 'الخميس', 'الجمعة', 'السبت'];
-const arNum = (s: string | number) =>
-  String(s).replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d]);
-
-const arDate = (iso: string) => {
-  const d = new Date(`${iso}T00:00:00`);
-  if (Number.isNaN(+d)) return iso;
-  return `${AR_DAYS[d.getDay()]} ${arNum(d.getDate())} ${AR_MONTHS[d.getMonth()]}`;
-};
+import { arNum } from '@/lib/format/num';
+import { arDate } from '@/lib/format/date';
 
 /**
  * A Jordanian number in the form WhatsApp wants: digits only, country code
@@ -48,7 +38,15 @@ export function msisdn(raw: string): string | null {
   return /^\d{8,15}$/.test(n) ? n : null;
 }
 
-/** The message itself. Arabic, because the portal is. */
+/**
+ * The message itself. Arabic, because the portal is.
+ *
+ * The link is the bare `${origin}/t` and cannot carry a `?code=` prefill: the
+ * pass code is stored hashed, so at the moment a booking is announced nobody —
+ * this process included — knows what it is. A prefilled link is only possible
+ * at the instant a code is issued, which is a different message from a
+ * different screen.
+ */
 export function compose(b: Booking, t: Talent, origin: string) {
   // null drops out; '' is a deliberate blank line and must survive the filter.
   const lines: (string | null)[] = [
@@ -60,6 +58,27 @@ export function compose(b: Booking, t: Talent, origin: string) {
     `الأجرة: ${arNum(b.feeJOD)} دينار`,
     '',
     'اقبل أو اعتذر من هون:',
+    `${origin}/t`,
+  ];
+  return lines.filter((l): l is string => l !== null).join('\n');
+}
+
+/**
+ * The nudge before the day, in the same voice as the offer.
+ *
+ * Deliberately shorter: they already accepted, so this is a reminder of a
+ * commitment rather than an offer of one, and it repeats only what somebody
+ * standing up at six in the morning needs — when, where, what time.
+ */
+export function composeReminder(b: Booking, t: Talent, origin: string) {
+  const lines: (string | null)[] = [
+    `تذكير ${t.name.ar} — عندك يوم تصوير مع برافدا.`,
+    '',
+    `${arDate(b.date)}${b.callTime ? ` · ${b.callTime}` : ''}`,
+    b.location ? `📍 ${b.location}` : null,
+    b.brief ? `الشغل: ${b.brief}` : null,
+    '',
+    'التفاصيل هون:',
     `${origin}/t`,
   ];
   return lines.filter((l): l is string => l !== null).join('\n');
@@ -102,6 +121,10 @@ export async function sendText(to: string, body: string): Promise<NotifyResult> 
       body: JSON.stringify({
         messaging_product: 'whatsapp', to, type: 'text', text: { body },
       }),
+      // Nothing here is worth holding a request open for. A notice that takes
+      // longer than four seconds has already failed the person waiting on the
+      // response behind it; the fallback is a human tapping send.
+      signal: AbortSignal.timeout(4000),
     });
     if (!res.ok) {
       const j = await res.json().catch(() => null);
@@ -112,6 +135,43 @@ export async function sendText(to: string, body: string): Promise<NotifyResult> 
     return { sent: false, reason: 'failed', detail: e instanceof Error ? e.message : 'unknown' };
   }
 }
+
+/**
+ * ── The template contract ───────────────────────────────────────────────────
+ *
+ * Whoever registers these with Meta needs the exact body text before this code
+ * ever runs, and the two can silently drift — a template whose parameter order
+ * changed on Meta's side still sends, it just sends a fee where a date should
+ * be. So the contract is written down here, next to the code that has to obey
+ * it, rather than in a spreadsheet.
+ *
+ * `WHATSAPP_TEMPLATE` — the offer. Category: UTILITY. Language: `ar`.
+ * Body, verbatim, three parameters in this order:
+ *
+ *   مرحبا {{1}} — في يوم تصوير إلك من برافدا يوم {{2}}. الأجرة {{3}} دينار. افتح البرافدا للتفاصيل.
+ *
+ *   {{1}} the provider's Arabic name   `t.name.ar`
+ *   {{2}} the shooting day, spelled    `arDate(b.date)` → "الأحد ٣٠ آب"
+ *   {{3}} the fee in dinars, digits    `arNum(b.feeJOD)` → "٥٠"
+ *
+ * `WHATSAPP_REMINDER_TEMPLATE` — the nudge before an accepted day. Category:
+ * UTILITY. Language: `ar`. Body, verbatim, three parameters in this order:
+ *
+ *   تذكير {{1}} — عندك يوم تصوير مع برافدا يوم {{2}}. المكان {{3}}. افتح البرافدا للتفاصيل.
+ *
+ *   {{1}} the provider's Arabic name   `t.name.ar`
+ *   {{2}} the shooting day, spelled    `arDate(b.date)`
+ *   {{3}} where and when               `b.location`/`b.callTime`, or "بنبعتلك التفاصيل"
+ *
+ * {{3}} is never empty: Meta rejects a template send with a blank parameter,
+ * and a booking with no location yet is an ordinary state, not an error.
+ *
+ * Neither variable is required. With no template name set, both senders fall
+ * back to `compose`/`composeReminder` free text, which only lands inside an
+ * open 24-hour window — and when nothing at all is configured the console
+ * shows the booking as un-notified and a human sends the `wa.me` link.
+ * ────────────────────────────────────────────────────────────────────────────
+ */
 
 /**
  * Send it, if we can.
@@ -145,7 +205,11 @@ export async function notifyOffer(
             parameters: [
               { type: 'text', text: t.name.ar },
               { type: 'text', text: arDate(b.date) },
-              { type: 'text', text: String(b.feeJOD) },
+              // Arabic digits: the template body around it is Arabic and a
+              // Latin numeral dropped into it is the one visibly foreign thing
+              // in the message. `compose` already does this; the template path
+              // did not, so the same fee read differently down two channels.
+              { type: 'text', text: arNum(b.feeJOD) },
             ],
           }],
         },
@@ -158,8 +222,72 @@ export async function notifyOffer(
         method: 'POST',
         headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
         body: JSON.stringify(body),
+        // The booking is already written. Waiting longer than this on Meta only
+        // delays the operator seeing that they need to send it by hand.
+        signal: AbortSignal.timeout(4000),
       },
     );
+    if (!res.ok) {
+      const j = await res.json().catch(() => null);
+      return { sent: false, reason: 'failed', detail: j?.error?.message ?? `HTTP ${res.status}` };
+    }
+    return { sent: true };
+  } catch (e) {
+    return { sent: false, reason: 'failed', detail: e instanceof Error ? e.message : 'unknown' };
+  }
+}
+
+/**
+ * The reminder, sent the same way and with the same honesty.
+ *
+ * Mirrors `notifyOffer` deliberately rather than sharing a body with it: the
+ * two templates are registered separately with Meta, carry different
+ * parameters, and will drift apart the first time one of them is reworded.
+ * Nothing calls this on a schedule — there is no queue. It is an operator's
+ * one tap, the day before or the morning of.
+ */
+export async function notifyReminder(
+  b: Booking, t: Talent, origin: string,
+): Promise<NotifyResult> {
+  const token = process.env.WHATSAPP_TOKEN;
+  const phoneId = process.env.WHATSAPP_PHONE_ID;
+  const template = process.env.WHATSAPP_REMINDER_TEMPLATE;
+
+  const to = msisdn(t.phone);
+  if (!to) return { sent: false, reason: 'no-number' };
+  if (!token || !phoneId) return { sent: false, reason: 'unconfigured' };
+
+  // Meta rejects a blank template parameter, and a day whose location is not
+  // settled yet is an ordinary state — so {{3}} says so rather than being empty.
+  const where = [b.location, b.callTime].filter(Boolean).join(' · ') || 'بنبعتلك التفاصيل';
+
+  try {
+    const body = template
+      ? {
+        messaging_product: 'whatsapp', to, type: 'template',
+        template: {
+          name: template, language: { code: 'ar' },
+          components: [{
+            type: 'body',
+            parameters: [
+              { type: 'text', text: t.name.ar },
+              { type: 'text', text: arDate(b.date) },
+              { type: 'text', text: where },
+            ],
+          }],
+        },
+      }
+      : {
+        messaging_product: 'whatsapp', to, type: 'text',
+        text: { body: composeReminder(b, t, origin) },
+      };
+
+    const res = await fetch(graph(`${phoneId}/messages`), {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(4000),
+    });
     if (!res.ok) {
       const j = await res.json().catch(() => null);
       return { sent: false, reason: 'failed', detail: j?.error?.message ?? `HTTP ${res.status}` };
