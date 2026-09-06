@@ -14,9 +14,22 @@ runConfig:
   maxInstances: 4
   concurrency: 80
 
+# Every `secret:` below must exist in Cloud Secret Manager before the next
+# deploy — App Hosting resolves them at build time and fails the rollout if one
+# is missing. Create each with, e.g.:
+#   firebase apphosting:secrets:set CRON_SECRET
+# A secret that is not wanted yet should be created holding an empty string
+# rather than deleted from this file: every consumer treats blank as "not
+# configured" and degrades honestly, which is the behaviour lib/config/check.ts
+# reports in the console.
+#
+# NEXT_PUBLIC_* carry BUILD as well as RUNTIME. Next inlines them into the
+# browser bundle at build time, so a RUNTIME-only declaration would leave every
+# client-side reference holding the fallback from lib/data/company.ts while the
+# server used the real value — the worst kind of half-configured.
+
 env:
-  # Values live in Cloud Secret Manager, never in this file. Create each with:
-  #   firebase apphosting:secrets:set META_ACCESS_TOKEN
+  # Values live in Cloud Secret Manager, never in this file.
   - variable: META_ACCESS_TOKEN
     secret: META_ACCESS_TOKEN
     availability: [RUNTIME]
@@ -28,6 +41,100 @@ env:
   - variable: OPERATOR_KEY
     secret: OPERATOR_KEY
     availability: [RUNTIME]
+
+  # Signs the operator session cookie. Separate from OPERATOR_KEY so revoking
+  # every live session is a secret rotation rather than a password change.
+  - variable: SESSION_SECRET
+    secret: SESSION_SECRET
+    availability: [RUNTIME]
+
+  # The read sweeper's only lock. Unset means /api/cron/read is closed, which
+  # means the read is best-effort again.
+  - variable: CRON_SECRET
+    secret: CRON_SECRET
+    availability: [RUNTIME]
+
+  # Khaled's own number, not the studio's published line. A personal number is
+  # a secret even though it is only ever used to build a wa.me link.
+  - variable: OPERATOR_PHONE
+    secret: OPERATOR_PHONE
+    availability: [RUNTIME]
+
+  # The recommended operator channel: no 24-hour window, no template approval.
+  - variable: TELEGRAM_BOT_TOKEN
+    secret: TELEGRAM_BOT_TOKEN
+    availability: [RUNTIME]
+
+  # A chat id is an addressee, not a credential.
+  - variable: TELEGRAM_CHAT_ID
+    value: ""
+    availability: [RUNTIME]
+
+  # WhatsApp stays for talent: a booked contractor being told about their own
+  # booking, sent as an approved template.
+  - variable: WHATSAPP_TOKEN
+    secret: WHATSAPP_TOKEN
+    availability: [RUNTIME]
+
+  - variable: WHATSAPP_PHONE_ID
+    secret: WHATSAPP_PHONE_ID
+    availability: [RUNTIME]
+
+  # A template name, which is public by nature.
+  - variable: WHATSAPP_TEMPLATE
+    value: ""
+    availability: [RUNTIME]
+
+  # The day-before reminder template. Optional; absent, reminders go as free
+  # text and only reach a provider inside an open 24-hour window.
+  - variable: WHATSAPP_REMINDER_TEMPLATE
+    value: ""
+    availability: [RUNTIME]
+
+  # Signs provider sessions on their own, so rotating SESSION_SECRET does not
+  # sign every provider out on the morning of a shoot. Falls back to
+  # SESSION_SECRET, then OPERATOR_KEY, when unset.
+  - variable: TALENT_SESSION_SECRET
+    secret: TALENT_SESSION_SECRET
+    availability: [RUNTIME]
+
+  # Email notices. Dormant until the domain is registered and verified.
+  - variable: RESEND_API_KEY
+    secret: RESEND_API_KEY
+    availability: [RUNTIME]
+
+  - variable: NOTIFY_EMAIL_TO
+    value: ""
+    availability: [RUNTIME]
+
+  - variable: NOTIFY_EMAIL_FROM
+    value: ""
+    availability: [RUNTIME]
+
+  # Where this deployment lives. Everything that names the site absolutely reads
+  # it: canonical URLs, the sitemap, the user-agent we identify ourselves with,
+  # and the link at the bottom of every notification.
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: ""
+    availability: [BUILD, RUNTIME]
+
+  - variable: NEXT_PUBLIC_CONTACT_EMAIL
+    value: ""
+    availability: [BUILD, RUNTIME]
+
+  - variable: NEXT_PUBLIC_PRIVACY_EMAIL
+    value: ""
+    availability: [BUILD, RUNTIME]
+
+  # The optional bot challenge, off until abuse is observed. The site key is
+  # public by design and must be inlined at build time; the secret is not.
+  - variable: TURNSTILE_SECRET_KEY
+    secret: TURNSTILE_SECRET_KEY
+    availability: [RUNTIME]
+
+  - variable: NEXT_PUBLIC_TURNSTILE_SITE_KEY
+    value: ""
+    availability: [BUILD, RUNTIME]
 
   # Pinned deliberately: a Graph version bump can change field availability on
   # the business_discovery edge, so it moves when we have tested it moving.

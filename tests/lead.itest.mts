@@ -83,7 +83,7 @@ ok('  and it is still marked as told', !!after?.notifiedNewAt);
 // ── a read that fails ──────────────────────────────────────────────────────
 console.log('\n══ a failed read leaves a reason, not a gap ══');
 
-await C.setClientStatus(HANDLE, 'failed', 'unreadable');
+await C.forceClientStatus(HANDLE, 'failed', 'unreadable');
 const failed = await C.getClient(HANDLE);
 ok('the failure is on the record', failed?.status === 'failed');
 ok('  with the engine’s own reason', failed?.readError === 'unreadable');
@@ -101,7 +101,7 @@ ok('  and clears the stale reason', !retried?.client.readError);
 // ── but a client already moving is not dragged backwards ───────────────────
 console.log('\n══ a live account is not reset by a form ══');
 
-await C.setClientStatus(HANDLE, 'sent');
+await C.forceClientStatus(HANDLE, 'sent');
 const resubmit = await C.openClient({
   handle: HANDLE, contactName: 'Abu Sami', contactPhone: '0799999999', lang: 'ar',
 });

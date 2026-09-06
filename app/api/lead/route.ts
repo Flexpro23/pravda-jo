@@ -1,9 +1,9 @@
 import { NextResponse, after } from 'next/server';
 import { normaliseHandle } from '@/lib/meta/discovery';
-import {
-  openClient, getClient, setClientStatus, attachToClient, setBusinessName,
-} from '@/lib/store/clients';
-import { runRead } from '@/lib/teardown/run';
+import { openClient, claimForRead, markNotifyAttempt } from '@/lib/store/clients';
+import { getSheet } from '@/lib/store/sheets';
+import { hit, ipKey, clientIp } from '@/lib/store/ratelimit';
+import { readAndFile } from '@/lib/teardown/pipeline';
 import { tellOperator } from '@/lib/notify/operator';
 
 export const runtime = 'nodejs';
@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
  * record, no phone number, nobody told. Every prospect who did the one thing
  * the page asked was dropped.
  *
- * Three rules shape everything below.
+ * Four rules shape everything below.
  *
  * The lead is written before anything is read, and the response does not wait
  * for the read. A hundred-post Meta call plus a website fetch is anywhere from
@@ -27,13 +27,22 @@ export const dynamic = 'force-dynamic';
  * person who just typed their number is still a lead. Losing one to an upstream
  * outage would be the same bug as before, with more code.
  *
- * The read runs once per business. A second submission from the same shop
- * reuses the account and does not spend another Meta call, which is both the
- * correct behaviour and the thing standing between a public endpoint and our
- * ~200 reads an hour. Real rate limiting belongs here too and is the next pass.
+ * Khaled is told *before* the response, not after it. That notice is the most
+ * time-critical thing this system does — there is a person holding a phone
+ * expecting a reply — and it used to sit inside `after()`, which on Cloud Run
+ * is a best-effort callback whose CPU is throttled the instant the response
+ * flushes. Every sender it reaches is bounded at four seconds, so a hung
+ * upstream cannot hold the form open.
  *
- * And Khaled is told twice, because the two events are different jobs: somebody
- * is waiting for a reply, and later, there is something to review.
+ * The read is claimed, never just started. `claimForRead` is a transaction, so
+ * the fast path here and the cron sweeper can both want the same account
+ * without either double-spending a Meta call — and if this instance is reclaimed
+ * mid-read, the lease expires and the sweeper finishes the job.
+ *
+ * And a stranger can only ask so often. A honeypot, a minimum time-on-form and
+ * two Firestore-backed IP windows sit in front of a ~200-call/hour Meta budget,
+ * with the real backstop — the global read ceiling — inside `claimForRead`,
+ * where it sits on the spend rather than on the request.
  */
 
 const clean = (v: unknown, max: number) => String(v ?? '').trim().slice(0, max);
@@ -45,8 +54,33 @@ const usablePhone = (raw: string) => {
     ? raw : null;
 };
 
+/**
+ * What a bot gets: a plain success, with nothing written.
+ *
+ * Silence teaches a script nothing. An error teaches it which field to leave
+ * empty next time, so the honeypot and the too-fast submission both answer
+ * exactly what a real submission answers.
+ */
+const SILENT_OK = { ok: true, handle: '', returning: false };
+
+/** Shortest a human plausibly takes to fill three fields, in milliseconds. */
+const MIN_FORM_MS = 1200;
+
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
+
+  // A field no human can see, filled in by anything that parses the form and
+  // fills every input it finds. `Intake.tsx` renders it hidden, unlabelled and
+  // out of the tab order.
+  if (clean(body?.company, 200)) return NextResponse.json(SILENT_OK);
+
+  // Time since the form mounted. Absent means an older client or a request that
+  // did not come from our form at all — not itself proof of a bot, so it is
+  // only ever a rejection when the number is present and impossibly small.
+  const elapsedMs = Number(body?.elapsedMs);
+  if (Number.isFinite(elapsedMs) && elapsedMs < MIN_FORM_MS) {
+    return NextResponse.json(SILENT_OK);
+  }
 
   const handle = normaliseHandle(clean(body?.handle, 40));
   if (!handle) return NextResponse.json({ error: 'handle' }, { status: 400 });
@@ -56,6 +90,21 @@ export async function POST(req: Request) {
   if (!contactName) return NextResponse.json({ error: 'name' }, { status: 400 });
   if (!usablePhone(contactPhone)) {
     return NextResponse.json({ error: 'phone' }, { status: 400 });
+  }
+
+  // Counted after the field checks and before anything is written, so a visitor
+  // fixing a typo in their own phone number does not spend their hour's budget
+  // on a request that never reached the store. A malformed flood costs a 400
+  // and nothing else.
+  const key = ipKey(clientIp(req));
+  const perHour = await hit(key, 5, 60 * 60_000);
+  const perDay = perHour.ok ? await hit(`${key}:d`, 20, 24 * 60 * 60_000) : null;
+  const limited = !perHour.ok ? perHour : (perDay && !perDay.ok ? perDay : null);
+  if (limited) {
+    return NextResponse.json({ error: 'too-many' }, {
+      status: 429,
+      headers: { 'retry-after': String(Math.max(1, limited.retryAfterSec)) },
+    });
   }
 
   const lang = body?.lang === 'en' ? 'en' as const : 'ar' as const;
@@ -69,50 +118,39 @@ export async function POST(req: Request) {
   if (!opened) return NextResponse.json({ error: 'store' }, { status: 503 });
 
   const { client, created } = opened;
-  // Already read, and the sheet is still theirs. Nothing to spend a Meta call on.
-  const alreadyRead = client.sheetTokens.length > 0;
+
+  // Before the response, deliberately. See the header. The attempt is stamped
+  // whether or not the cascade lands, so the cron sweeper behind this knows a
+  // try has just been made and waits an hour before making another — without
+  // it, a lead whose channels are all down is re-announced every minute.
+  if (created || !client.notifiedNewAt) {
+    await markNotifyAttempt(client.id).catch(() => {});
+    await tellOperator('new', client).catch(() => {});
+  }
+
+  // Somebody who came back to the site while their finished document sits at a
+  // URL they cannot reach is the worst version of "we already have you on
+  // file". If it is approved, hand it over.
+  let sheetUrl: string | undefined;
+  const newest = client.sheetTokens[0];
+  if (!created && newest) {
+    const sheet = await getSheet(newest).catch(() => null);
+    if (sheet?.status === 'approved' && sheet.shareToken) {
+      sheetUrl = `/s/${sheet.shareToken}`;
+    }
+  }
 
   after(async () => {
-    // Everything past this point happens after the response has been sent. It
-    // must never throw into the runtime, so each step carries its own failure.
-    try {
-      if (created || !client.notifiedNewAt) {
-        await tellOperator('new', client);
-      }
-      if (alreadyRead) return;
-
-      await setClientStatus(client.id, 'reading');
-      const run = await runRead({ handle, website });
-
-      if (!run.ok) {
-        await setClientStatus(client.id, 'failed', run.reason);
-        const failed = await getClient(client.id);
-        if (failed) await tellOperator('failed', failed);
-        return;
-      }
-
-      await attachToClient(client.id, 'sheet', run.sheet.token);
-      if (run.sheet.clientName) await setBusinessName(client.id, run.sheet.clientName);
-      await setClientStatus(client.id, 'ready');
-
-      // Re-read so the message carries the business name the run just learned
-      // and the ready status, rather than the stale copy from before it.
-      const ready = await getClient(client.id);
-      if (ready) {
-        await tellOperator('ready', ready, {
-          sheetToken: run.sheet.token,
-          findings: run.sheet.findings.findings.length,
-        });
-      }
-    } catch {
-      // A background failure must leave a mark rather than vanish. The console
-      // reads `failed` as a queue to work, so the lead surfaces either way.
-      await setClientStatus(client.id, 'failed', 'network').catch(() => {});
-    }
+    // The fast path. It claims first, so an account that is already read, or
+    // already being read by the sweeper, is left alone — and if this instance
+    // is reclaimed before the read finishes, the lease expires and the sweeper
+    // picks it up within the minute.
+    const claimed = await claimForRead(client.id).catch(() => null);
+    if (claimed) await readAndFile(claimed);
   });
 
   // What the person sees. Deliberately says only what is true at this instant:
   // we have it, and somebody will message them. It does not promise a report,
   // because the read has not run and may not succeed.
-  return NextResponse.json({ ok: true, handle, returning: !created });
+  return NextResponse.json({ ok: true, handle, returning: !created, sheetUrl });
 }
