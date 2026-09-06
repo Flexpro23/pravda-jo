@@ -1,0 +1,539 @@
+{
+  "token": "GOLDENHARDCASE",
+  "handle": "salon.samar.amman",
+  "clientName": "صالون سمر",
+  "vertical": "body",
+  "verticalGuess": {
+    "guess": "body",
+    "confidence": 1,
+    "runnerUp": null,
+    "evidence": [
+      {
+        "vertical": "body",
+        "term": "بشره",
+        "hits": 6
+      },
+      {
+        "vertical": "body",
+        "term": "تجميل",
+        "hits": 1
+      }
+    ]
+  },
+  "profile": {
+    "name": "صالون سمر",
+    "biography": "صالون تجميل وعناية بالبشرة · عمّان",
+    "followers": 1950,
+    "follows": 2400,
+    "mediaCount": 14,
+    "readAt": "2026-09-06T09:00:00.000Z"
+  },
+  "signals": {
+    "handle": "salon.samar.amman",
+    "followers": 1950,
+    "posts": 14,
+    "shallow": true,
+    "readShare": 1,
+    "first": "2026-01-08T19:00:00.000Z",
+    "last": "2026-03-01T19:00:00.000Z",
+    "spanDays": 52,
+    "daysSinceLast": 188.58333333333334,
+    "activeSpanDays": 240.58333333333334,
+    "postsPerWeek": 0,
+    "postsPerWeekInWindow": 1.8846153846153846,
+    "recentPosts": 0,
+    "coverage": {
+      "likesKnown": 0,
+      "commentsKnown": 14,
+      "engagementKnown": 0,
+      "recentEngagementKnown": 0
+    },
+    "engagementReliable": false,
+    "engagementRate": 0,
+    "meanEngagementRate": 0,
+    "recentEngagementRate": 0,
+    "recentMedianEngagement": 0,
+    "selfP25Rate": 0,
+    "medianEngagement": 0,
+    "formats": [
+      {
+        "format": "IMAGE",
+        "posts": 14,
+        "known": 0,
+        "sharePosts": 100,
+        "shareKnown": 0,
+        "shareEngagement": 0,
+        "medianEngagement": 0
+      }
+    ],
+    "strongest": null,
+    "busiest": {
+      "format": "IMAGE",
+      "posts": 14,
+      "known": 0,
+      "sharePosts": 100,
+      "shareKnown": 0,
+      "shareEngagement": 0,
+      "medianEngagement": 0
+    },
+    "byHour": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      14,
+      0
+    ],
+    "peakWindow": {
+      "from": 22,
+      "to": 0,
+      "share": 100
+    },
+    "bestWindow": null,
+    "best": null,
+    "captions": {
+      "withCaption": 14,
+      "none": 0,
+      "medianWords": 5,
+      "asking": 0,
+      "askingShare": 0,
+      "questioning": 0,
+      "questioningShare": 0
+    },
+    "bio": {
+      "biography": "صالون تجميل وعناية بالبشرة · عمّان"
+    }
+  },
+  "site": null,
+  "findings": {
+    "findings": [
+      {
+        "id": "ig-ask",
+        "severity": "critical",
+        "source": "instagram",
+        "figure": {
+          "ar": "٠٪",
+          "en": "0%"
+        },
+        "title": {
+          "ar": "كابشناتكم بتوصف، وما بتطلب",
+          "en": "Your captions describe, and never ask"
+        },
+        "detail": {
+          "ar": "٠ من ١٤ منشور فيهم طلب واضح. الباقي بيحكي عن المنتج وبيوقف هناك.",
+          "en": "0 of 14 captioned posts carry a clear request. The rest describe the product and stop there."
+        },
+        "provenance": {
+          "ar": "٠ منشور بدون كابشن أصلًا · ٠ فيهم سؤال بس",
+          "en": "0 posts carry no caption at all · 0 ask a question but request nothing"
+        }
+      },
+      {
+        "id": "ig-dormant",
+        "severity": "critical",
+        "source": "instagram",
+        "figure": {
+          "ar": "١٨٩ يومًا",
+          "en": "189d"
+        },
+        "title": {
+          "ar": "الحساب واقف",
+          "en": "The account has stopped"
+        },
+        "detail": {
+          "ar": "آخر منشور كان من ١٨٩ يومًا، بتاريخ ١ آذار ٢٠٢٦. أي إعلان بتشغّلوه بيوصّل زبون لصفحة شكلها مسكّرة.",
+          "en": "The last post was 189 days ago, on 1 March 2026. Any advert you run now sends a stranger to a profile that looks closed."
+        },
+        "provenance": {
+          "ar": "محسوب من تاريخ آخر منشور",
+          "en": "Computed from the last post date"
+        }
+      },
+      {
+        "id": "ig-bio-noroute",
+        "severity": "critical",
+        "source": "instagram",
+        "title": {
+          "ar": "البايو ما بيوصّل لحدا على إشي",
+          "en": "Your bio leads nowhere"
+        },
+        "detail": {
+          "ar": "ما في رابط ولا رقم ولا واتساب بالبايو. الغريب اللي فتح البروفايل بعد إعلان ما عنده وين يروح، فبيرجع.",
+          "en": "There is no link, no number and no WhatsApp in the bio. A stranger who opens the profile after an advert has nowhere to go, so they leave."
+        },
+        "provenance": {
+          "ar": "قراءة البايو",
+          "en": "Read from the bio"
+        }
+      },
+      {
+        "id": "web-none",
+        "severity": "critical",
+        "source": "website",
+        "title": {
+          "ar": "ما في موقع نوصل عليه",
+          "en": "There is no site to send anyone to"
+        },
+        "detail": {
+          "ar": "كل إعلان بتدفعوا عليه بيوقف عند الإنستغرام. ما في صفحة تقيس، ولا مكان ترجعوا فيه لحدا زار وما اشترى.",
+          "en": "Every dinar of advertising stops at Instagram. There is no page to measure, and nowhere to bring back somebody who looked and did not buy."
+        },
+        "provenance": {
+          "ar": "ما في رابط بالبايو ولا انكتب إلنا",
+          "en": "No link in the bio, and none given"
+        }
+      },
+      {
+        "id": "ig-likes-hidden",
+        "severity": "notable",
+        "source": "instagram",
+        "figure": {
+          "ar": "٠/١٤",
+          "en": "0/14"
+        },
+        "title": {
+          "ar": "حسابكم مخفي عدد الإعجابات",
+          "en": "Your account hides its like counts"
+        },
+        "detail": {
+          "ar": "أرقام التفاعل رجعتلنا كاملة لـ ٠ من ١٤ منشور بس، فما بنقدر نحسب من برا ولا رقم عن الوصول. اللي تحت مبني على التوقيتات والكابشنات — وهدول رجعوا كاملين.",
+          "en": "Complete reaction counts came back for only 0 of 14 posts, so nothing about reach can be computed from outside. Everything below rests on timing and captions — which did come back in full."
+        },
+        "provenance": {
+          "ar": "من ردّ إنستغرام نفسه",
+          "en": "From what Instagram returned"
+        }
+      },
+      {
+        "id": "ig-longevity",
+        "severity": "good",
+        "source": "instagram",
+        "figure": {
+          "ar": "٨ شهور",
+          "en": "8 months"
+        },
+        "title": {
+          "ar": "الحساب مش جديد",
+          "en": "The account is not new"
+        },
+        "detail": {
+          "ar": "إنتو ناشرين على هاد الحساب من ٨ شهور، و١٤ منشور منهم قدامنا. اللي بينبنى على أرشيف موجود أرخص من اللي بيبدأ من صفر.",
+          "en": "You have been publishing on this account for 8 months, and 14 of those posts are in front of us. Building on an archive costs less than starting from nothing."
+        },
+        "provenance": {
+          "ar": "من ٨ كانون الثاني ٢٠٢٦",
+          "en": "Since 8 January 2026"
+        }
+      }
+    ],
+    "charts": [
+      {
+        "kind": "hours",
+        "id": "hours",
+        "title": {
+          "ar": "إمتى بتنشروا",
+          "en": "When you publish"
+        },
+        "note": {
+          "ar": "كل منشور بساعته، بتوقيت عمّان.",
+          "en": "Every post by the hour it went out, Amman time."
+        },
+        "byHour": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          14,
+          0
+        ],
+        "peak": [
+          22,
+          0
+        ]
+      }
+    ],
+    "operatorNotes": [],
+    "read": {
+      "posts": 14,
+      "site": false,
+      "adsChecked": false
+    }
+  },
+  "webState": {
+    "state": "no-url"
+  },
+  "rosterState": "real",
+  "recommendations": [
+    {
+      "conceptN": 1,
+      "name": "The Inbox Twelve",
+      "tier": "light",
+      "shape": "talking-head",
+      "videos": 10,
+      "priceJOD": 1500,
+      "hook": "A full-screen card carrying the customer's own question in their own words, zero branding — then the person is already talking before second two.",
+      "premise": "Pre-production is the concept: PRAVDA exports 90 days of the client's real WhatsApp Business inbox and pulls the twelve questions customers actually type. Single setup, never moved: the principal in their own room, chest up, off-centre with the question burned into the empty side. Frame one is a full-screen card holding the question verbatim in dialect ('ليش أسعاركم أغلى؟') for 1.2s. Cut in with them already mid-answer — no greeting. Three beats: direct answer, reason, then the number or the caveat. Two 1.5s inserts of the thing discussed. End on the answer as text plus a WhatsApp line. Reset, next question. Five of the twelve are re-cut as 12s price versions: the question card, a 3s making-of cutaway, the number slamming full-screen with a sound hit, one beat back to the principal — 'شفت؟ سهلة.' Jacket on/off at the halfway point so eight weeks of drip does not look like one afternoon.",
+      "format": "Talking-head batch. 10-12 Reels of 20-40s plus 5 twelve-second price cutdowns, all from one half-day (5-6 hours) on one setup. Budget 1.5 editor days for the batch.",
+      "because": {
+        "ar": "لأنه بينهي بمحادثة، وما عندهم موقع يوصّلوا عليه أصلًا.",
+        "en": "Because it ends in a conversation, and they have no site to send anyone to."
+      },
+      "answers": [
+        "ig-ask",
+        "web-none"
+      ],
+      "models": 0,
+      "needsVoice": false,
+      "cast": [
+        {
+          "talentId": "omar",
+          "name": {
+            "ar": "عمر",
+            "en": "Omar"
+          },
+          "discipline": "videographer",
+          "why": {
+            "ar": "بيصوّر وبيركّب نفس الشغلة، فاليوم بيخلص بيوم.",
+            "en": "Shoots and cuts the same piece, so a day finishes in a day."
+          }
+        }
+      ],
+      "crewNotes": [
+        "editor"
+      ]
+    },
+    {
+      "conceptN": 7,
+      "name": "Phone Kit Friday",
+      "tier": "light",
+      "shape": "ugc",
+      "videos": 6,
+      "priceJOD": 900,
+      "hook": "Whatever the client's own hands are doing, framed correctly for the first time in their life — the difference is legible in frame one because the tape does the directing.",
+      "premise": "PRAVDA couriers a physical kit to the shop: a phone clamp, a roll of floor tape, a small LED, a laminated framing card showing the exact frame, and a printed shot list of six things. Each shot is one line and one taped mark — 'ضع الكوب على العلامة، صوّر ٧ ثواني، ما تحرك التلفون'. The owner or a staff member shoots on Thursday, sends the raw clips to a dedicated WhatsApp number, and PRAVDA's editor returns finished vertical assets with burned bilingual captions inside 48 hours. The producer reviews the first two clips live on a WhatsApp video call and corrects framing before the rest are shot, which is the entire quality-control mechanism. The tape stays down, so every subsequent cycle matches the first and the library builds a consistent look with no crew ever attending.",
+      "format": "No crew day at all. PRAVDA ships a kit and directs over WhatsApp; the client shoots on their own phone. 6-10 assets per cycle, edit-only cost, the floor product below every shot concept.",
+      "because": {
+        "ar": "لأنه بيطلب من المتفرّج إشي، وهاد بالضبط اللي ما بتعمله كابشناتهم.",
+        "en": "Because it asks the viewer for something, which is exactly what their captions never do."
+      },
+      "answers": [
+        "ig-ask",
+        "web-none"
+      ],
+      "models": 0,
+      "needsVoice": false,
+      "cast": [],
+      "crewNotes": [
+        "editor",
+        "producer"
+      ]
+    },
+    {
+      "conceptN": 3,
+      "name": "We Say No To This",
+      "tier": "light",
+      "shape": "talking-head",
+      "videos": 1,
+      "priceJOD": 150,
+      "hook": "Straight to lens, unblinking, first words: 'ما بنشتغل مع كل حدا.' No music, no motion, no titles — stillness as the pattern interrupt.",
+      "premise": "Principal framed tighter than anything else the firm has — head and shoulders, slightly low angle, plain background, one key with negative fill. 0-4s: they name a service they actually sell — 'فيلر الخدود', the annual membership, a retainer tier — and immediately say who should not buy it. 4-25s: two or three specific disqualifications, each genuinely costly and each real: under this budget we are the wrong choice; in two weeks we cannot do it properly; if this is your case I will tell you no. Cut to two short inserts of the equipment or the work while they explain what they would do instead — those inserts are the safety net that rescues a fumbled take from a non-performer. 25-40s: back to camera for the turn — 'بس إذا…' — and one tight sentence naming exactly who they ARE right for. End frame: no discount, just 'إذا هاد أنت، احكيلي.'",
+      "format": "Talking-head Reel 30-45s with two inserts. Sold only as a same-setup add-on to an Inbox Twelve day, where its marginal cost is thirty minutes. 1-2 per client.",
+      "because": {
+        "ar": "مناسب لقطاعهم، وبيطلع ١ مقاطع من يوم تصوير واحد.",
+        "en": "Fits their trade, and yields 1 pieces from a single crew day."
+      },
+      "answers": [
+        "ig-ask"
+      ],
+      "models": 0,
+      "needsVoice": false,
+      "cast": [
+        {
+          "talentId": "rana",
+          "name": {
+            "ar": "رنا",
+            "en": "Rana"
+          },
+          "discipline": "videographer",
+          "why": {
+            "ar": "بيصوّر وبيركّب نفس الشغلة، فاليوم بيخلص بيوم.",
+            "en": "Shoots and cuts the same piece, so a day finishes in a day."
+          }
+        }
+      ],
+      "crewNotes": [
+        "editor"
+      ]
+    },
+    {
+      "conceptN": 27,
+      "name": "The Whole Visit",
+      "tier": "premium",
+      "shape": "observational",
+      "videos": 1,
+      "priceJOD": 150,
+      "hook": "A hand pushes the door open from the pavement and reception looks straight down the lens and says your name — 'أهلاً أستاذ، تفضل، الدكتورة جاهزة.' You are inside the building in second two.",
+      "premise": "One take, no cuts, camera at eye height on a gimbal in the position of the person arriving — you see hands enter frame, you never see their face. 0s: the exterior door from the pavement, the sign, the hand pushing it open, street ambience cutting hard to interior quiet. Reception looks up and greets you by name, because the appointment was booked and that is the point. Water offered. Walk past a waiting area with two people in it, comfortable, not staged-perfect. Someone collects you within seconds. Down the corridor, camera glancing into a treatment room or past a certificate wall at reading speed. Into the room. For a clinic, the practitioner tears open a sealed sterilisation pouch on camera and lays the instruments down. The camera lowers into the chair position, looking up at the light. The take ends the instant before a handshake, on their face and their first word. Burned text, one sparse line every fifteen seconds: 'الاستشارة الأولى — ٢٠ دقيقة', 'من غير التزام', 'كل أداة بتنفتح قدامك'.",
+      "format": "Continuous POV single-take vertical 60-90s, street to chair, no cuts. A full crew day of its own, sold as a premium bolt-on to an Inbox Twelve booking. One deliverable.",
+      "because": {
+        "ar": "الكاميرا بتتفرّج على شغل حقيقي، بلا تعليق وبلا تمثيل. ١ مقاطع من يوم واحد.",
+        "en": "The camera watching real work, with nothing narrated and nothing performed. 1 pieces from one day."
+      },
+      "answers": [
+        "ig-ask"
+      ],
+      "models": 2,
+      "needsVoice": false,
+      "cast": [
+        {
+          "talentId": "omar",
+          "name": {
+            "ar": "عمر",
+            "en": "Omar"
+          },
+          "discipline": "videographer",
+          "why": {
+            "ar": "بيصوّر وبيركّب نفس الشغلة، فاليوم بيخلص بيوم.",
+            "en": "Shoots and cuts the same piece, so a day finishes in a day."
+          }
+        },
+        {
+          "talentId": "rana",
+          "name": {
+            "ar": "رنا",
+            "en": "Rana"
+          },
+          "discipline": "videographer",
+          "why": {
+            "ar": "بيصوّر وبيركّب نفس الشغلة، فاليوم بيخلص بيوم.",
+            "en": "Shoots and cuts the same piece, so a day finishes in a day."
+          }
+        },
+        {
+          "talentId": "laith",
+          "name": {
+            "ar": "ليث",
+            "en": "Laith"
+          },
+          "discipline": "model",
+          "why": {
+            "ar": "قدّام الكاميرا، وبيعرف يخلّي غير المحترف يرتاح.",
+            "en": "On camera, and gets a non-performer to settle."
+          }
+        },
+        {
+          "talentId": "dana",
+          "name": {
+            "ar": "دانا",
+            "en": "Dana"
+          },
+          "discipline": "model",
+          "why": {
+            "ar": "قدّام الكاميرا، وبيعرف يخلّي غير المحترف يرتاح.",
+            "en": "On camera, and gets a non-performer to settle."
+          }
+        }
+      ],
+      "crewNotes": [
+        "editor",
+        "producer"
+      ]
+    },
+    {
+      "conceptN": 8,
+      "name": "The Menu Day",
+      "tier": "light",
+      "shape": "product",
+      "videos": 8,
+      "priceJOD": 1200,
+      "hook": "An audible slam of the product hitting a hard surface in frame one, no logo, no face, no intro — and the still of the same item is already on the client's grid.",
+      "premise": "One surface — marble counter, dark wood, glass shelf — one key light plus white bounce, taped so nothing moves for three hours. The photographer works through the client's full menu or SKU list: each item lands on the mark, gets a straight-down still, a 45-degree still and a detail macro. Between stills the videographer rolls six seconds of the same item: hand enters fast from frame right, sets it down hard with a real thud, a six-frame whip push-in, one satisfying use beat — cheese pull, lid lift, ring turning under the light, key fob thunk — then both hands sweep it out to land on the identical empty surface that opened the shot, so the clip loops invisibly. Ten SKUs equal thirty-plus grid stills, ten loops, a delivery-app image set and a cut-together menu version. Nothing else changes between takes but the item.",
+      "format": "Stills-led half day: 30-40 finished stills plus 8-10 six-second locked-off loops from one lighting setup. The photographer is the deliverable, not a secondary.",
+      "because": {
+        "ar": "إضاءة وحدة على طاولة وحدة، والمنتج نفسه هو الكادر. ٨ مقاطع من يوم واحد.",
+        "en": "One light on one surface, with the thing itself carrying the frame. 8 pieces from one day."
+      },
+      "answers": [],
+      "models": 1,
+      "needsVoice": false,
+      "cast": [
+        {
+          "talentId": "omar",
+          "name": {
+            "ar": "عمر",
+            "en": "Omar"
+          },
+          "discipline": "videographer",
+          "why": {
+            "ar": "بيصوّر وبيركّب نفس الشغلة، فاليوم بيخلص بيوم.",
+            "en": "Shoots and cuts the same piece, so a day finishes in a day."
+          }
+        },
+        {
+          "talentId": "hala",
+          "name": {
+            "ar": "هالة",
+            "en": "Hala"
+          },
+          "discipline": "model",
+          "why": {
+            "ar": "قدّام الكاميرا، وبيعرف يخلّي غير المحترف يرتاح.",
+            "en": "On camera, and gets a non-performer to settle."
+          }
+        }
+      ],
+      "crewNotes": [
+        "photographer",
+        "editor"
+      ]
+    }
+  ],
+  "chosen": [],
+  "offer": {
+    "videos": 6,
+    "pricePerVideo": 150,
+    "ads": true,
+    "adsMonthlyJOD": 400,
+    "totalJOD": 900
+  },
+  "status": "draft",
+  "createdAt": "2026-09-06T09:00:00.000Z",
+  "updatedAt": "2026-09-06T09:00:00.000Z",
+  "expiresAt": "2027-03-05T09:00:00.000Z"
+}

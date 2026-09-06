@@ -2,61 +2,58 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { VERTICAL_LABEL, type Vertical } from '@/lib/data/concepts';
+import { explain, OFFLINE } from '@/lib/ops/errors';
+import { reauthAction, useToast } from '@/components/ops/Toast';
 
-/** Every failure the read can return, said the way an operator needs to hear it. */
-const EXPLAIN: Record<string, string> = {
-  unreadable:
-    'Could not read that account. Personal, misspelled, renamed and deleted all '
-    + 'return the same error from Meta, so there is no way to tell which.',
-  'too-few-posts':
-    'Too few posts to say anything defensible. Nothing was stored.',
-  'no-data':
-    'The account reports posts but returned none — that is our token, not their '
-    + 'account. Check whether it has passed data_access_expires_at.',
-  unauthorised:
-    'Meta refused our token. Check it is the Pravda app token, not the Wasla one.',
-  unauthenticated: 'The console session expired. Reload and sign in again.',
-  throttled: 'Meta’s hourly budget is nearly spent. Try again shortly.',
-  handle: 'That is not a valid Instagram handle.',
-};
+const VERTICALS = Object.keys(VERTICAL_LABEL) as Vertical[];
 
+/**
+ * A handle, a website, and what the business actually is.
+ *
+ * The vertical is the third field because the recommender takes one and nothing
+ * in the product ever set it: the public form does not ask, so every sheet was
+ * scored with `vertical: null` and lost the trade bonus that makes a shortlist
+ * feel chosen rather than generic. Blank is still allowed and still honest —
+ * the engine guesses, stores the guess, and the sheet page is where it gets
+ * confirmed once somebody has actually looked.
+ */
 export default function RunHandle() {
   const [handle, setHandle] = useState('');
   const [site, setSite] = useState('');
+  const [vertical, setVertical] = useState<Vertical | ''>('');
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<{ k: 'ok' | 'err'; t: string } | null>(null);
+  const { push } = useToast();
   const router = useRouter();
 
-  const run = async (force: boolean) => {
+  const run = async () => {
     if (!handle.trim() || busy) return;
     setBusy(true);
-    setMsg(null);
     try {
       const res = await fetch('/api/ops/sheet', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ action: 'run', handle, website: site }),
+        body: JSON.stringify({
+          action: 'run', handle, website: site, vertical: vertical || undefined,
+        }),
       });
       const j = await res.json();
       if (!res.ok) {
-        setMsg({ k: 'err', t: EXPLAIN[j.error] ?? j.hint ?? `Failed: ${j.error}` });
-      } else if (j.reused) {
-        setMsg({
-          k: 'ok',
-          t: `Already read — showing the existing ${j.status}. Use "Read again" to spend a fresh call.`,
+        push({
+          kind: 'err', text: explain(j.error, j),
+          action: j.error === 'unauthenticated' ? reauthAction() : { label: 'Retry', onClick: run },
         });
-        router.refresh();
       } else {
         setHandle(''); setSite('');
-        setMsg({
-          k: 'ok',
-          t: `Read ${j.posts} posts${j.site ? ' and their website' : j.siteProblem ? ` (site: ${j.siteProblem})` : ''}`
+        push({
+          kind: 'ok',
+          text: `Read ${j.posts} posts${j.site ? ' and their website' : j.siteProblem ? ` (site: ${j.siteProblem})` : ''}`
             + ` · ${j.findings} findings · five ideas ready.`,
         });
         router.push(`/ops/sheet/${j.token}`);
       }
     } catch {
-      setMsg({ k: 'err', t: 'The request did not complete.' });
+      push({ kind: 'err', text: OFFLINE, action: { label: 'Retry', onClick: run } });
     } finally {
       setBusy(false);
     }
@@ -68,7 +65,7 @@ export default function RunHandle() {
         <input
           value={handle}
           onChange={(e) => setHandle(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') run(false); }}
+          onKeyDown={(e) => { if (e.key === 'Enter') run(); }}
           placeholder="@handle to read"
           aria-label="Instagram handle to read"
           autoComplete="off" autoCapitalize="none" spellCheck={false}
@@ -76,18 +73,26 @@ export default function RunHandle() {
         />
         <input
           value={site} onChange={(e) => setSite(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') run(false); }}
+          onKeyDown={(e) => { if (e.key === 'Enter') run(); }}
           placeholder="their website (optional)"
           aria-label="Website to read"
           autoComplete="off" autoCapitalize="none" spellCheck={false}
           disabled={busy}
         />
-        <button className="go" onClick={() => run(false)} disabled={busy || !handle.trim()}>
+        <select
+          className="sel" value={vertical} disabled={busy}
+          aria-label="What kind of business this is"
+          onChange={(e) => setVertical(e.target.value as Vertical | '')}
+        >
+          <option value="">what they are — let it guess</option>
+          {VERTICALS.map((v) => (
+            <option key={v} value={v}>{VERTICAL_LABEL[v].en}</option>
+          ))}
+        </select>
+        <button className="go" onClick={run} disabled={busy || !handle.trim()}>
           {busy ? 'Reading…' : 'Read'}
         </button>
-
       </div>
-      {msg && <p className="note" data-k={msg.k}>{msg.t}</p>}
     </div>
   );
 }

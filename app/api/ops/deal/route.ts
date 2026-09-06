@@ -1,20 +1,39 @@
 import { NextResponse } from 'next/server';
 import { randomBytes } from 'node:crypto';
-import { opsAuthed } from '@/lib/ops/auth';
+import { opsAuthed, sameOrigin } from '@/lib/ops/auth';
 import { saveDeal, advanceDeal, getDeal } from '@/lib/store/deals';
-import type { Deal, DealStatus } from '@/lib/data/deals';
+import { DEAL_LABEL, DEAL_TRANSITIONS, type Deal, type DealStatus } from '@/lib/data/deals';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
+  if (!sameOrigin(req)) return NextResponse.json({ error: 'origin' }, { status: 403 });
   if (!(await opsAuthed())) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   const b = await req.json().catch(() => null);
 
   if (b?.action === 'advance') {
     if (!b.id || !b.status) return NextResponse.json({ error: 'malformed' }, { status: 400 });
-    await advanceDeal(String(b.id), b.status as DealStatus);
-    return NextResponse.json({ ok: true });
+
+    // `hasOwnProperty`, not `in`: the status arrives from a JSON body, and
+    // `'constructor' in DEAL_TRANSITIONS` is true.
+    const status = String(b.status) as DealStatus;
+    if (!Object.prototype.hasOwnProperty.call(DEAL_TRANSITIONS, status)) {
+      return NextResponse.json({ error: 'malformed', field: 'status' }, { status: 400 });
+    }
+
+    const lostReason = typeof b.lostReason === 'string' ? b.lostReason.trim().slice(0, 200) : undefined;
+    const moved = await advanceDeal(String(b.id), status, lostReason);
+    if (moved) return NextResponse.json({ ok: true });
+
+    // Either there is no such deal or the table refused the move. Told apart
+    // here so the console can say which, rather than showing "did not work".
+    const deal = await getDeal(String(b.id));
+    if (!deal) return NextResponse.json({ error: 'not-found' }, { status: 404 });
+    return NextResponse.json({
+      error: 'illegal-transition',
+      message: `A deal cannot move to ${DEAL_LABEL[status].toLowerCase()} from ${DEAL_LABEL[deal.status].toLowerCase()}.`,
+    }, { status: 409 });
   }
 
   if (b?.action === 'create') {

@@ -1,148 +1,67 @@
-import Link from 'next/link';
-import { opsAuthed } from '@/lib/ops/auth';
-import { listTeardowns } from '@/lib/store/teardowns';
 import { listSheets } from '@/lib/store/sheets';
 import { listClients } from '@/lib/store/clients';
-import { owesNotice } from '@/lib/data/clients';
+import { listDeals, listOpenBookings, listTalent } from '@/lib/store/deals';
+import { configReport } from '@/lib/config/check';
+import { buildToday } from '@/lib/ops/today';
+import type { Talent } from '@/lib/data/deals';
 import RunHandle from '@/components/ops/RunHandle';
 import OpsNav from '@/components/ops/OpsNav';
+import TodayList from '@/components/ops/TodayList';
+import ConfigPanel from '@/components/ops/ConfigPanel';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-/** The queue. Everything read, newest first, with what still needs doing. */
-export default async function Ops({
-  searchParams,
-}: { searchParams: Promise<{ bad?: string }> }) {
-  const { bad } = await searchParams;
+/**
+ * What to do next.
+ *
+ * This page used to lead with the long-form teardown queue — the one pipeline
+ * nothing feeds any more — while the live work was scattered across a badge on
+ * one tab and a table on another. Now it answers the only question either
+ * operator asks: five queries, one ordered list, and an inline action on every
+ * card that has one.
+ */
+export default async function Ops() {
+  // Five reads, fixed, whatever the volume. An unreachable store is said
+  // plainly rather than crashing the console — the operator can still tell the
+  // difference between "nothing to do" and "nothing can be read".
+  let broke = false;
+  const fail = <T,>(v: T) => (e: unknown) => { void e; broke = true; return v; };
 
-  if (!(await opsAuthed())) {
-    return (
-      <main className="gate">
-        <h1>PRAVDA — operator</h1>
-        <form method="post" action="/api/ops/login">
-          <input
-            type="password" name="key" autoFocus autoComplete="off"
-            placeholder="Operator key" aria-label="Operator key"
-          />
-          <button className="go" type="submit">Enter</button>
-          {bad && <p className="note" data-k="err">That key was not accepted.</p>}
-        </form>
-        <p className="muted" style={{ marginTop: 18 }}>
-          The key is in Secret Manager as OPERATOR_KEY.
-        </p>
-      </main>
-    );
-  }
+  const [clients, sheets, deals, bookings, roster] = await Promise.all([
+    listClients(200).catch(fail([])),
+    listSheets(60).catch(fail([])),
+    listDeals(100).catch(fail([])),
+    listOpenBookings(200).catch(fail([])),
+    listTalent().catch(fail([] as Talent[])),
+  ]);
 
-  // A store that cannot be read is worth saying plainly rather than crashing
-  // the console — the operator can still tell the difference and act on it.
-  let rows; let sheets: Awaited<ReturnType<typeof listSheets>> = [];
-  // Leads nobody has been told about. Carried onto every tab, because the whole
-  // point of the badge is that it is seen from wherever he happens to be.
-  let waiting = 0;
-  try {
-    rows = await listTeardowns(100);
-    sheets = await listSheets(60).catch(() => []);
-    waiting = (await listClients(200).catch(() => [])).filter(owesNotice).length;
-  } catch {
-    return (
-      <main className="wrap">
-        <p className="note" data-k="err">
-          Could not reach Firestore. The console is up; the store is not.
-        </p>
-      </main>
-    );
-  }
-
-  const counts = {
-    draft: rows.filter((r) => r.status === 'draft').length,
-    ready: rows.filter((r) => r.status === 'ready').length,
-    sent: rows.filter((r) => r.status === 'sent').length,
-  };
+  const talentById = Object.fromEntries(roster.map((t) => [t.id, t]));
+  const tasks = buildToday({ clients, sheets, deals, bookings, talentById });
 
   return (
     <main className="wrap">
-      <OpsNav here="queue" waiting={waiting} />
-      <p className="muted" style={{ marginBottom: 18 }}>
-        {counts.draft} draft · {counts.ready} ready · {counts.sent} sent
-      </p>
+      <OpsNav here="today" waiting={tasks.length} />
+
+      {broke && (
+        <p className="note" data-k="err" style={{ marginBottom: 18 }}>
+          Part of the store could not be read, so this list is incomplete. What
+          is below is real; what is missing is unknown.
+        </p>
+      )}
 
       <RunHandle />
 
-      {sheets.length > 0 && (
-        <>
-          <p className="lab" style={{ marginBottom: 10 }}>Sheets</p>
-          <div className="scroll-x" style={{ marginBottom: 34 }}>
-          <table>
-            <thead>
-              <tr><th>Business</th><th>Read</th><th>Findings</th><th>Chosen</th><th>Status</th><th /></tr>
-            </thead>
-            <tbody>
-              {sheets.map((sh) => (
-                <tr key={sh.token}>
-                  <td>{sh.clientName}<span className="muted mono"> @{sh.handle}</span></td>
-                  <td className="mono">{sh.signals?.posts ?? '—'}{sh.site ? ' + site' : ''}</td>
-                  <td className="mono">{sh.findings?.findings?.length ?? 0}</td>
-                  <td className="mono">{sh.chosen?.length ?? 0}/3</td>
-                  <td>
-                    {/* Won outranks approved: once it is a job, that is what it
-                        is, and a row still reading "approved" invites it to be
-                        approved again. */}
-                    <span className="pill" data-s={sh.dealId ? 'won' : sh.status === 'approved' ? 'ready' : 'draft'}>
-                      {sh.dealId ? 'won' : sh.status}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    {sh.dealId && (
-                      <Link className="btn go" href={`/ops/deals/${sh.dealId}`}
-                            style={{ marginInlineEnd: 8 }}>The deal</Link>
-                    )}
-                    <Link className="btn" href={`/ops/sheet/${sh.token}`}>
-                      {sh.status === 'approved' ? 'Open' : 'Review'}
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        </>
-      )}
+      <p className="lab" style={{ margin: '0 0 12px' }}>
+        {tasks.length === 0
+          ? 'Nothing owed'
+          : `${tasks.length} thing${tasks.length === 1 ? '' : 's'} owed`}
+      </p>
+      <TodayList tasks={tasks} />
 
-      {rows.length === 0 ? (
-        <p className="muted">
-          Nothing read yet. Put a handle in above and the engine will read a
-          hundred posts and compose what the arithmetic supports.
-        </p>
-      ) : (
-        <div className="scroll-x">
-        <table>
-          <thead>
-            <tr>
-              <th>Handle</th><th>Client</th><th>Status</th>
-              <th>Posts</th><th>Read</th><th />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.token}>
-                <td className="mono">@{r.handle}</td>
-                <td>{r.report?.client?.en ?? '—'}</td>
-                <td><span className="pill" data-s={r.status}>{r.status}</span></td>
-                <td className="mono">{r.signals?.posts ?? '—'}</td>
-                <td className="muted">{r.readAt?.slice(0, 10) ?? '—'}</td>
-                <td style={{ textAlign: 'right' }}>
-                  <Link className="btn" href={`/ops/${r.token}`}>
-                    {r.status === 'draft' ? 'Write' : 'Open'}
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        </div>
-      )}
+      <div style={{ marginTop: 34 }}>
+        <ConfigPanel rows={configReport()} />
+      </div>
     </main>
   );
 }

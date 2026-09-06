@@ -22,7 +22,7 @@ server, `rm -rf .next`, restart.
 
 ## Routes
 
-Every page exists in both locales. `/ar` is canonical.
+Every page under `/{lang}` exists in both locales. `/ar` is canonical.
 
 | Path | | Indexed |
 |---|---|---|
@@ -32,7 +32,7 @@ Every page exists in both locales. `/ar` is canonical.
 | `/{lang}/work/[slug]` | One piece | yes |
 | `/{lang}/cast` | Cast & crew — reached only through work | yes |
 | `/{lang}/teardown` | What a Teardown is, and the handle intake | yes |
-| `/{lang}/teardown/sample` | A complete specimen teardown | yes |
+| `/{lang}/teardown/sample` | 308 → `/specimen/{lang}` (kept: it's `heroCta2` and was in the old sitemap) | no |
 | `/{lang}/studio` | Founders and the entity block | yes |
 | `/{lang}/pricing` | Published rates | yes |
 | `/{lang}/privacy` | Privacy | yes |
@@ -40,15 +40,60 @@ Every page exists in both locales. `/ar` is canonical.
 | `/{lang}/terms` | Terms | yes |
 | `/{lang}/data` | The six data rights and how to exercise them | yes |
 | `/{lang}/instagram-professional` | Helper for the ~1/3 of accounts that are personal | yes |
-| `/r/[token]` | **A delivered Teardown** | **no** |
-| `/p/[token]` | **The one-screen preview sent in the DM** | **no** |
+| `/specimen/[lang]` | **The one complete, public specimen sheet** — the proof `/teardown` sends every cold visitor to | yes |
+| `/s/[token]` | **The delivered Sheet** — the one artefact a real prospect receives | **no** |
+| `/ops` | Operator console — queue, clients, deals, roster | **no** |
+| `/t` | Talent portal — a provider's own bookings, by passcode | **no** |
+| `/doc/proposal/[id]`, `/doc/invoice/[talentId]` | Print-only documents, no PDF library — see `CLAUDE.md` | **no** |
+| `/api/health` | Firestore + Meta token self-check, unauthenticated | — |
+| `/api/cron/read` | The read sweeper Cloud Scheduler calls; `x-pravda-cron` gated | — |
 
-`/r` and `/p` are per-recipient. They carry `noindex, nofollow, nocache`, are
-absent from the sitemap, and are disallowed in `robots.txt` — a teardown is
-written for one business and must never surface in search.
+`/s`, `/ops`, `/t` and `/doc` carry `noindex, nofollow, nocache`, are absent
+from the sitemap, and are disallowed in `robots.txt` (`app/robots.ts`) — each
+is either per-recipient or operator/provider-only and must never surface in
+search. `/specimen` is the deliberate exception: it is the one artefact meant
+to be found by a stranger, so it is in both the sitemap and the routes above
+that are indexed.
+
+There used to be two delivery surfaces, `/r/[token]` (a long-form report) and
+`/p/[token]` (its one-screen preview), each with its own renderer. Both are
+**deleted**, not redirected — see `CLAUDE.md`'s "The one artefact" section for
+why, and do not resurrect either for a one-off case.
 
 `sitemap.xml`, `robots.txt`, `icon.svg`, an error boundary and a skeleton
 loading state are all generated.
+
+## How a lead flows
+
+1. **Intake** — a stranger types an Instagram handle into `/{lang}/teardown`.
+   `POST /api/lead` writes a `Client` (`openClient`) before anything is read,
+   so a Meta outage never loses a lead, and tells Khaled *before* responding —
+   the notice is more time-critical than the read itself.
+2. **Queue** — the read is claimed, not just started (`claimForRead`, a
+   Firestore transaction). The fast path runs inline via `after()`; if that
+   instance dies mid-read, `GET /api/cron/read` (Cloud Scheduler, once a
+   minute) sweeps anything left in `new` or a `reading` state whose lease
+   expired, up to three attempts before a client is marked `failed`.
+3. **Sheet** — `lib/teardown/run.ts` composes a `Sheet`: signals, findings,
+   recommended concepts, a vertical guess. Nothing in it is invented — see
+   "Only what we can prove" in `CLAUDE.md`.
+4. **Approve** — an operator reviews the sheet at `/ops`, casts real talent
+   against it (never a placeholder), and approves it. Approving mints a share
+   link; it does **not** by itself tell the client anything.
+5. **Send** — `compose-share` hands the operator the Arabic message and a
+   `wa.me` link; `mark-share-sent` is the separate, human-confirmed act that
+   actually advances the client to `sent`. Two steps on purpose: opening
+   WhatsApp is not sending.
+6. **Win** — the client opens `/s/[token]`, and if they say yes, the sheet
+   converts into a `Deal`.
+7. **Bookings** — real talent are offered days against the deal
+   (`POST /api/ops/booking`), each a `Booking` that never carries what the
+   client paid — the connector invariant in `CLAUDE.md`.
+8. **Portal** — a talent signs into `/t` with their own passcode to accept or
+   decline, set availability, and see their own upcoming days.
+9. **Documents** — `/doc/proposal/[id]` and `/doc/invoice/[talentId]` are
+   print stylesheets a human opens and prints/saves as PDF from the browser;
+   there is no server-side PDF generation anywhere in this codebase.
 
 ### The entity block
 
@@ -247,11 +292,48 @@ the Latin and sets ~1.35× at 1.85 line-height.
 | First Load JS, WebGL routes | ≤250 kB | 245 kB |
 | First Load JS, text routes | ≤250 kB | 109–111 kB |
 | Shared chunk | — | 105 kB |
+| `/s/[token]` | ≤150 kB | — |
 
-`/r/{token}` — the Teardown, where all cold traffic lands — is held to a
-stricter ≤150 kB and carries **no canvas at all**.
+`/s/[token]` — where every real prospect's teardown lands, and all cold
+traffic that isn't the specimen — is held to the stricter budget the old
+`/r` used to carry, and ships **no canvas at all**. `scripts/check-bundle.mjs`
+enforces this in CI against `next build`'s own "First Load JS" output.
 
 ## Placeholders
 
 `public/plates/*.svg` are generated abstract plates, deliberately not stock
 photography. Replace with real work — AVIF, `q=60`, explicit `sizes`.
+
+## Tests
+
+```bash
+npm run test:unit    # pure engine — signals, findings, recommend, auth,
+                      # msisdn/handle normalisation. node --test, no network,
+                      # no Firestore. Fast; run this on every change.
+npm run test:itest   # the same code paths against a real Firestore emulator —
+                      # queue claiming, status transitions, contact merges,
+                      # deals/bookings, the golden sheet snapshot.
+npm test             # both, wrapped in `firebase-tools emulators:exec`
+```
+
+Itests need a JDK for the Firestore emulator (`firebase-tools` requires 21+).
+On macOS, if the emulator refuses to start over a Java version error, point
+`JAVA_HOME` at a JDK 21+ before running:
+
+```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 21) npm test
+```
+
+`npx tsc --noEmit`, `npm run lint` (`next lint`) and `npm run lint:eslint`
+(ESLint 9's own CLI, same rules via `eslint.config.mjs`) round out what CI
+runs on every push — see `.github/workflows/ci.yml`.
+
+## Runbook and the plan
+
+Operational procedures — rotating a secret, reissuing the Meta token,
+re-running a stuck read, honouring a PDPL export/delete request, standing up
+staging — live in [`docs/RUNBOOK.md`](docs/RUNBOOK.md). Cross-cutting rules
+an agent must not violate live in [`CLAUDE.md`](CLAUDE.md). The reconciled
+plan across every workstream — the decisions, the unified data model, the
+execution waves — is [`docs/plan/MASTER-PLAN.md`](docs/plan/MASTER-PLAN.md);
+read it before a change that touches more than one file.

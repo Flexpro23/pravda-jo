@@ -2,25 +2,45 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { explain, OFFLINE } from '@/lib/ops/errors';
+import { reauthAction, useToast } from '@/components/ops/Toast';
 
-export default function NewDeal({ tokens }: { tokens: { token: string; handle: string; client: string }[] }) {
+/**
+ * A deal typed in by hand.
+ *
+ * Almost every deal now arrives by winning a sheet, which carries its own
+ * numbers across. This is the escape hatch for the ones that do not — a job
+ * agreed on a call before anything was read.
+ */
+export default function NewDeal() {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [f, setF] = useState({ clientName: '', clientHandle: '', clientPhone: '', clientTotalJOD: '', retainerJOD: '', teardownToken: '' });
-  const [msg, setMsg] = useState<string | null>(null);
+  const [f, setF] = useState({
+    clientName: '', clientHandle: '', clientPhone: '',
+    clientTotalJOD: '', retainerJOD: '',
+  });
+  const { push } = useToast();
   const router = useRouter();
 
   const create = async () => {
-    setBusy(true); setMsg(null);
+    setBusy(true);
     try {
       const res = await fetch('/api/ops/deal', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ action: 'create', ...f, clientTotalJOD: Number(f.clientTotalJOD) || 0, retainerJOD: Number(f.retainerJOD) || undefined }),
       });
       const j = await res.json();
-      if (!res.ok) { setMsg(`Failed: ${j.error}`); return; }
+      if (!res.ok) {
+        push({
+          kind: 'err', text: explain(j.error, j),
+          action: j.error === 'unauthenticated' ? reauthAction() : { label: 'Retry', onClick: create },
+        });
+        return;
+      }
       router.push(`/ops/deals/${j.id}`);
-    } catch { setMsg('The request did not complete.'); }
+    } catch {
+      push({ kind: 'err', text: OFFLINE, action: { label: 'Retry', onClick: create } });
+    }
     finally { setBusy(false); }
   };
 
@@ -31,13 +51,14 @@ export default function NewDeal({ tokens }: { tokens: { token: string; handle: s
         <section className="blk" style={{ marginTop: 14 }}>
           <h2>New deal</h2>
           <p className="hint">
-            Attach the teardown it came out of where there is one — it is the
-            only record of what was promised.
+            For a job agreed before anything was read. Everything else gets here
+            by winning a sheet, which brings its own figures with it.
           </p>
           <div className="pair">
             <div>
               <label>Client name</label>
-              <input value={f.clientName} onChange={(e) => setF({ ...f, clientName: e.target.value })} />
+              <input value={f.clientName} dir="auto"
+                     onChange={(e) => setF({ ...f, clientName: e.target.value })} />
             </div>
             <div>
               <label>Instagram handle</label>
@@ -63,21 +84,8 @@ export default function NewDeal({ tokens }: { tokens: { token: string; handle: s
               <input dir="ltr" className="mono" value={f.clientPhone}
                      onChange={(e) => setF({ ...f, clientPhone: e.target.value })} />
             </div>
-            <div>
-              <label>From which teardown</label>
-              <select value={f.teardownToken}
-                      onChange={(e) => {
-                        const t = tokens.find((x) => x.token === e.target.value);
-                        setF({ ...f, teardownToken: e.target.value, clientName: f.clientName || t?.client || '', clientHandle: f.clientHandle || t?.handle || '' });
-                      }}
-                      style={{ width: '100%', background: '#191919', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 6, padding: '9px 11px' }}>
-                <option value="">— none —</option>
-                {tokens.map((t) => <option key={t.token} value={t.token}>@{t.handle} · {t.client}</option>)}
-              </select>
-            </div>
           </div>
           <button className="go" disabled={busy || !f.clientName} onClick={create}>Create</button>
-          {msg && <p className="note" data-k="err">{msg}</p>}
         </section>
       )}
     </div>

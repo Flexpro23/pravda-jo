@@ -1,6 +1,11 @@
 import { randomBytes } from 'node:crypto';
-import { getSheet, saveSheet, type Sheet } from '@/lib/store/sheets';
-import { getDeal, saveDeal } from '@/lib/store/deals';
+import { FieldValue } from 'firebase-admin/firestore';
+import { store } from '@/lib/store/firebase';
+import {
+  getSheet, saveSheet, effectiveCast, castRefusal, clearSheetExpiry, type Sheet,
+} from '@/lib/store/sheets';
+import { getDeal, listTalent, saveDeal } from '@/lib/store/deals';
+import { clientForSheet } from '@/lib/store/clients';
 import type { Deal, SoldConcept } from '@/lib/data/deals';
 
 /**
@@ -46,8 +51,10 @@ export function castPlan(sheet: Sheet): CastSlot[] {
     const written = sheet.copy?.[String(n)];
     const name = written?.name || rec.name;
     const hook = written?.hook || rec.hook;
-    const override = sheet.castOverrides?.[String(n)];
-    const ids = [...new Set(override ?? rec.cast.map((c) => c.talentId))].filter(Boolean);
+    // The override when there is one, exactly as the approve gate read it.
+    // Both go through `effectiveCast` so the people who were checked before
+    // sending are the people who get booked.
+    const ids = [...new Set(effectiveCast(sheet, n).map((c) => c.talentId))].filter(Boolean);
     for (const talentId of ids) {
       slots.push({ talentId, conceptN: n, conceptName: name, brief: `${name} — ${hook}` });
     }
@@ -55,8 +62,24 @@ export function castPlan(sheet: Sheet): CastSlot[] {
   return slots;
 }
 
+/**
+ * The retention clock stops when the lead stops being a lead.
+ *
+ * `expiresAt` exists so an unconverted enquiry does not sit in Firestore
+ * forever; a client who signed is not an unconverted enquiry, and a TTL policy
+ * does not care about intentions. Deleted rather than nulled, so the field's
+ * absence means what it says. Written here rather than in `clients.ts` because
+ * that file belongs to another workstream this wave; when a `clearClientExpiry`
+ * lands there, this should become a call to it.
+ */
+async function clearExpiry(clientId: string): Promise<void> {
+  const P = process.env.FIRESTORE_COLLECTION_PREFIX ?? '';
+  await store().collection(`${P}clients`).doc(clientId)
+    .update({ expiresAt: FieldValue.delete() });
+}
+
 export async function winSheet(token: string): Promise<
-{ ok: true; dealId: string; created: boolean } | { ok: false; why: string }> {
+{ ok: true; dealId: string; created: boolean } | { ok: false; why: string; detail?: string }> {
   const sheet = await getSheet(token);
   if (!sheet) return { ok: false, why: 'not-found' };
   // A sheet that was never approved was never sent, so there is nothing a
@@ -64,6 +87,16 @@ export async function winSheet(token: string): Promise<
   if (sheet.status !== 'approved') return { ok: false, why: 'not-approved' };
   if (sheet.chosen.length !== 3) return { ok: false, why: 'pick-three' };
   if (!sheet.offer || sheet.offer.videos < 1) return { ok: false, why: 'no-offer' };
+
+  // The same gate `approveSheet` runs, run again against the roster as it is
+  // now. Reaching a refusal here means the roster changed after the sheet went
+  // out — somebody deactivated, or a seed rerun flagged a real person back to a
+  // worked example — and a deal is precisely where that turns into a booking
+  // offer sent to a person who does not exist. It was previously only half of
+  // the check: `uncastable` was tested and the cast itself was not, so a sheet
+  // naming a placeholder could be won even though it could not be approved.
+  const refusal = castRefusal(sheet, await listTalent());
+  if (refusal) return { ok: false, why: refusal.why, detail: refusal.detail };
 
   // Already won: open what exists. The second press is usually the first one
   // being slow, and it must not produce a second deal for the same client.
@@ -106,5 +139,15 @@ export async function winSheet(token: string): Promise<
     createdAt: now, updatedAt: now,
   };
   await saveDeal(deal);
+
+  // Quietly, and after the deal exists. A retention field that failed to clear
+  // is a thing to fix next time this runs; a deal that failed to be created
+  // because of it would be a job nobody can see. The sheet carries the same
+  // clock as the client for the same reason — it holds more about the business
+  // than the client record does — so both stop here.
+  const client = await clientForSheet(sheet.token).catch(() => null);
+  if (client) await clearExpiry(client.id).catch(() => {});
+  await clearSheetExpiry(sheet.token).catch(() => {});
+
   return { ok: true, dealId: id, created: true };
 }

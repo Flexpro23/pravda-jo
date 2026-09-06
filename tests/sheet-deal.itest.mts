@@ -166,7 +166,18 @@ ok('a brief the crew can read is the Arabic he wrote',
 ok('an idea he left in English stays English, not machine-translated',
   plan.find((p) => p.conceptN === 1)?.brief === 'Question cards — A card with their own question');
 
-await S.saveSheet({ ...((await S.getSheet(TOKEN)) as object), castOverrides: { '1': [MD] } } as never);
+// Materialised, not referential: an override is the people themselves, so the
+// page a client is holding cannot change under them when a talent record is
+// edited. `castPlan` reads the ids back off those objects.
+await S.saveSheet({
+  ...((await S.getSheet(TOKEN)) as object),
+  castOverrides: {
+    '1': [{
+      talentId: MD, name: { ar: 'أمل', en: 'Amal' }, discipline: 'model',
+      why: { ar: 'اختيار المشغّل', en: 'chosen by the operator' },
+    }],
+  },
+} as never);
 const overridden = V.castPlan((await S.getSheet(TOKEN))!);
 ok('an override replaces the suggestion rather than adding to it',
   overridden.filter((p) => p.conceptN === 1).map((p) => p.talentId).join() === MD);
@@ -174,10 +185,12 @@ ok('an override replaces the suggestion rather than adding to it',
 // ── the rule the whole system rests on ─────────────────────────────────────
 const slot = plan.find((p) => p.talentId === MD)!;
 const rate = (await D.getTalent(MD))!.dayRateJOD;
-const booking = await D.offerBooking({
+const offered = await D.offerBooking({
   dealId: (healed as { dealId: string }).dealId, talentId: slot.talentId,
   date: '2026-09-15', feeJOD: rate, brief: slot.brief,
 });
+if (!offered.ok) { console.error('fixture failed to book', offered); process.exit(2); }
+const booking = offered.booking;
 ok('a booking made from a cast slot pays the roster rate', booking.feeJOD === 50);
 ok('  and carries no client price',
   !Object.prototype.hasOwnProperty.call(booking, 'clientTotalJOD')
@@ -186,6 +199,55 @@ ok('  and does not name the client before the money',
   booking.clientName === undefined);
 
 await C('bookings').doc(booking.id).delete();
+
+// ── the roster moves between approving and winning ─────────────────────────
+//
+// `approveSheet` refuses a sheet that names a worked example or an idea the
+// recommender could not cast. `winSheet` only ever checked the second half, so
+// a sheet approved in March could be won in April against a roster where the
+// videographer had since been deactivated — and the deal, which is what
+// actually sends a person a booking offer, was the first thing to find out.
+// Both now run the same exported `castRefusal` against the roster as it is.
+console.log('\n══ a sheet cannot be won against a roster that changed under it ══');
+
+const beforeCast = (await S.getSheet(TOKEN))!;
+await D.saveTalent({ ...(await D.getTalent(MD))!, placeholder: true });
+const flagged = await V.winSheet(TOKEN);
+ok('a cast naming a worked example refuses',
+  flagged.ok === false && (flagged as { why?: string }).why === 'placeholder-cast',
+  JSON.stringify(flagged));
+// The detail names the person as the sheet wrote them down, which is what an
+// operator reading the refusal needs — an id would send him to the roster.
+ok('  and names who, in the words the sheet is holding',
+  ((flagged as { detail?: string }).detail ?? '').includes('Amal'),
+  (flagged as { detail?: string }).detail);
+
+await D.saveTalent({ ...(await D.getTalent(MD))!, placeholder: false });
+await D.saveTalent({ ...(await D.getTalent(VG))!, active: false });
+const gone = await V.winSheet(TOKEN);
+ok('a deactivated person refuses too',
+  gone.ok === false && (gone as { why?: string }).why === 'placeholder-cast',
+  JSON.stringify(gone));
+
+await D.saveTalent({ ...(await D.getTalent(VG))!, active: true });
+const restored = await V.winSheet(TOKEN);
+ok('and with the roster whole again it opens the same deal',
+  restored.ok === true && (restored as { dealId: string }).dealId === beforeCast.dealId,
+  JSON.stringify(restored));
+
+// ── the retention clock stops when the sheet stops being a draft ───────────
+console.log('\n══ an approved, won sheet is not an unconverted draft ══');
+
+await C('sheets').doc(TOKEN).update({ expiresAt: new Date().toISOString() });
+ok('a sheet can carry an expiry', !!(await S.getSheet(TOKEN))?.expiresAt);
+await S.clearSheetExpiry(TOKEN);
+ok('  and clearing it removes the field rather than nulling it',
+  (await S.getSheet(TOKEN))?.expiresAt === undefined,
+  String((await S.getSheet(TOKEN))?.expiresAt));
+
+const approved = await S.approveSheet(TOKEN);
+ok('approving stops the clock as well', approved.ok === true
+  && (await S.getSheet(TOKEN))?.expiresAt === undefined);
 
 console.log(bad === 0 ? '\nall good' : `\n${bad} failed`);
 process.exit(bad === 0 ? 0 : 1);

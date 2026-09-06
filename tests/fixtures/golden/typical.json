@@ -1,0 +1,644 @@
+{
+  "token": "GOLDENTYPICAL",
+  "handle": "mataam.alnoor",
+  "clientName": "مطعم النور",
+  "website": "https://mataam-alnoor.jo",
+  "vertical": "food",
+  "verticalGuess": {
+    "guess": "food",
+    "confidence": 0.875,
+    "runnerUp": "retail",
+    "evidence": [
+      {
+        "vertical": "food",
+        "term": "شاورما",
+        "hits": 9
+      },
+      {
+        "vertical": "food",
+        "term": "قهوه",
+        "hits": 8
+      },
+      {
+        "vertical": "food",
+        "term": "حلويات",
+        "hits": 1
+      },
+      {
+        "vertical": "food",
+        "term": "كافيه",
+        "hits": 1
+      },
+      {
+        "vertical": "food",
+        "term": "مطعم",
+        "hits": 1
+      },
+      {
+        "vertical": "retail",
+        "term": "توصيل",
+        "hits": 1
+      },
+      {
+        "vertical": "retail",
+        "term": "متجر",
+        "hits": 1
+      }
+    ]
+  },
+  "profile": {
+    "name": "مطعم النور",
+    "biography": "مطعم وكافيه بعمّان · منسف، شاورما، حلويات · توصيل يومي",
+    "bioLink": "https://mataam-alnoor.jo",
+    "followers": 8400,
+    "follows": 310,
+    "mediaCount": 486,
+    "profilePictureUrl": "https://scontent.cdninstagram.com/v/alnoor.jpg",
+    "readAt": "2026-09-06T09:00:00.000Z"
+  },
+  "signals": {
+    "handle": "mataam.alnoor",
+    "followers": 8400,
+    "posts": 40,
+    "shallow": true,
+    "readShare": 0.0823045267489712,
+    "first": "2026-06-01T10:00:00.000Z",
+    "last": "2026-08-10T23:00:00.000Z",
+    "spanDays": 70.54166666666667,
+    "daysSinceLast": 26.416666666666668,
+    "activeSpanDays": 96.95833333333333,
+    "postsPerWeek": 2.6444444444444444,
+    "postsPerWeekInWindow": 3.96928529238039,
+    "recentPosts": 34,
+    "coverage": {
+      "likesKnown": 40,
+      "commentsKnown": 40,
+      "engagementKnown": 40,
+      "recentEngagementKnown": 34
+    },
+    "engagementReliable": true,
+    "engagementRate": 0.7261904761904762,
+    "meanEngagementRate": 0.7761904761904763,
+    "recentEngagementRate": 0.7976190476190477,
+    "recentMedianEngagement": 67,
+    "selfP25Rate": 0.4166666666666667,
+    "medianEngagement": 61,
+    "formats": [
+      {
+        "format": "REELS",
+        "posts": 16,
+        "known": 16,
+        "sharePosts": 40,
+        "shareKnown": 40,
+        "shareEngagement": 61.963190184049076,
+        "medianEngagement": 98.5
+      },
+      {
+        "format": "IMAGE",
+        "posts": 24,
+        "known": 24,
+        "sharePosts": 60,
+        "shareKnown": 60,
+        "shareEngagement": 38.036809815950924,
+        "medianEngagement": 39
+      }
+    ],
+    "strongest": {
+      "format": "REELS",
+      "posts": 16,
+      "known": 16,
+      "sharePosts": 40,
+      "shareKnown": 40,
+      "shareEngagement": 61.963190184049076,
+      "medianEngagement": 98.5,
+      "p": 0.0004997501249375312
+    },
+    "busiest": {
+      "format": "IMAGE",
+      "posts": 24,
+      "known": 24,
+      "sharePosts": 60,
+      "shareKnown": 60,
+      "shareEngagement": 38.036809815950924,
+      "medianEngagement": 39
+    },
+    "byHour": [
+      2,
+      6,
+      2,
+      0,
+      1,
+      0,
+      1,
+      6,
+      1,
+      0,
+      1,
+      0,
+      1,
+      6,
+      1,
+      0,
+      1,
+      0,
+      1,
+      6,
+      2,
+      0,
+      2,
+      0
+    ],
+    "peakWindow": {
+      "from": 1,
+      "to": 3,
+      "share": 20
+    },
+    "bestWindow": null,
+    "best": {
+      "permalink": "https://instagram.com/p/b1/",
+      "timestamp": "2026-07-26T19:00:00.000Z",
+      "engagement": 129,
+      "multiple": 2.1147540983606556,
+      "format": "REELS"
+    },
+    "captions": {
+      "withCaption": 40,
+      "none": 0,
+      "medianWords": 4,
+      "asking": 8,
+      "askingShare": 20,
+      "questioning": 5,
+      "questioningShare": 12.5
+    },
+    "bio": {
+      "biography": "مطعم وكافيه بعمّان · منسف، شاورما، حلويات · توصيل يومي",
+      "website": "https://mataam-alnoor.jo"
+    }
+  },
+  "site": {
+    "https": true,
+    "title": "عطور الشرق",
+    "description": "متجر عطور في عمان",
+    "lang": "ar",
+    "hasArabic": true,
+    "mobileReady": true,
+    "hreflangs": [],
+    "hasArabicRoute": false,
+    "schemaTypes": [],
+    "hasLocalBusiness": false,
+    "hasProductOffers": false,
+    "hasOpeningHours": false,
+    "hasPostalAddress": false,
+    "hasAggregateRating": false,
+    "canonicalMatchesFinalUrl": false,
+    "noindex": false,
+    "metaPixel": false,
+    "metaCapiHint": false,
+    "googleAnalytics": false,
+    "gtm": false,
+    "tiktokPixel": false,
+    "snapPixel": false,
+    "googleAdsConversion": false,
+    "whatsapp": true,
+    "whatsappNumber": "962791234567",
+    "telLink": false,
+    "mailto": false,
+    "form": false,
+    "phoneInText": false,
+    "showsPrice": true,
+    "ogImage": false,
+    "platform": "salla",
+    "url": "https://mataam-alnoor.jo/",
+    "finalUrl": "https://mataam-alnoor.jo/",
+    "ok": true,
+    "status": 200,
+    "ms": 1480,
+    "msSamples": [
+      2310,
+      1480,
+      1520
+    ],
+    "msCold": 2310,
+    "ttfbMs": 940,
+    "bytes": 61400,
+    "truncated": false,
+    "scheme": "https",
+    "httpRedirectsToHttps": true,
+    "hasRobots": true,
+    "hasSitemap": false
+  },
+  "findings": {
+    "findings": [
+      {
+        "id": "ig-format",
+        "severity": "critical",
+        "source": "instagram",
+        "figure": {
+          "ar": "٦٢٪",
+          "en": "62%"
+        },
+        "title": {
+          "ar": "شغلكم رايح بمكان، والنتيجة بمكان تاني",
+          "en": "Your effort and your results are in different places"
+        },
+        "detail": {
+          "ar": "ريلز هي ٤٠٪ من المنشورات وبتحمل ٦٢٪ من التفاعل. و٦٠٪ من شغلكم رايح على صور مفردة.",
+          "en": "Reels are 40% of your posts and carry 62% of all engagement. Meanwhile 60% of your effort goes into single images."
+        },
+        "provenance": {
+          "ar": "١٦ ريلز مقابل ٢٤ صور مفردة",
+          "en": "16 Reels against 24 single images"
+        }
+      },
+      {
+        "id": "web-pixel",
+        "severity": "critical",
+        "source": "website",
+        "title": {
+          "ar": "موقعكم ما بيشوف مين بيزوره",
+          "en": "Your site cannot see who visits it"
+        },
+        "detail": {
+          "ar": "ما في بكسل ميتا على الموقع. يعني ما بتقدروا تعرفوا أي إعلان جاب زبون، ولا ترجعوا لحدا زار الموقع وما اشترى — وهدول أرخص جمهورين ممكن تشتروهم.",
+          "en": "There is no Meta pixel on the site. No advert can be traced to a sale, and nobody who visited and left can be reached again — and those are the two cheapest audiences money can buy."
+        },
+        "provenance": {
+          "ar": "قراءة كود الصفحة",
+          "en": "Read from the page source"
+        }
+      },
+      {
+        "id": "ig-engagement",
+        "severity": "notable",
+        "source": "instagram",
+        "figure": {
+          "ar": "٠٫٨٪",
+          "en": "0.8%"
+        },
+        "title": {
+          "ar": "نسبة التفاعل",
+          "en": "Engagement rate"
+        },
+        "detail": {
+          "ar": "المنشور العادي عندكم بياخد ٦٧ تفاعل، وعندكم ٨٬٤٠٠ متابع. يعني ٠٫٨٪.",
+          "en": "A typical post draws 67 reactions against 8,400 followers — 0.8%."
+        },
+        "provenance": {
+          "ar": "محسوب من ٣٤ منشور خلال آخر ٩٠ يوم · وسيط",
+          "en": "Computed from 34 posts in the last 90 days · median"
+        }
+      },
+      {
+        "id": "ig-ask",
+        "severity": "notable",
+        "source": "instagram",
+        "figure": {
+          "ar": "٢٠٪",
+          "en": "20%"
+        },
+        "title": {
+          "ar": "كابشناتكم بتوصف، وقلّ ما بتطلب",
+          "en": "Your captions describe, and rarely ask"
+        },
+        "detail": {
+          "ar": "٨ من ٤٠ منشور فيهم طلب واضح. الباقي بيحكي عن المنتج وبيوقف هناك.",
+          "en": "8 of 40 captioned posts carry a clear request. The rest describe the product and stop there."
+        },
+        "provenance": {
+          "ar": "٠ منشور بدون كابشن أصلًا · ٥ فيهم سؤال بس",
+          "en": "0 posts carry no caption at all · 5 ask a question but request nothing"
+        }
+      },
+      {
+        "id": "ig-best",
+        "severity": "good",
+        "source": "instagram",
+        "figure": {
+          "ar": "٢٫١×",
+          "en": "2.1×"
+        },
+        "title": {
+          "ar": "عندكم منشور اشتغل فعلًا",
+          "en": "One post genuinely worked"
+        },
+        "detail": {
+          "ar": "أقوى منشور عندكم أخذ ٢٫١ ضعف تفاعل المنشور العادي. الشكل اللي اشتغل معروف — المشكلة إنه ما تكرر.",
+          "en": "Your strongest post drew 2.1× the engagement of a typical one. The shape that worked is known — it simply was not repeated."
+        },
+        "provenance": {
+          "ar": "محسوب · أعلى منشور",
+          "en": "Computed · highest post"
+        }
+      },
+      {
+        "id": "ig-longevity",
+        "severity": "good",
+        "source": "instagram",
+        "figure": {
+          "ar": "٣ شهور",
+          "en": "3 months"
+        },
+        "title": {
+          "ar": "الحساب مش جديد",
+          "en": "The account is not new"
+        },
+        "detail": {
+          "ar": "إنتو ناشرين على هاد الحساب من ٣ شهور، و٤٠ منشور منهم قدامنا. اللي بينبنى على أرشيف موجود أرخص من اللي بيبدأ من صفر.",
+          "en": "You have been publishing on this account for 3 months, and 40 of those posts are in front of us. Building on an archive costs less than starting from nothing."
+        },
+        "provenance": {
+          "ar": "من ١ حزيران ٢٠٢٦",
+          "en": "Since 1 June 2026"
+        }
+      },
+      {
+        "id": "web-arabic",
+        "severity": "good",
+        "source": "website",
+        "title": {
+          "ar": "الموقع بيحكي عربي",
+          "en": "The site speaks Arabic"
+        },
+        "detail": {
+          "ar": "في عربي على الصفحة. يعني الزيارة الجاية من إعلان عربي بتلاقي نفس اللغة اللي جابتها — وهاد نص الشغل.",
+          "en": "There is Arabic on the page. A visit arriving from an Arabic advert meets the language that brought it, which is half the work."
+        },
+        "provenance": {
+          "ar": "قراءة نص الصفحة",
+          "en": "Read from the page copy"
+        }
+      }
+    ],
+    "charts": [
+      {
+        "kind": "bars",
+        "id": "formats",
+        "title": {
+          "ar": "أي شكل بيشتغل",
+          "en": "Which format works"
+        },
+        "note": {
+          "ar": "التفاعل النموذجي لكل شكل، منسوب للمنشور العادي عندكم.",
+          "en": "Typical engagement per format, against your own typical post."
+        },
+        "series": [
+          {
+            "label": {
+              "ar": "ريلز",
+              "en": "Reels"
+            },
+            "value": 1.6,
+            "caption": "40%",
+            "hi": true
+          },
+          {
+            "label": {
+              "ar": "صور مفردة",
+              "en": "single images"
+            },
+            "value": 0.6,
+            "caption": "60%",
+            "hi": false
+          }
+        ]
+      },
+      {
+        "kind": "hours",
+        "id": "hours",
+        "title": {
+          "ar": "إمتى بتنشروا",
+          "en": "When you publish"
+        },
+        "note": {
+          "ar": "كل منشور بساعته، بتوقيت عمّان.",
+          "en": "Every post by the hour it went out, Amman time."
+        },
+        "byHour": [
+          2,
+          6,
+          2,
+          0,
+          1,
+          0,
+          1,
+          6,
+          1,
+          0,
+          1,
+          0,
+          1,
+          6,
+          1,
+          0,
+          1,
+          0,
+          1,
+          6,
+          2,
+          0,
+          2,
+          0
+        ],
+        "peak": [
+          1,
+          3
+        ]
+      }
+    ],
+    "operatorNotes": [],
+    "read": {
+      "posts": 40,
+      "site": true,
+      "adsChecked": false
+    }
+  },
+  "webState": {
+    "state": "read"
+  },
+  "rosterState": "real",
+  "recommendations": [
+    {
+      "conceptN": 1,
+      "name": "The Inbox Twelve",
+      "tier": "light",
+      "shape": "talking-head",
+      "videos": 10,
+      "priceJOD": 1500,
+      "hook": "A full-screen card carrying the customer's own question in their own words, zero branding — then the person is already talking before second two.",
+      "premise": "Pre-production is the concept: PRAVDA exports 90 days of the client's real WhatsApp Business inbox and pulls the twelve questions customers actually type. Single setup, never moved: the principal in their own room, chest up, off-centre with the question burned into the empty side. Frame one is a full-screen card holding the question verbatim in dialect ('ليش أسعاركم أغلى؟') for 1.2s. Cut in with them already mid-answer — no greeting. Three beats: direct answer, reason, then the number or the caveat. Two 1.5s inserts of the thing discussed. End on the answer as text plus a WhatsApp line. Reset, next question. Five of the twelve are re-cut as 12s price versions: the question card, a 3s making-of cutaway, the number slamming full-screen with a sound hit, one beat back to the principal — 'شفت؟ سهلة.' Jacket on/off at the halfway point so eight weeks of drip does not look like one afternoon.",
+      "format": "Talking-head batch. 10-12 Reels of 20-40s plus 5 twelve-second price cutdowns, all from one half-day (5-6 hours) on one setup. Budget 1.5 editor days for the batch.",
+      "because": {
+        "ar": "لأنه بنفس الشكل اللي أصلًا بيشتغل معهم.",
+        "en": "Because it is the format already working for them."
+      },
+      "answers": [
+        "ig-ask",
+        "web-pixel",
+        "ig-engagement",
+        "ig-format"
+      ],
+      "models": 0,
+      "needsVoice": false,
+      "cast": [
+        {
+          "talentId": "omar",
+          "name": {
+            "ar": "عمر",
+            "en": "Omar"
+          },
+          "discipline": "videographer",
+          "why": {
+            "ar": "بيصوّر وبيركّب نفس الشغلة، فاليوم بيخلص بيوم.",
+            "en": "Shoots and cuts the same piece, so a day finishes in a day."
+          }
+        }
+      ],
+      "crewNotes": [
+        "editor"
+      ]
+    },
+    {
+      "conceptN": 12,
+      "name": "What 95K Buys",
+      "tier": "light",
+      "shape": "talking-head",
+      "videos": 3,
+      "priceJOD": 450,
+      "hook": "The real, unflattering view out of the master bedroom window, held for three seconds, with the price stamped across it — the shot nobody else in the category will publish.",
+      "premise": "0-3s: agent stands dead-centre in the open front door and says the price flat in dialect while it slams on screen in huge numerals. 3-7s: gimbal pushes straight down the hallway into the salon in one unbroken move. 7-22s: four hard cuts, 2.5s each, no music swells — a hand tapping the kitchen stone, the bathroom, the numbered parking bay with a car in it, and the master bedroom window showing the ACTUAL view out of it: rooftops, water tanks, the neighbour's wall. That window shot is the hero, held longest, because it is the frame every other listing video refuses to shoot. Each cut carries one burned card: area in m2, floor, finishing level, monthly service charge. 22-30s: agent to camera in the salon, tone drops — 'الشي اللي مش حلو فيها…' — and names ONE genuine flaw: no generator backup, the second bedroom is small, it faces Mecca Street and it is loud. 30-35s: static end card, send 'مخطط' on WhatsApp for the floor plan.",
+      "format": "Vertical Reel 30-45s, price-first walkthrough. Two properties per crew day, three to four assets.",
+      "because": {
+        "ar": "لأنه بيحطّ وجه إنسان بالكادر، وهاد أكتر إشي بيرفع تفاعلهم.",
+        "en": "Because it puts a human face in frame, which is what lifts their engagement most."
+      },
+      "answers": [
+        "ig-ask",
+        "web-pixel",
+        "ig-engagement",
+        "ig-format"
+      ],
+      "models": 0,
+      "needsVoice": false,
+      "cast": [
+        {
+          "talentId": "rana",
+          "name": {
+            "ar": "رنا",
+            "en": "Rana"
+          },
+          "discipline": "videographer",
+          "why": {
+            "ar": "بيصوّر وبيركّب نفس الشغلة، فاليوم بيخلص بيوم.",
+            "en": "Shoots and cuts the same piece, so a day finishes in a day."
+          }
+        }
+      ],
+      "crewNotes": [
+        "editor"
+      ]
+    },
+    {
+      "conceptN": 7,
+      "name": "Phone Kit Friday",
+      "tier": "light",
+      "shape": "ugc",
+      "videos": 6,
+      "priceJOD": 900,
+      "hook": "Whatever the client's own hands are doing, framed correctly for the first time in their life — the difference is legible in frame one because the tape does the directing.",
+      "premise": "PRAVDA couriers a physical kit to the shop: a phone clamp, a roll of floor tape, a small LED, a laminated framing card showing the exact frame, and a printed shot list of six things. Each shot is one line and one taped mark — 'ضع الكوب على العلامة، صوّر ٧ ثواني، ما تحرك التلفون'. The owner or a staff member shoots on Thursday, sends the raw clips to a dedicated WhatsApp number, and PRAVDA's editor returns finished vertical assets with burned bilingual captions inside 48 hours. The producer reviews the first two clips live on a WhatsApp video call and corrects framing before the rest are shot, which is the entire quality-control mechanism. The tape stays down, so every subsequent cycle matches the first and the library builds a consistent look with no crew ever attending.",
+      "format": "No crew day at all. PRAVDA ships a kit and directs over WhatsApp; the client shoots on their own phone. 6-10 assets per cycle, edit-only cost, the floor product below every shot concept.",
+      "because": {
+        "ar": "لأنه بيطلب من المتفرّج إشي، وهاد بالضبط اللي ما بتعمله كابشناتهم.",
+        "en": "Because it asks the viewer for something, which is exactly what their captions never do."
+      },
+      "answers": [
+        "ig-ask",
+        "web-pixel"
+      ],
+      "models": 0,
+      "needsVoice": false,
+      "cast": [],
+      "crewNotes": [
+        "editor",
+        "producer"
+      ]
+    },
+    {
+      "conceptN": 9,
+      "name": "Status Thirty",
+      "tier": "light",
+      "shape": "ugc",
+      "videos": 6,
+      "priceJOD": 900,
+      "hook": "No hook, deliberately. A familiar face already talking to you as if you had asked — the pattern interrupt is that it does not behave like an ad.",
+      "premise": "Different physics from a Reel: no algorithm, an audience of saved contacts only, watched with sound on, and the viewer already knows who you are. So the piece opens with no hook and no branding — it starts as if mid-conversation. The owner or staff member holds the phone at arm's length in the actual room and says one thing that is only useful to someone who already has the number: what came in today, what is left, what time they close tonight, the two slots free tomorrow, the price change starting Sunday. One vertical shot, one take, sound on, no music, no captions. The last three seconds are a static card with nothing but the item and 'رد على هالستوري' — because a Status reply lands directly in the business's inbox as a thread, not as a comment. Posted daily by the client from a batch PRAVDA delivers weekly.",
+      "format": "Vertical 20-30s built for WhatsApp Status and broadcast lists, not for the feed. 6-8 per cycle, cut from footage already shot on any other concept day.",
+      "because": {
+        "ar": "لأنه بينهي بمحادثة، وموقعهم ما بيقيس أي إشي.",
+        "en": "Because it ends in a conversation, and their site measures nothing."
+      },
+      "answers": [
+        "ig-ask",
+        "web-pixel"
+      ],
+      "models": 0,
+      "needsVoice": false,
+      "cast": [],
+      "crewNotes": [
+        "editor"
+      ]
+    },
+    {
+      "conceptN": 17,
+      "name": "Inside The Skin",
+      "tier": "standard",
+      "shape": "graphics",
+      "videos": 4,
+      "priceJOD": 600,
+      "hook": "An abstract macro interior nobody can identify, over the practitioner's own voice asking 'بتعرف شو بصير تحت الجلد لما...'",
+      "premise": "The practitioner records 25 seconds of voice-over in Jordanian dialect explaining what a treatment physically does — what filler actually sits on, why a scaler reaches what a brush cannot, what happens to a muscle fibre in the 48 hours after a session, why a follicle stops producing, what a whitening agent does to enamel. The visuals are AI-generated: a stylised interior in the clinic's brand colours — collagen strands under tension, a follicle in cross-section, plaque under a gumline, a fibre repairing — cut tight to the voice, one visual idea per sentence. Two live-action bookends filmed at the clinic: the practitioner at the top asking the question straight to camera, and at the end holding the actual instrument. Every generated biological visual goes back to the practitioner for written sign-off before it ships. Final card: clinic name, area, WhatsApp.",
+      "format": "AI-generated explainer 20-30s, practitioner voice-over with live-action bookends. Four to six built from one 30-minute VO session and one ten-minute bookend visit.",
+      "because": {
+        "ar": "مناسب لقطاعهم، وبيطلع ٤ مقاطع من يوم تصوير واحد.",
+        "en": "Fits their trade, and yields 4 pieces from a single crew day."
+      },
+      "answers": [
+        "ig-ask",
+        "web-pixel",
+        "ig-engagement"
+      ],
+      "models": 0,
+      "needsVoice": false,
+      "cast": [
+        {
+          "talentId": "rana",
+          "name": {
+            "ar": "رنا",
+            "en": "Rana"
+          },
+          "discipline": "videographer",
+          "why": {
+            "ar": "بيصوّر وبيركّب نفس الشغلة، فاليوم بيخلص بيوم.",
+            "en": "Shoots and cuts the same piece, so a day finishes in a day."
+          }
+        }
+      ],
+      "crewNotes": [
+        "editor",
+        "AI operator"
+      ]
+    }
+  ],
+  "chosen": [],
+  "offer": {
+    "videos": 6,
+    "pricePerVideo": 150,
+    "ads": true,
+    "adsMonthlyJOD": 400,
+    "totalJOD": 900
+  },
+  "status": "draft",
+  "createdAt": "2026-09-06T09:00:00.000Z",
+  "updatedAt": "2026-09-06T09:00:00.000Z",
+  "expiresAt": "2027-03-05T09:00:00.000Z"
+}

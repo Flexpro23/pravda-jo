@@ -17,10 +17,16 @@ a{color:var(--brass);}
 .top h1{font:500 17px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;margin:0;}
 .top .sp{flex:1;}
 .muted{color:var(--ash);font-size:13px;}
-.mono{font-family:var(--mono);}
+/* A phone number or a JOD figure sitting beside an Arabic name is exactly
+   the case bidirectional text gets wrong on its own — isolating it keeps the
+   digits reading left-to-right without dragging the name across the line. */
+.mono{font-family:var(--mono);unicode-bidi:isolate;}
 
 /* ── controls ── */
-button,.btn{font:500 13px/1 var(--sans);padding:9px 14px;border-radius:6px;
+/* 44px is the tap-target floor on every platform that publishes one. This
+   used to be a 31px-tall button — comfortable with a mouse, missed on a
+   thumb roughly one tap in five. */
+button,.btn{font:500 13px/1 var(--sans);padding:12px 16px;min-height:44px;border-radius:6px;
   border:1px solid var(--line);background:var(--panel);color:var(--ink);
   cursor:pointer;text-decoration:none;display:inline-block;}
 button:hover,.btn:hover{border-color:var(--ash);}
@@ -33,6 +39,10 @@ input,textarea{width:100%;background:#191919;color:var(--ink);
 input:focus,textarea:focus{outline:none;border-color:var(--brass);}
 textarea{resize:vertical;min-height:64px;}
 input[dir="rtl"],textarea[dir="rtl"]{font-family:'Amiri',var(--sans);font-size:15px;}
+/* iOS Safari zooms the whole page on focusing anything under 16px and never
+   zooms back out on blur. `.sel` repeats the input/textarea box for reasons
+   explained where it is declared below, so it needs the same floor. */
+@media(max-width:640px){input,textarea,.sel{font-size:16px;}}
 
 /* ── queue ── */
 .run{display:flex;gap:10px;margin-bottom:26px;}
@@ -82,12 +92,16 @@ section.blk > p.hint{color:var(--ash);font-size:12.5px;margin:0 0 14px;}
 .itemhead{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
 .itemhead b{font:500 11px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--ash);}
 .itemhead .sp{flex:1;}
-.x{background:none;border:none;color:var(--ash);padding:4px 7px;font-size:13px;}
+.x{background:none;border:none;color:var(--ash);min-width:44px;min-height:44px;
+  padding:4px 7px;font-size:13px;display:inline-flex;align-items:center;justify-content:center;}
 .x:hover{color:var(--warn);}
 
 .bar{position:sticky;bottom:0;background:rgba(26,26,26,.94);
   backdrop-filter:blur(8px);border-top:1px solid var(--line);
-  padding:14px 0;margin-top:26px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  /* `env()` is 0 on anything without a home-indicator inset, so this costs
+     nothing on a device that does not need it. */
+  padding:14px 0 calc(14px + env(safe-area-inset-bottom));
+  margin-top:26px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
 .bar .sp{flex:1;}
 .note{font-size:13px;padding:10px 13px;border-radius:6px;border:1px solid var(--line);}
 .note[data-k="err"]{color:var(--warn);border-color:#4A3229;}
@@ -139,7 +153,7 @@ section.blk > p.hint{color:var(--ash);font-size:12.5px;margin:0 0 14px;}
 .rec[data-on="true"]{border-color:var(--brass);background:rgba(205,196,179,.05);}
 .rec[data-full="true"]{opacity:.42;}
 .rec-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:9px;}
-.rec-pick{width:32px;height:32px;min-height:0;padding:0;border-radius:7px;flex:none;
+.rec-pick{width:44px;height:44px;padding:0;border-radius:7px;flex:none;
   font-size:15px;line-height:1;}
 .rec[data-on="true"] .rec-pick{background:var(--brass);border-color:var(--brass);color:var(--void);}
 .rec-name{display:block;font-size:15.5px;font-weight:600;}
@@ -189,3 +203,217 @@ a.btn.go{background:var(--go);border-color:var(--go);color:#10210F;}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;
   padding:16px 18px;}
 .panel .lab{margin:0;}
+
+/* ══ wave 2 — the console the plan asks for ════════════════════════════════
+   Today's cards, the client hub, the cast picker, the roster rows. Added
+   rather than folded into the blocks above so the diff is readable: nothing
+   here changes an existing rule. */
+
+/* A `<select>` inherited the browser's default box everywhere it appeared,
+   which is why five of them carried the same 200-character inline style. */
+.sel{width:100%;background:#191919;color:var(--ink);border:1px solid var(--line);
+  border-radius:6px;padding:9px 11px;font:400 14px/1.5 var(--sans);}
+.sel:focus{outline:none;border-color:var(--brass);}
+.run .sel{flex:0 1 210px;}
+@media(max-width:700px){.run{flex-wrap:wrap;}.run input,.run .sel{flex:1 1 100%;}}
+
+/* A horizontal group of controls. Wraps, because this is read on a phone. */
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;}
+.sub{border-top:1px solid var(--line);margin-top:14px;padding-top:14px;}
+
+/* ── today ── */
+.cards{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
+.card{border:1px solid var(--line);border-left:3px solid var(--line);
+  border-radius:8px;padding:14px 16px;background:var(--panel);}
+.card[data-hot="true"]{border-left-color:var(--warn);}
+.card-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.card-head .sp{flex:1;}
+.card-title{display:block;font-size:15.5px;font-weight:500;color:var(--ink);
+  text-decoration:none;line-height:1.4;}
+.card-title:hover{color:var(--brass);}
+.card-sub{margin:4px 0 0;color:var(--ash);font-size:13px;line-height:1.5;}
+.card-acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px;}
+.card-acts:empty{display:none;}
+.allclear{border:1px solid #2F4A2F;border-radius:8px;padding:22px 20px;
+  color:var(--go);font-size:15px;line-height:1.6;}
+
+/* ── the two-step send ── */
+.sbh{display:contents;}
+.sbh-body{flex:1 1 100%;margin-top:10px;}
+.sbh-pre{white-space:pre-wrap;background:#191919;border:1px solid var(--line);
+  border-radius:6px;padding:14px;margin:0 0 12px;text-align:start;
+  font:400 14px/1.7 var(--sans);}
+.sbh-pre[dir="rtl"]{font-family:'Amiri',var(--sans);font-size:15px;}
+.sbh-acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+
+/* ── the client hub ── */
+.next{border:1px solid var(--brass);border-radius:8px;padding:16px 18px;
+  background:rgba(205,196,179,.05);}
+.next[data-none]{border-color:var(--line);background:transparent;}
+.next-t{margin:0;font-size:16px;font-weight:500;line-height:1.4;}
+.next-s{margin:6px 0 0;color:var(--ash);font-size:13px;line-height:1.5;}
+.acts{display:flex;flex-direction:column;gap:14px;}
+.acts .panel .row:first-of-type{margin-top:10px;}
+.noteline{margin:0 0 14px;font-size:14px;line-height:1.6;}
+.noteline:last-child{margin-bottom:0;}
+.pill.stalled{color:var(--warn);border-color:#4A3229;}
+
+/* ── the timeline, shared by the client hub and the deal ── */
+.tline{list-style:none;margin:0;padding:0;}
+.tline li{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:9px 0;border-top:1px solid var(--line);opacity:.42;}
+.tline li:first-child{border-top:none;}
+.tline li[data-done="true"]{opacity:1;}
+.tline-l{min-width:96px;font-size:13.5px;font-weight:500;}
+.tline-d{font-size:12px;color:var(--ash);min-width:82px;}
+.tline-n{font-size:12px;color:var(--brass);}
+
+/* ── casting ── */
+.cast-pick{border-top:1px solid var(--line);margin-top:12px;padding-top:12px;}
+.cast-slot{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center;
+  margin-bottom:8px;}
+.cast-slot label{font:500 10.5px/1 var(--sans);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ash);}
+@media(max-width:560px){.cast-slot{grid-template-columns:1fr;gap:5px;}}
+
+/* Finding chips under a recommendation, and tag chips on the roster. */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px;}
+.chip{font:500 11px/1 var(--sans);padding:5px 9px;border-radius:999px;
+  border:1px solid var(--line);color:var(--dim);background:transparent;
+  cursor:pointer;}
+.chip[data-s="critical"]{color:var(--warn);border-color:#4A3229;}
+.chip[data-s="good"]{color:var(--go);border-color:#2F4A2F;}
+.chip[data-sug]{color:var(--ash);opacity:.7;}
+.chip[data-sug]:hover{opacity:1;}
+
+/* The bio, verbatim. Arabic almost always, so it gets the Arabic face. */
+.bio{font:400 15px/1.85 'Amiri',var(--sans);white-space:pre-wrap;
+  border-inline-start:2px solid var(--line);padding-inline-start:14px;
+  margin:0 0 16px;color:var(--dim);}
+
+/* ── bookings on a deal ── */
+.bookings{display:flex;flex-direction:column;gap:10px;margin-bottom:18px;}
+.bk{border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+.bk[data-gone="true"]{border-color:#4A3229;}
+.bk-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.bk-head .sp{flex:1;}
+.bk-head b{font-size:14.5px;}
+
+/* ── the roster ── */
+.roster{display:flex;flex-direction:column;gap:10px;}
+.tal{border:1px solid var(--line);border-radius:8px;padding:13px 15px;}
+.tal[data-off="true"]{opacity:.5;}
+.tal[data-fake="true"]{border-style:dashed;}
+.tal-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.tal-head .sp{flex:1;}
+.tal-head b{font-size:14.5px;}
+.tal-sub{margin:6px 0 0;color:var(--ash);font-size:12.5px;line-height:1.6;}
+
+/* ── the configuration panel ── */
+.cfgrows{list-style:none;margin:0;padding:0;}
+.cfgrows li{display:grid;grid-template-columns:200px 1fr;gap:14px;
+  padding:8px 0;border-top:1px solid var(--line);font-size:12.5px;color:var(--ash);}
+.cfgrows li:first-child{border-top:none;}
+.cfgrows li[data-sev="critical"] .mono{color:var(--warn);}
+.cfgrows li[data-sev="degraded"] .mono{color:#C9A227;}
+@media(max-width:600px){.cfgrows li{grid-template-columns:1fr;gap:3px;}}
+
+/* ── the sheet preview ──
+   `s.css` is imported by that page and wins the collisions it has with this
+   file, so this bar is styled off the console's variables explicitly. */
+.prevbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:12px 20px;background:#212121;border-bottom:1px solid #343434;
+  font:400 12px/1.4 Inter,system-ui,sans-serif;color:#8A857A;}
+
+/* ══ wave 3 — a phone, not a scaled-down desktop ═══════════════════════════
+   Everything below is additive, same discipline as wave 2: nothing above
+   this line changes meaning. */
+
+/* ── the tab strip ──
+   Title, four tabs and Sign out used to be six flex children wrapping into
+   three ragged lines under about 500px. The tabs (and Sign out, appended
+   after them) now live in their own scrolling track; the title stays put. */
+.top-tabs{display:flex;align-items:center;gap:10px;flex:1 1 auto;min-width:0;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+.top-tabs .btn{flex:none;white-space:nowrap;}
+.top-tabs form{flex:none;margin-inline-start:auto;}
+@media(max-width:480px){
+  .top h1{font-size:14.5px;letter-spacing:.10em;}
+}
+
+/* ── every table becomes a card list ──
+   A `<table>` inside `.scroll-x` is read by scrubbing sideways below 640px,
+   which is not reading, it is surveying. `data-l` supplies the label a
+   `<th>` would have given the same cell; `attr()` reads it back at the one
+   place the cell needs it. */
+@media(max-width:640px){
+  .scroll-x{overflow-x:visible;}
+  .scroll-x table{display:block;width:100%;}
+  .scroll-x thead{display:none;}
+  .scroll-x tbody{display:block;}
+  .scroll-x tr{display:grid;gap:2px;border:1px solid var(--line);border-radius:8px;
+    padding:12px;margin-bottom:10px;background:var(--panel);}
+  .scroll-x tr:hover td{background:none;}
+  .scroll-x td{display:grid;grid-template-columns:92px 1fr;gap:8px;
+    padding:5px 0;border-top:0;align-items:start;}
+  .scroll-x td::before{content:attr(data-l);color:var(--ash);
+    font:500 10.5px/1.5 var(--sans);letter-spacing:.08em;text-transform:uppercase;}
+}
+
+/* ── the bottom bar: one primary action, the rest behind "More" ──
+   `display:contents` on the wide layout makes the wrapper and its summary
+   invisible to layout without touching what is inside it, so the desktop bar
+   is exactly the flat row it always was — the collapse only exists <640px. */
+.bar-more{display:contents;}
+.bar-more summary{display:none;}
+.bar-more-body{display:contents;}
+@media(max-width:640px){
+  .bar-primary{order:-1;flex:1 1 100%;text-align:center;}
+  .bar-more{display:block;flex:1 1 100%;order:1;}
+  .bar-more summary{display:list-item;cursor:pointer;font:500 13px/1 var(--sans);
+    padding:12px 16px;min-height:44px;border-radius:6px;border:1px solid var(--line);
+    color:var(--ink);list-style:none;}
+  .bar-more summary::-webkit-details-marker{display:none;}
+  .bar-more summary::before{content:'More ▾';}
+  .bar-more[open] summary::before{content:'Less ▴';}
+  .bar-more-body{display:flex;flex-direction:column;gap:10px;margin-top:10px;}
+}
+
+/* ── `.facts` collapses to two numbers below the main column ──
+   Same `display:contents` trick: on the two-column layout the wrapper and
+   its summary vanish and the panel reads exactly as it always did. Under
+   900px, where `.cols` is already one column, it becomes a real disclosure
+   so the sidebar's wall of numbers does not sit between the record and the
+   action bar that matters more. */
+.facts-mob{display:contents;}
+.facts-mob summary{display:none;}
+.facts-body{display:contents;}
+@media(max-width:900px){
+  .facts{order:2;position:static;}
+  .facts-mob{display:block;}
+  .facts-mob summary{display:flex;justify-content:space-between;gap:12px;
+    cursor:pointer;list-style:none;padding:2px 0;}
+  .facts-mob summary::-webkit-details-marker{display:none;}
+  .facts-body{display:block;margin-top:14px;padding-top:14px;
+    border-top:1px solid var(--line);}
+}
+
+/* ── toasts ──
+   Fixed, top on a phone (a fixed footer already holds the action bar), moved
+   to the bottom-right once there is room for both. A success clears itself;
+   a failure sits until it is read or dismissed. */
+.toasts{position:fixed;left:0;right:0;top:0;z-index:1000;
+  display:flex;flex-direction:column;gap:8px;padding:12px;pointer-events:none;}
+.toast{pointer-events:auto;display:flex;align-items:flex-start;gap:10px;
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.4);
+  animation:toast-in .16s ease-out;}
+.toast[data-k="err"]{border-color:#4A3229;}
+.toast[data-k="ok"]{border-color:#2F4A2F;}
+.toast p{margin:0;flex:1;font-size:13.5px;line-height:1.5;}
+.toast-acts{display:flex;gap:8px;flex:none;}
+@keyframes toast-in{from{opacity:0;}to{opacity:1;}}
+@media(prefers-reduced-motion:reduce){.toast{animation:none;}}
+@media(min-width:641px){
+  .toasts{top:auto;bottom:0;left:auto;right:0;align-items:flex-end;max-width:380px;}
+}

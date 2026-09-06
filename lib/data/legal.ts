@@ -1,5 +1,4 @@
 import { CO } from './company';
-import type { Lang } from '@/lib/i18n';
 
 export const UPDATED = '2026-08-23';
 type B = { ar: string; en: string };

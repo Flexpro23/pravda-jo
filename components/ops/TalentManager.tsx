@@ -6,31 +6,103 @@ import {
   AVAILABILITY_LABEL, DISCIPLINE_RATE, rateIsSet,
   type Talent, type TalentDiscipline,
 } from '@/lib/data/deals';
+import { VERTICAL_LABEL } from '@/lib/data/concepts';
+import { explain, OFFLINE } from '@/lib/ops/errors';
+import { reauthAction, useToast } from '@/components/ops/Toast';
+
+/**
+ * The roster, editable.
+ *
+ * It could create somebody, reissue their code and deactivate them, and nothing
+ * else — so a phone number typed wrong on the day somebody joined stayed wrong,
+ * and `tags`, which `fitOf()` in the recommender uses to cast, could not be set
+ * anywhere in the product. Casting was fit-blind by omission rather than by
+ * design.
+ *
+ * `placeholder` gets a pill and a dimmed row for the same reason: half this
+ * roster is invented, to make the cast page look populated, and nothing on any
+ * screen said so.
+ */
 
 const DISCIPLINES = Object.keys(DISCIPLINE_RATE) as TalentDiscipline[];
+const TAG_SUGGESTIONS = [...Object.keys(VERTICAL_LABEL), ...DISCIPLINES];
 
-export default function TalentManager({ talent }: { talent: Talent[] }) {
+export type TalentWork = {
+  /** Days offered or accepted and not yet shot. */
+  booked: number;
+  /** Days shot. */
+  done: number;
+  /** What we owe them: shot and not paid. */
+  owedJOD: number;
+  /** The soonest day still ahead of them, for a "do not double-book" glance. */
+  next?: string;
+};
+
+const daysSince = (iso?: string) =>
+  (iso ? Math.floor((Date.now() - +new Date(iso)) / 86_400_000) : null);
+
+export default function TalentManager({
+  talent, work = {},
+}: { talent: Talent[]; work?: Record<string, TalentWork> }) {
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<{ k: 'ok' | 'err'; t: string } | null>(null);
+  const { push } = useToast();
   /** Shown once, right after issuing. Never fetched back — it is not stored. */
   const [code, setCode] = useState<{ who: string; code: string } | null>(null);
-  const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ nameEn: '', nameAr: '', discipline: 'videographer' as TalentDiscipline, phone: '', dayRateJOD: '' });
+  const [adding, setAdding] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [tagDraft, setTagDraft] = useState('');
+  const [f, setF] = useState({
+    nameEn: '', nameAr: '', discipline: 'videographer' as TalentDiscipline,
+    phone: '', dayRateJOD: '',
+  });
+  // The active toggle is the one thing on this page pressed often enough
+  // that waiting for a round trip is felt: this is applied the instant it is
+  // pressed and rolled back if the request that should confirm it fails.
+  const [activeOverride, setActiveOverride] = useState<Record<string, boolean>>({});
+  const isActive = (t: Talent) => activeOverride[t.id] ?? t.active;
   const router = useRouter();
 
-  const call = async (body: Record<string, unknown>) => {
-    setBusy(true); setMsg(null);
+  const call = async (
+    body: Record<string, unknown>, ok?: string, opts?: { rollback?: () => void },
+  ) => {
+    setBusy(true);
     try {
       const res = await fetch('/api/ops/talent', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify(body),
       });
       const j = await res.json();
-      if (!res.ok) { setMsg({ k: 'err', t: `Failed: ${j.error}` }); return null; }
+      if (!res.ok) {
+        opts?.rollback?.();
+        push({
+          kind: 'err', text: explain(j.error, j),
+          action: j.error === 'unauthenticated' ? reauthAction() : { label: 'Retry', onClick: () => call(body, ok, opts) },
+        });
+        return null;
+      }
+      if (ok) push({ kind: 'ok', text: ok });
       router.refresh();
       return j;
-    } catch { setMsg({ k: 'err', t: 'The request did not complete.' }); return null; }
+    } catch {
+      opts?.rollback?.();
+      push({ kind: 'err', text: OFFLINE, action: { label: 'Retry', onClick: () => call(body, ok, opts) } });
+      return null;
+    }
     finally { setBusy(false); }
+  };
+
+  /** One field, saved on blur. `saveTalent` merges, so nothing else moves. */
+  const patch = (t: Talent, body: Record<string, unknown>) =>
+    call({ action: 'update', id: t.id, ...body });
+
+  const toggleActive = (t: Talent) => {
+    const next = !isActive(t);
+    setActiveOverride((o) => ({ ...o, [t.id]: next }));
+    call(
+      { action: 'update', id: t.id, active: next },
+      next ? 'Reactivated.' : 'Deactivated.',
+      { rollback: () => setActiveOverride((o) => ({ ...o, [t.id]: !next })) },
+    );
   };
 
   const create = async () => {
@@ -38,7 +110,7 @@ export default function TalentManager({ talent }: { talent: Talent[] }) {
     if (j?.code) {
       setCode({ who: f.nameEn, code: j.code });
       setF({ nameEn: '', nameAr: '', discipline: 'videographer', phone: '', dayRateJOD: '' });
-      setOpen(false);
+      setAdding(false);
     }
   };
 
@@ -57,12 +129,12 @@ export default function TalentManager({ talent }: { talent: Talent[] }) {
       )}
 
       <div style={{ marginBottom: 22 }}>
-        <button className="go" onClick={() => setOpen((o) => !o)}>
-          {open ? 'Cancel' : 'Add someone'}
+        <button className="go" onClick={() => setAdding((o) => !o)}>
+          {adding ? 'Cancel' : 'Add someone'}
         </button>
       </div>
 
-      {open && (
+      {adding && (
         <section className="blk">
           <h2>New provider</h2>
           <div className="pair">
@@ -78,14 +150,8 @@ export default function TalentManager({ talent }: { talent: Talent[] }) {
           <div className="pair">
             <div>
               <label>Discipline</label>
-              <select
-                value={f.discipline}
-                onChange={(e) => setF({ ...f, discipline: e.target.value as TalentDiscipline })}
-                style={{
-                  width: '100%', background: '#191919', color: 'var(--ink)',
-                  border: '1px solid var(--line)', borderRadius: 6, padding: '9px 11px',
-                }}
-              >
+              <select className="sel" value={f.discipline}
+                      onChange={(e) => setF({ ...f, discipline: e.target.value as TalentDiscipline })}>
                 {DISCIPLINES.map((d) => (
                   <option key={d} value={d}>
                     {d}{rateIsSet(d) ? ` — ${DISCIPLINE_RATE[d]} JOD/day` : ' — no published rate'}
@@ -122,44 +188,212 @@ export default function TalentManager({ talent }: { talent: Talent[] }) {
         </section>
       )}
 
-      {msg && <p className="note" data-k={msg.k}>{msg.t}</p>}
-
       {talent.length === 0 ? (
-        <p className="muted">
-          Nobody on the roster. The cast page is showing worked examples until
-          there is.
-        </p>
+        <div className="panel">
+          <p style={{ marginTop: 0 }}>
+            Nobody on the roster yet.
+          </p>
+          <p className="hint" style={{ marginBottom: 0 }}>
+            This is the list the engine casts from. Every sheet picks its crew
+            out of it — a videographer for the shoot, models for the day, a
+            voice where a concept needs one — and every booking, every WhatsApp
+            offer and every invoice is addressed to somebody on it. Until there
+            is a real person here, the cast page shows worked examples and no
+            sheet can be approved.
+          </p>
+        </div>
       ) : (
-        <div className="scroll-x">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th><th>Discipline</th><th>Day rate</th>
-              <th>Availability</th><th>Phone</th><th />
-            </tr>
-          </thead>
-          <tbody>
-            {talent.map((t) => (
-              <tr key={t.id} style={t.active ? undefined : { opacity: 0.45 }}>
-                <td>{t.name.en}<span className="muted"> · {t.name.ar}</span></td>
-                <td className="muted">{t.discipline}</td>
-                <td className="mono">{t.dayRateJOD} JOD</td>
-                <td><span className="pill">{AVAILABILITY_LABEL[t.availability].en}</span></td>
-                <td className="mono muted">{t.phone || '—'}</td>
-                <td style={{ textAlign: 'right' }}>
-                  <button disabled={busy} onClick={async () => {
-                    const j = await call({ action: 'reissue', id: t.id });
-                    if (j?.code) setCode({ who: t.name.en, code: j.code });
-                  }}>Reissue code</button>
-                  <button disabled={busy} style={{ marginInlineStart: 8 }}
-                          onClick={() => call({ action: 'update', id: t.id, active: !t.active })}>
-                    {t.active ? 'Deactivate' : 'Reactivate'}
+        <div className="roster">
+          {talent.map((t) => {
+            const w = work[t.id];
+            const age = daysSince(t.availabilitySetAt);
+            const backBy = t.availableFrom;
+            const open = openId === t.id;
+            return (
+              <div className="tal" key={t.id} data-off={!isActive(t)} data-fake={!!t.placeholder}>
+                <div className="tal-head">
+                  <b dir="auto">{t.name.en}</b>
+                  <span className="muted" dir="auto">{t.name.ar}</span>
+                  <span className="mono muted">{t.discipline} · {t.dayRateJOD} JOD</span>
+                  {t.placeholder && (
+                    <span className="pill" data-s="warn">worked example — not bookable</span>
+                  )}
+                  {!isActive(t) && <span className="pill">inactive</span>}
+                  <span className="sp" />
+                  <span className="pill" data-s={t.availability === 'available' ? 'ready' : undefined}>
+                    {AVAILABILITY_LABEL[t.availability].en}
+                    {backBy && t.availability !== 'available' ? ` until ${backBy}` : ''}
+                  </span>
+                  <button type="button" onClick={() => setOpenId(open ? null : t.id)}>
+                    {open ? 'Close' : 'Edit'}
                   </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+
+                <p className="tal-sub">
+                  <span className="mono" dir="ltr">{t.phone || 'no number'}</span>
+                  {age !== null && (
+                    <span className={age > 30 ? 'todo' : undefined} suppressHydrationWarning>
+                      {' · '}said so {age === 0 ? 'today' : `${age} day${age === 1 ? '' : 's'} ago`}
+                    </span>
+                  )}
+                  {backBy && backBy < new Date().toISOString().slice(0, 10)
+                    && t.availability !== 'available' && (
+                    <span className="todo"> · that date has passed — they may be back</span>
+                  )}
+                  {w && (w.booked > 0 || w.done > 0 || w.owedJOD > 0) && (
+                    <>
+                      {' · '}{w.booked} day{w.booked === 1 ? '' : 's'} booked
+                      {' · '}{w.done} done
+                      {w.owedJOD > 0 && (
+                        <span className="todo"> · {w.owedJOD} JOD owed</span>
+                      )}
+                    </>
+                  )}
+                  {t.tags?.length ? <> · <span className="mono">{t.tags.join(' ')}</span></> : null}
+                </p>
+
+                {open && (
+                  <div className="sub">
+                    <div className="pair">
+                      <div>
+                        <label>Name — EN</label>
+                        <input defaultValue={t.name.en} dir="auto"
+                               onBlur={(e) => e.target.value !== t.name.en && patch(t, { nameEn: e.target.value })} />
+                      </div>
+                      <div>
+                        <label>Name — AR</label>
+                        <input defaultValue={t.name.ar} dir="rtl"
+                               onBlur={(e) => e.target.value !== t.name.ar && patch(t, { nameAr: e.target.value })} />
+                      </div>
+                    </div>
+                    <div className="pair">
+                      <div>
+                        <label>Discipline</label>
+                        <select className="sel" defaultValue={t.discipline}
+                                onChange={(e) => patch(t, { discipline: e.target.value })}>
+                          {DISCIPLINES.map((d) => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label>Day rate — JOD</label>
+                        <input type="number" min={0} defaultValue={t.dayRateJOD}
+                               onBlur={(e) => Number(e.target.value) !== t.dayRateJOD
+                                 && patch(t, { dayRateJOD: Number(e.target.value) })} />
+                      </div>
+                    </div>
+                    <div className="pair">
+                      <div>
+                        <label>Phone</label>
+                        <input defaultValue={t.phone} dir="ltr" className="mono"
+                               onBlur={(e) => e.target.value !== t.phone && patch(t, { phone: e.target.value })} />
+                      </div>
+                      <div>
+                        <label>Back from {AVAILABILITY_LABEL[t.availability].en.toLowerCase()} on</label>
+                        <input type="date" defaultValue={t.availableFrom ?? ''}
+                               onBlur={(e) => e.target.value !== (t.availableFrom ?? '')
+                                 && patch(t, { availableFrom: e.target.value })} />
+                      </div>
+                    </div>
+
+                    <label>What they are good for</label>
+                    <p className="hint" style={{ margin: '0 0 8px' }}>
+                      The recommender matches these against a concept&rsquo;s vertical
+                      and the words it uses about itself. A tag that matches
+                      nothing simply does not pull.
+                    </p>
+                    <div className="chips">
+                      {(t.tags ?? []).map((tag) => (
+                        <button type="button" className="chip" key={tag} disabled={busy}
+                                aria-label={`Remove ${tag}`}
+                                onClick={() => patch(t, { tags: (t.tags ?? []).filter((x) => x !== tag) })}>
+                          {tag} ×
+                        </button>
+                      ))}
+                    </div>
+                    <div className="row" style={{ marginTop: 8 }}>
+                      <input value={openId === t.id ? tagDraft : ''} placeholder="add a tag"
+                             style={{ maxWidth: 200 }}
+                             onChange={(e) => setTagDraft(e.target.value)}
+                             onKeyDown={(e) => {
+                               if (e.key !== 'Enter' || !tagDraft.trim()) return;
+                               patch(t, { tags: [...new Set([...(t.tags ?? []), tagDraft.trim()])] });
+                               setTagDraft('');
+                             }} />
+                    </div>
+                    <div className="chips" style={{ marginTop: 8 }}>
+                      {TAG_SUGGESTIONS.filter((s) => !(t.tags ?? []).includes(s)).map((s) => (
+                        <button type="button" className="chip" key={s} disabled={busy}
+                                data-sug onClick={() => patch(t, { tags: [...(t.tags ?? []), s] })}>
+                          + {s}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="pair" style={{ marginTop: 14 }}>
+                      <div>
+                        <label>Portfolio</label>
+                        <input defaultValue={t.portfolioUrl ?? ''} dir="ltr" className="mono"
+                               onBlur={(e) => e.target.value !== (t.portfolioUrl ?? '')
+                                 && patch(t, { portfolioUrl: e.target.value })} />
+                      </div>
+                      <div>
+                        <label>Name on a receipt</label>
+                        <input defaultValue={t.legalName ?? ''} dir="auto"
+                               onBlur={(e) => e.target.value !== (t.legalName ?? '')
+                                 && patch(t, { legalName: e.target.value })} />
+                      </div>
+                    </div>
+                    <div className="pair">
+                      <div>
+                        <label>ID or passport number</label>
+                        <input defaultValue={t.idNumber ?? ''} dir="ltr" className="mono"
+                               onBlur={(e) => e.target.value !== (t.idNumber ?? '')
+                                 && patch(t, { idNumber: e.target.value })} />
+                      </div>
+                    </div>
+                    <label>Anything else</label>
+                    <textarea rows={2} defaultValue={t.note ?? ''} dir="auto"
+                              onBlur={(e) => e.target.value !== (t.note ?? '') && patch(t, { note: e.target.value })} />
+
+                    <label className="cfgline" data-on={!!t.placeholder} style={{ marginTop: 12 }}>
+                      <input type="checkbox" defaultChecked={!!t.placeholder}
+                             onChange={(e) => patch(t, { placeholder: e.target.checked })} />
+                      <span>Worked example — not bookable, never cast on a real sheet</span>
+                    </label>
+
+                    {w && (
+                      <p className="hint" style={{ marginTop: 12 }}>
+                        {w.booked} day{w.booked === 1 ? '' : 's'} offered or accepted,{' '}
+                        {w.done} shot, <b>{w.owedJOD} JOD</b> owed.
+                        {w.next && <> Next day: <span className="mono">{w.next}</span>.</>}
+                        {' '}
+                        <a href={`/doc/invoice/${t.id}`} target="_blank" rel="noreferrer">
+                          Their invoice →
+                        </a>
+                      </p>
+                    )}
+
+                    <div className="row" style={{ marginTop: 14 }}>
+                      <button disabled={busy} onClick={() => toggleActive(t)}>
+                        {isActive(t) ? 'Deactivate' : 'Reactivate'}
+                      </button>
+                      <button disabled={busy} onClick={async () => {
+                        const j = await call({ action: 'reissue', id: t.id });
+                        if (j?.code) setCode({ who: t.name.en, code: j.code });
+                      }}>
+                        Reissue code — signs every device out
+                      </button>
+                      <button className="warn" disabled={busy}
+                              onClick={() => call({ action: 'signout', id: t.id },
+                                'Signed out everywhere. Their code still works.')}>
+                        Sign out everywhere
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </>

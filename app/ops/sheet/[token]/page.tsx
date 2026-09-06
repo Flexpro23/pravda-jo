@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { opsAuthed } from '@/lib/ops/auth';
 import { getSheet } from '@/lib/store/sheets';
 import { listTalent } from '@/lib/store/deals';
+import { clientForSheet } from '@/lib/store/clients';
 import SheetReview from '@/components/ops/SheetReview';
 import OpsNav from '@/components/ops/OpsNav';
 
@@ -10,21 +10,28 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export default async function SheetPage({ params }: { params: Promise<{ token: string }> }) {
-  if (!(await opsAuthed())) {
-    return <main className="gate"><h1>PRAVDA — operator</h1><p><Link className="btn" href="/ops">Sign in</Link></p></main>;
-  }
   const { token } = await params;
   const sheet = await getSheet(token);
   if (!sheet) notFound();
-  const roster = await listTalent().catch(() => []);
+  const [roster, client] = await Promise.all([
+    listTalent().catch(() => []),
+    clientForSheet(token).catch(() => null),
+  ]);
 
   return (
     <main className="wrap">
-      <OpsNav here="queue" />
-      <h2 style={{ margin: '0 0 6px', fontWeight: 500, fontSize: 21 }}>{sheet.clientName}</h2>
+      <OpsNav here="today" />
+      <div className="top" style={{ marginTop: 0, marginBottom: 14 }}>
+        <h1 dir="auto">{sheet.clientName}</h1>
+        <span className="sp" />
+        {client && <Link className="btn" href={`/ops/clients/${client.id}`}>The account →</Link>}
+      </div>
       <p className="muted" style={{ marginBottom: 22 }}>
         Read {sheet.signals.posts} posts{sheet.site ? ' and their website' : ''} ·{' '}
         {sheet.findings.findings.length} findings · five ideas selected from the library
+        {client?.contactPhone
+          ? <> · <span className="mono" dir="ltr">{client.contactPhone}</span></>
+          : <> · <span style={{ color: 'var(--warn)' }}>no number on the account</span></>}
       </p>
       <SheetReview sheet={sheet} roster={roster} />
     </main>
