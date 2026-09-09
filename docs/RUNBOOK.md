@@ -276,9 +276,20 @@ it is switched on, so `earliestVersionTime` only reaches a full seven days a
 week later; `gcloud firestore databases describe` reports where it currently
 stands.
 
-Delete protection on the database is still **off**, which is the one guard
-neither backups nor PITR provide: they both live inside the database being
-protected.
+Delete protection is the one guard neither backups nor PITR provide — they
+both live inside the database being protected — and it is **on** as of
+9 September 2026:
+
+```bash
+gcloud firestore databases update --database='(default)' --project pravda-jo --delete-protection
+```
+
+The consequence to know before you meet it: `(default)` can no longer be
+deleted, by anyone or any script, until someone passes
+`--no-delete-protection` first. That is the entire point, and it is also why a
+teardown you actually intend will look broken for a minute. It does not touch
+documents or collections — deleting a client record, dropping a collection or
+running the itest suite is unaffected.
 
 Run a restore drill once, into a **scratch project or a new database
 instance — never into `pravda-jo` directly** — and record here that it
