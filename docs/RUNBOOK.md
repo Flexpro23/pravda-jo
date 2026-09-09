@@ -259,10 +259,26 @@ gcloud firestore backups schedules create \
   --recurrence=daily --retention=14d
 ```
 
-**Production**: created 9 September 2026 — daily, fourteen days' retention.
-Point-in-time recovery is a separate switch and is currently **off**; it is
-the thing that answers "a bad write went out four hours ago", which a daily
-backup cannot.
+Point-in-time recovery is a separate switch, and the two answer different
+questions. A daily backup answers "restore yesterday"; PITR answers "put it
+back to 14:05, just before that write went out", to any microsecond inside its
+window. Without it the window is one hour, which is shorter than it takes to
+notice most mistakes.
+
+```bash
+gcloud firestore databases update --database='(default)' --project pravda-jo --enable-pitr
+```
+
+**Production**: daily backups created 9 September 2026, fourteen days'
+retention. PITR enabled the same day — the retention period went from one hour
+to seven days. Note that the recoverable window starts filling from the moment
+it is switched on, so `earliestVersionTime` only reaches a full seven days a
+week later; `gcloud firestore databases describe` reports where it currently
+stands.
+
+Delete protection on the database is still **off**, which is the one guard
+neither backups nor PITR provide: they both live inside the database being
+protected.
 
 Run a restore drill once, into a **scratch project or a new database
 instance — never into `pravda-jo` directly** — and record here that it
