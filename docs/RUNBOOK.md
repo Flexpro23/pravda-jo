@@ -291,13 +291,46 @@ teardown you actually intend will look broken for a minute. It does not touch
 documents or collections — deleting a client record, dropping a collection or
 running the itest suite is unaffected.
 
-Run a restore drill once, into a **scratch project or a new database
-instance — never into `pravda-jo` directly** — and record here that it
-worked: `<date>, <who>, <restored-into>, worked/did not work`.
+Run a restore drill, into a **scratch project or a new database instance —
+never into `pravda-jo` directly**, and record the result below. A backup
+nobody has ever restored is a belief, not a capability.
 
 ```
-2026-__-__  ____  scratch project “pravda-restore-test”  ⌷ worked
+2026-09-09  Claude/Ali  database restore-drill-20260910 (PITR clone)  ⌷ worked
 ```
+
+**How that drill was run**, since the daily backup had not taken its first
+snapshot yet and `databases restore` needs one. Point-in-time recovery gives
+the same proof by a different door: `databases clone` materialises the source
+as it stood at a chosen minute, into a brand-new database.
+
+```bash
+gcloud firestore databases clone --project pravda-jo \
+  --source-database='projects/pravda-jo/databases/(default)' \
+  --snapshot-time=2026-09-09T23:22:00Z \
+  --destination-database=restore-drill-20260910
+```
+
+All nineteen documents across `clients`, `sheets`, `ratelimit` and `talent`
+came back byte for byte: same ids, same fields, same values, verified by
+hashing each document's payload in both databases and diffing. The scratch
+database was deleted afterwards.
+
+Three things that will cost you time if you do not know them:
+
+- It took **22 minutes** for a database holding a few kilobytes. The cost is
+  almost entirely fixed, so do not read a long-looking clone as a stuck one.
+- `--snapshot-time` must be a whole minute, and no earlier than
+  `earliestVersionTime` from `databases describe`.
+- **The clone inherits delete protection from its source.** Cleaning up a
+  drill therefore needs `--no-delete-protection` on the *copy* first, and the
+  copy refuses to be deleted at all until the clone operation has finished
+  settling, which is a little after it reports `SUCCESSFUL`.
+
+Still untested: the `databases restore --source-backup` path, which needs a
+managed backup to exist. The first one is due within a day of the schedule
+being created on 9 September 2026; run the same comparison against it and add
+a second line above.
 
 ## 9. Staging backend
 
