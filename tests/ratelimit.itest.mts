@@ -16,6 +16,7 @@ process.env.GOOGLE_CLOUD_PROJECT = 'pravda-jo';
 
 const { hit, ipKey, clientIp } = await import('../lib/store/ratelimit.ts');
 const { store } = await import('../lib/store/firebase.ts');
+const { Timestamp } = await import('firebase-admin/firestore');
 
 const db = store();
 const PREFIX = process.env.FIRESTORE_COLLECTION_PREFIX ?? '';
@@ -75,9 +76,13 @@ console.log('\n══ expiresAt is written, for the Firestore TTL policy ══'
 const doc = await db.collection(`${PREFIX}ratelimit`).doc(`${BUCKET}:${windowIndex}`).get();
 const data = doc.data();
 ok('the window document exists', doc.exists);
-ok('  it carries an expiresAt', typeof data?.expiresAt === 'string', String(data?.expiresAt));
-ok('  expiresAt is a valid, future ISO date', (() => {
-  const t = data?.expiresAt ? +new Date(data.expiresAt) : NaN;
+// A TTL policy deletes only a timestamp-valued field and ignores every other
+// type without saying so, so the stored shape is the whole assertion here: a
+// string would pass any "it carries an expiry" test and still never be swept.
+ok('  it carries an expiresAt Timestamp, not a string',
+  data?.expiresAt instanceof Timestamp, JSON.stringify(data?.expiresAt));
+ok('  expiresAt is a valid, future date', (() => {
+  const t = data?.expiresAt instanceof Timestamp ? +data.expiresAt.toDate() : NaN;
   return Number.isFinite(t) && t > Date.now();
 })());
 ok('  count reached 6', data?.count === 6, String(data?.count));

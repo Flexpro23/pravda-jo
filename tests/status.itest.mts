@@ -21,6 +21,7 @@ process.env.GOOGLE_CLOUD_PROJECT = 'pravda-jo';
 const C = await import('../lib/store/clients.ts');
 const { STATUS_RANK } = await import('../lib/data/clients.ts');
 const { store } = await import('../lib/store/firebase.ts');
+const { Timestamp } = await import('firebase-admin/firestore');
 
 const db = store();
 const PREFIX = process.env.FIRESTORE_COLLECTION_PREFIX ?? '';
@@ -120,7 +121,36 @@ ok('setClientOutcome writes lost', lost?.status === 'lost', lost?.status);
 ok('  and keeps the reason in his own words',
   lost?.lostReason === 'Went with their cousin.', String(lost?.lostReason));
 
-await clients.doc(HANDLE).update({ expiresAt: new Date().toISOString() });
+// ── the retention clock, in the shape a TTL policy can actually see ─────────
+console.log('\n══ expiresAt is stored as a Timestamp, and read back as a string ══');
+
+await reset();
+const stamped = (await clients.doc(HANDLE).get()).get('expiresAt');
+// A TTL policy deletes only a timestamp-valued field; a string is passed over
+// in silence, so the 180-day promise would be kept by nobody.
+ok('openClient stamps a Timestamp on a fresh lead, not a string',
+  stamped instanceof Timestamp, JSON.stringify(stamped));
+
+const domainExpiry = (await C.getClient(HANDLE))?.expiresAt;
+ok('  and getClient hands the domain an ISO string',
+  typeof domainExpiry === 'string', String(domainExpiry));
+ok('  the two are the same instant',
+  domainExpiry === (stamped as InstanceType<typeof Timestamp>).toDate().toISOString());
+const daysOut = (+new Date(String(domainExpiry)) - Date.now()) / 86_400_000;
+ok('  and the retention window is still 180 days', daysOut > 179 && daysOut < 181,
+  String(daysOut));
+
+// The shape the deployed build wrote, which production still holds: it must
+// keep reading correctly, backfill or no backfill.
+const legacyIso = new Date(Date.now() + 86_400_000).toISOString();
+await clients.doc(HANDLE).update({ expiresAt: legacyIso });
+ok('  a legacy string expiry still reads back as an ISO string',
+  (await C.getClient(HANDLE))?.expiresAt === legacyIso,
+  String((await C.getClient(HANDLE))?.expiresAt));
+ok('  and the list queries normalise it too',
+  (await C.listClients(200)).find((c) => c.id === HANDLE)?.expiresAt === legacyIso);
+
+await reset('sent');
 const won = await C.setClientOutcome(HANDLE, 'won');
 ok('setClientOutcome writes won', won?.status === 'won', won?.status);
 ok('  clears the loss reason', !won?.lostReason, String(won?.lostReason));

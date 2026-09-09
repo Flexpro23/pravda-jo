@@ -2,6 +2,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { store } from '@/lib/store/firebase';
 import { normaliseHandle } from '@/lib/meta/discovery';
 import { hit } from '@/lib/store/ratelimit';
+import { ttlWrite, withTtl } from '@/lib/store/ttl';
 import { ENGINE_STATUS, STATUS_RANK } from '@/lib/data/clients';
 import type {
   Client, ClientNote, ClientStatus, NotifyChannel, ReadFailure,
@@ -22,7 +23,15 @@ const now = () => new Date().toISOString();
  * the field entirely (`setClientOutcome`), so a real client's history is never
  * subject to this policy once the relationship exists. The TTL policy itself
  * is an owner action — `gcloud firestore fields ttls update expiresAt
- * --collection-group=clients` — documented in docs/RUNBOOK.md.
+ * --collection-group=clients --enable-ttl` — documented in docs/RUNBOOK.md.
+ *
+ * The value is an ISO string on `Client` and a Firestore `Timestamp` in the
+ * document. A TTL policy deletes only what it finds in a timestamp field and
+ * says nothing at all about a field of any other type, so a string there is a
+ * 180-day promise that never comes due; but `Client` lives in `lib/data`,
+ * which client components import, and `firebase-admin` must never reach a
+ * browser bundle. `lib/store/ttl.ts` is where the two shapes meet, and this
+ * file converts on every read and every write of the field.
  */
 const RETENTION_DAYS = 180;
 const retentionExpiry = () => new Date(Date.now() + RETENTION_DAYS * 86_400_000).toISOString();
@@ -43,7 +52,7 @@ export async function getClient(id: string): Promise<Client | null> {
   const clean = idFor(id);
   if (!clean) return null;
   const d = await store().collection(CLIENTS).doc(clean).get();
-  return d.exists ? (d.data() as Client) : null;
+  return d.exists ? withTtl<Client>(d.data()!) : null;
 }
 
 /**
@@ -92,7 +101,7 @@ export async function openClient(input: {
   // sheetTokens with an empty array.
   const result = await store().runTransaction(async (tx) => {
     const snap = await tx.get(ref);
-    const prior = snap.exists ? (snap.data() as Client) : null;
+    const prior = snap.exists ? withTtl<Client>(snap.data()!) : null;
 
     // A client already moved along the pipeline is not dragged back to `new` by
     // someone re-submitting the form. Only an account that has never got past a
@@ -158,7 +167,9 @@ export async function openClient(input: {
       createdAt: prior?.createdAt ?? now(),
       updatedAt: now(),
     };
-    tx.set(ref, client, { merge: true });
+    // The expiry is the one field that goes down as something other than what
+    // the type says, because only a timestamp is a thing the TTL sweep can see.
+    tx.set(ref, { ...client, expiresAt: ttlWrite(client.expiresAt) }, { merge: true });
     return { client, created: !prior, refused };
   });
 
@@ -219,7 +230,7 @@ export async function advanceClient(
   return store().runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists) return null;
-    const prior = snap.data() as Client;
+    const prior = withTtl<Client>(snap.data()!);
 
     // Refused, not failed: the account is simply further along than the engine
     // is, and the caller carries on filing whatever it produced.
@@ -280,14 +291,14 @@ export async function claimForRead(
   // returning client that needs no read at all would burn an hour's budget.
   const peek = await ref.get();
   if (!peek.exists) return null;
-  if (!claimable(peek.data() as Client)) return null;
+  if (!claimable(withTtl<Client>(peek.data()!))) return null;
 
   // Fail closed. This ceiling sits on Meta spend rather than on a request, so
   // a store outage that let it through would not inconvenience one visitor —
   // it would remove the only bound on the bill.
   const ceiling = await hit('reads:global', 40, 60 * 60_000, { failClosed: true });
   if (!ceiling.ok) {
-    await ref.update({ queuedAt: (peek.data() as Client).queuedAt ?? now(), updatedAt: now() })
+    await ref.update({ queuedAt: withTtl<Client>(peek.data()!).queuedAt ?? now(), updatedAt: now() })
       .catch(() => {});
     console.log(JSON.stringify({ msg: 'read.deferred', clientId: clean, retryAfterSec: ceiling.retryAfterSec }));
     return null;
@@ -296,7 +307,7 @@ export async function claimForRead(
   return store().runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists) return null;
-    const prior = snap.data() as Client;
+    const prior = withTtl<Client>(snap.data()!);
     // Checked again inside the transaction, and this is the check that counts:
     // the peek above is an optimisation, this is the mutual exclusion.
     if (!claimable(prior)) return null;
@@ -339,7 +350,7 @@ export async function resumeAfterRead(
   const snap = await ref.get();
   if (!snap.exists) return null;
 
-  const resume = (snap.data() as Client).resumeStatus;
+  const resume = withTtl<Client>(snap.data()!).resumeStatus;
   if (!resume) return null;
   if (STATUS_RANK[resume] <= 2) {
     await ref.update({ resumeStatus: FieldValue.delete(), updatedAt: now() });
@@ -385,7 +396,7 @@ export async function enqueueForRead(id: string): Promise<void> {
   const ref = store().collection(CLIENTS).doc(clean);
   const snap = await ref.get();
   if (!snap.exists) return;
-  const c = snap.data() as Client;
+  const c = withTtl<Client>(snap.data()!);
   if (c.queuedAt) return;
   await ref.update({ queuedAt: now(), updatedAt: now() }).catch(() => {});
 }
@@ -406,7 +417,7 @@ export async function attachToClient(
   await store().runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists) return;
-    const c = snap.data() as Client;
+    const c = withTtl<Client>(snap.data()!);
     // Only sheets attach now. The long-form teardown pipeline is retired, and
     // `teardownTokens` survives on the type as a read-only relic so documents
     // written before the retirement still parse — nothing writes it again.
@@ -459,7 +470,7 @@ export async function addClientNote(
   return store().runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists) return null;
-    const c = snap.data() as Client;
+    const c = withTtl<Client>(snap.data()!);
     const notes = [...(c.notes ?? []), { at: now(), by, text: body }];
     tx.update(ref, { notes, updatedAt: now() });
     return { ...c, notes };
@@ -534,7 +545,7 @@ export async function linkDeal(id: string, dealId: string): Promise<void> {
 export async function listClients(limit = 200): Promise<Client[]> {
   const snap = await store().collection(CLIENTS)
     .orderBy('updatedAt', 'desc').limit(limit).get();
-  return snap.docs.map((d) => d.data() as Client);
+  return snap.docs.map((d) => withTtl<Client>(d.data()));
 }
 
 /**
@@ -548,7 +559,7 @@ export async function listClients(limit = 200): Promise<Client[]> {
 export async function queuedForRead(limit = 3): Promise<Client[]> {
   const snap = await store().collection(CLIENTS)
     .where('status', '==', 'new').orderBy('queuedAt', 'asc').limit(limit).get();
-  return snap.docs.map((d) => d.data() as Client);
+  return snap.docs.map((d) => withTtl<Client>(d.data()));
 }
 
 /**
@@ -562,7 +573,7 @@ export async function queuedForRead(limit = 3): Promise<Client[]> {
 export async function staleUnqueued(limit = 3): Promise<Client[]> {
   const snap = await store().collection(CLIENTS)
     .where('status', '==', 'new').limit(limit).get();
-  return snap.docs.map((d) => d.data() as Client).filter((c) => !c.queuedAt);
+  return snap.docs.map((d) => withTtl<Client>(d.data())).filter((c) => !c.queuedAt);
 }
 
 /**
@@ -575,7 +586,7 @@ export async function staleUnqueued(limit = 3): Promise<Client[]> {
 export async function expiredLeases(limit = 3, at = Date.now()): Promise<Client[]> {
   const snap = await store().collection(CLIENTS)
     .where('status', '==', 'reading').orderBy('readLeaseUntil', 'asc').limit(limit).get();
-  return snap.docs.map((d) => d.data() as Client)
+  return snap.docs.map((d) => withTtl<Client>(d.data()))
     .filter((c) => !c.readLeaseUntil || +new Date(c.readLeaseUntil) <= at);
 }
 
@@ -586,5 +597,5 @@ export const currentSheetOf = (c: Client) => c.sheetTokens[0] ?? null;
 export async function clientForSheet(token: string): Promise<Client | null> {
   const snap = await store().collection(CLIENTS)
     .where('sheetTokens', 'array-contains', token).limit(1).get();
-  return snap.empty ? null : (snap.docs[0].data() as Client);
+  return snap.empty ? null : withTtl<Client>(snap.docs[0].data());
 }

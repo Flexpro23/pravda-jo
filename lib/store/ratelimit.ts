@@ -19,16 +19,24 @@
  * hash with a server secret means the mapping cannot be rebuilt from outside
  * the deployment even by someone who reads the collection directly.
  *
+ * `expiresAt` is written as a Firestore `Timestamp` and not as the ISO string
+ * every other date here is, because a TTL policy only ever deletes a document
+ * whose TTL field holds a timestamp — anything else is passed over in silence,
+ * so a window document written with a string would be swept by nothing and
+ * this collection would grow without limit under exactly the traffic it exists
+ * to survive. `ttlWrite` is where that conversion happens.
+ *
  * Owner action this file cannot perform: a Firestore TTL policy is not
  * expressible in firestore.indexes.json. Every document below is written
  * with a correct `expiresAt`, but nothing actually deletes an expired one
  * until this runs once, after the first deploy:
- *   gcloud firestore fields ttls update expiresAt --collection-group=ratelimit
+ *   gcloud firestore fields ttls update expiresAt --collection-group=ratelimit --enable-ttl
  */
 
 import { createHash } from 'node:crypto';
 import { FieldValue } from 'firebase-admin/firestore';
 import { store } from '@/lib/store/firebase';
+import { ttlWrite } from '@/lib/store/ttl';
 
 const P = process.env.FIRESTORE_COLLECTION_PREFIX ?? '';
 const RATELIMIT = `${P}ratelimit`;
@@ -82,7 +90,7 @@ export async function hit(
     const ref = store().collection(RATELIMIT).doc(`${bucket}:${windowIndex}`);
     // A full window past this window's own end, so the TTL sweep never races
     // the last legitimate read of a window that just closed.
-    const expiresAt = new Date(windowEnd + windowMs).toISOString();
+    const expiresAt = ttlWrite(new Date(windowEnd + windowMs).toISOString());
     await ref.set({ count: FieldValue.increment(1), expiresAt }, { merge: true });
 
     const snap = await ref.get();

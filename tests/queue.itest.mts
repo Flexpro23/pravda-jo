@@ -32,6 +32,7 @@ process.env.GOOGLE_CLOUD_PROJECT = 'pravda-jo';
 const C = await import('../lib/store/clients.ts');
 const { outOfAttempts, leaseExpired, MAX_READ_ATTEMPTS } = await import('../lib/data/clients.ts');
 const { store } = await import('../lib/store/firebase.ts');
+const { Timestamp } = await import('firebase-admin/firestore');
 
 const db = store();
 const PREFIX = process.env.FIRESTORE_COLLECTION_PREFIX ?? '';
@@ -159,7 +160,10 @@ const windowIndex = Math.floor(Date.now() / CEILING_WINDOW_MS);
 const ceilingDoc = db.collection(`${PREFIX}ratelimit`).doc(`reads:global:${windowIndex}`);
 await ceilingDoc.set({
   count: 40,
-  expiresAt: new Date(Date.now() + 2 * CEILING_WINDOW_MS).toISOString(),
+  // A Timestamp, the shape `hit` itself writes — a TTL policy only ever
+  // deletes a timestamp-valued field, so a fixture written as a string would
+  // be a window document that outlives every real one.
+  expiresAt: Timestamp.fromMillis(Date.now() + 2 * CEILING_WINDOW_MS),
 });
 
 const fresh = await open(HANDLES[3]);

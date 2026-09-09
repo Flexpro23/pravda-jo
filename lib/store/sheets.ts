@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { FieldValue } from 'firebase-admin/firestore';
 import { store } from '@/lib/store/firebase';
+import { ttlWrite, withTtl } from '@/lib/store/ttl';
 import type { Signals } from '@/lib/teardown/signals';
 import type { SiteRead } from '@/lib/meta/website';
 import type { Findings, Web } from '@/lib/teardown/findings';
@@ -153,7 +154,16 @@ export type Sheet = {
    * given an address to, or a business that became a customer, is no longer an
    * unconverted enquiry and the retention clock does not apply to it. A
    * Firestore TTL policy on this field is what actually does the deleting —
-   * `gcloud firestore fields ttls update expiresAt --collection-group=sheets`.
+   * `gcloud firestore fields ttls update expiresAt --collection-group=sheets
+   * --enable-ttl`.
+   *
+   * An ISO string here and a Firestore `Timestamp` in the document. The policy
+   * deletes only what it finds in a timestamp field and ignores every other
+   * type without complaining, so a string in Firestore is a retention promise
+   * that quietly never happens; but the engine composes this value in
+   * `lib/teardown/run.ts`, which must not import `firebase-admin`, so the type
+   * stays a string and `lib/store/ttl.ts` converts at every read and write in
+   * this file.
    */
   expiresAt?: string;
 
@@ -182,14 +192,20 @@ export const mintToken = () => randomBytes(12).toString('base64url');
 const clean = (t: string) => /^[A-Za-z0-9_-]{10,64}$/.test(t);
 
 export async function saveSheet(s: Sheet) {
-  await store().collection(SHEETS).doc(s.token)
-    .set({ ...s, updatedAt: new Date().toISOString() }, { merge: true });
+  await store().collection(SHEETS).doc(s.token).set({
+    ...s,
+    // The whole sheet goes back, so the expiry goes back with it — as a
+    // timestamp, or a round trip through here would silently downgrade a
+    // TTL-eligible field to a string the policy ignores.
+    expiresAt: ttlWrite(s.expiresAt),
+    updatedAt: new Date().toISOString(),
+  }, { merge: true });
 }
 
 export async function getSheet(token: string): Promise<Sheet | null> {
   if (!clean(token)) return null;
   const d = await store().collection(SHEETS).doc(token).get();
-  return d.exists ? (d.data() as Sheet) : null;
+  return d.exists ? withTtl<Sheet>(d.data()!) : null;
 }
 
 /**
@@ -204,7 +220,7 @@ export async function getShared(shareToken: string): Promise<Sheet | null> {
   const snap = await store().collection(SHEETS)
     .where('shareToken', '==', shareToken).limit(1).get();
   if (snap.empty) return null;
-  const s = snap.docs[0].data() as Sheet;
+  const s = withTtl<Sheet>(snap.docs[0].data());
   return s.status === 'approved' ? s : null;
 }
 
@@ -227,7 +243,7 @@ export async function recordOpen(shareToken: string): Promise<void> {
     .where('shareToken', '==', shareToken).limit(1).get();
   if (snap.empty) return;
   const doc = snap.docs[0];
-  const s = doc.data() as Sheet;
+  const s = withTtl<Sheet>(doc.data());
   if (s.status !== 'approved') return;
 
   const now = new Date().toISOString();
@@ -244,7 +260,7 @@ export async function recordOpen(shareToken: string): Promise<void> {
 export async function listSheets(limit = 60): Promise<Sheet[]> {
   const snap = await store().collection(SHEETS)
     .orderBy('updatedAt', 'desc').limit(limit).get();
-  return snap.docs.map((d) => d.data() as Sheet);
+  return snap.docs.map((d) => withTtl<Sheet>(d.data()));
 }
 
 /**

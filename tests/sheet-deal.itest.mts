@@ -18,6 +18,7 @@ const S = await import('../lib/store/sheets.ts');
 const D = await import('../lib/store/deals.ts');
 const V = await import('../lib/store/convert.ts');
 const { store } = await import('../lib/store/firebase.ts');
+const { Timestamp } = await import('firebase-admin/firestore');
 
 const db = store();
 const PREFIX = process.env.FIRESTORE_COLLECTION_PREFIX ?? '';
@@ -238,8 +239,29 @@ ok('and with the roster whole again it opens the same deal',
 // ── the retention clock stops when the sheet stops being a draft ───────────
 console.log('\n══ an approved, won sheet is not an unconverted draft ══');
 
-await C('sheets').doc(TOKEN).update({ expiresAt: new Date().toISOString() });
+// Written the way the deployed build wrote it, because production holds live
+// documents in that shape and they have to keep reading correctly until the
+// backfill has been over them — and after it, because a restored backup can
+// put them back.
+const legacyIso = new Date().toISOString();
+await C('sheets').doc(TOKEN).update({ expiresAt: legacyIso });
 ok('a sheet can carry an expiry', !!(await S.getSheet(TOKEN))?.expiresAt);
+ok('  a legacy string expiry still reads back as an ISO string',
+  (await S.getSheet(TOKEN))?.expiresAt === legacyIso,
+  String((await S.getSheet(TOKEN))?.expiresAt));
+
+// And what the store itself writes is a Timestamp, because a TTL policy
+// deletes only a timestamp-valued field and passes silently over every other
+// type — a string here is a retention promise that never comes due.
+const composed = { ...(await S.getSheet(TOKEN))!, expiresAt: legacyIso };
+await S.saveSheet(composed);
+const raw = (await C('sheets').doc(TOKEN).get()).get('expiresAt');
+ok('  and saveSheet stores it as a Timestamp, not a string',
+  raw instanceof Timestamp, JSON.stringify(raw));
+ok('  which reads back through getSheet as the same ISO string',
+  (await S.getSheet(TOKEN))?.expiresAt === legacyIso,
+  String((await S.getSheet(TOKEN))?.expiresAt));
+
 await S.clearSheetExpiry(TOKEN);
 ok('  and clearing it removes the field rather than nulling it',
   (await S.getSheet(TOKEN))?.expiresAt === undefined,

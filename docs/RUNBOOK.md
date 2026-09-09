@@ -84,18 +84,42 @@ it was deleted with the rest of the long-form report pipeline.
 
 ## 5. Create the Cloud Scheduler job for the read sweeper
 
-One-time, per environment:
+One-time, per environment. The Cloud Scheduler API is not on by default in a
+Firebase project, so enable it first or the create fails with `SERVICE_DISABLED`:
 
 ```bash
+gcloud services enable cloudscheduler.googleapis.com --project pravda-jo
+
+S=$(gcloud secrets versions access latest --secret=CRON_SECRET --project pravda-jo)
 gcloud scheduler jobs create http pravda-read-queue \
+  --project pravda-jo \
+  --location europe-west4 \
   --schedule="* * * * *" \
+  --time-zone="Asia/Amman" \
   --uri="$SITE/api/cron/read" \
   --http-method=GET \
-  --headers="x-pravda-cron=<CRON_SECRET value>"
+  --headers="x-pravda-cron=$S" \
+  --attempt-deadline=300s \
+  --max-retry-attempts=0
 ```
+
+Reading the secret into a shell variable keeps it out of the terminal history
+and off the screen; it still lands in the job's own configuration, where any
+project admin can read it, which is the same trust boundary Secret Manager
+already draws.
+
+`--location europe-west4` puts the job in the region the backend runs in.
+`--attempt-deadline=300s` is well past the sub-second this endpoint takes when
+the queue is empty and still leaves room for the three reads it will do when
+it is not. Retries are off deliberately: the job runs again in sixty seconds
+anyway, the work is claim-leased so a repeat is harmless rather than useful,
+and a retry backlog on a per-minute schedule only stacks.
 
 Without this job, `/api/cron/read` is never called and the sweeper is dead
 code — the read guarantee (D8) depends entirely on this job existing.
+
+**Production**: created 9 September 2026, `pravda-read-queue` in
+`europe-west4`, firing every minute and returning 200.
 
 ## 6. Create a secret before you declare it
 
@@ -152,9 +176,9 @@ a TTL policy is enabled — Firestore does not delete anything on its own until
 you run this, once, per collection:
 
 ```bash
-gcloud firestore fields ttls update expiresAt --collection-group=ratelimit
-gcloud firestore fields ttls update expiresAt --collection-group=clients
-gcloud firestore fields ttls update expiresAt --collection-group=sheets
+gcloud firestore fields ttls update expiresAt --collection-group=ratelimit --enable-ttl
+gcloud firestore fields ttls update expiresAt --collection-group=clients --enable-ttl
+gcloud firestore fields ttls update expiresAt --collection-group=sheets --enable-ttl
 ```
 
 - `ratelimit.expiresAt` — every rate-limit window document (`lib/store/ratelimit.ts`).
@@ -164,16 +188,55 @@ gcloud firestore fields ttls update expiresAt --collection-group=sheets
 - `sheets.expiresAt` — the same lifecycle, on the sheet side (H1's
   `lib/store/sheets.ts`/`convert.ts`).
 
+**The field has to be a `Timestamp`.** A TTL policy deletes a document only
+when its TTL field holds a timestamp; a field holding a string, a number or
+`null` is not an error and not a warning — the sweep passes the document over
+in silence and it lives forever. So a policy enabled over a string-valued
+`expiresAt` looks healthy in the console and deletes nothing, which is the
+worst of both: a retention promise on paper and an unbounded collection in
+fact. The store modules write the field through `lib/store/ttl.ts` and read it
+back as an ISO string, so nothing above this line has to think about it.
+
+Documents written before that landed carry the old string shape, and a policy
+will ignore every one of them. Correct them once, before or after enabling the
+policies — the order does not matter, since a policy only ever acts on what it
+can see:
+
+```bash
+node scripts/backfill-ttl-timestamps.mjs           # dry run: counts, writes nothing
+node scripts/backfill-ttl-timestamps.mjs --apply   # rewrites the strings
+```
+
+It honours `FIRESTORE_COLLECTION_PREFIX` and never touches a document whose
+`expiresAt` is absent — absence is how an approved sheet and a won client say
+the retention clock has stopped, and stamping one would put a deletion date on
+a customer's record.
+
 Firestore's TTL sweep is best-effort and can take up to 24 hours after a
 document's `expiresAt` passes — verify the policy is *enabled* via the
 Firestore console's TTL policy status page rather than waiting on a real
-document to prove it works.
+document to prove it works. A policy reports `CREATING` for a few minutes
+before it reaches `ACTIVE`.
+
+**Production**: the three policies were enabled on 9 September 2026 and are
+`ACTIVE`.
 
 ## 8. Managed daily backups + a restore drill
 
 Firestore → Backups (console) → enable **managed daily backups** on the
 default database. No Cloud Function, no Cloud Scheduler — a native feature
-with its own retention window.
+with its own retention window. The CLI does it too, which is repeatable:
+
+```bash
+gcloud firestore backups schedules create \
+  --database='(default)' --project pravda-jo \
+  --recurrence=daily --retention=14d
+```
+
+**Production**: created 9 September 2026 — daily, fourteen days' retention.
+Point-in-time recovery is a separate switch and is currently **off**; it is
+the thing that answers "a bad write went out four hours ago", which a daily
+backup cannot.
 
 Run a restore drill once, into a **scratch project or a new database
 instance — never into `pravda-jo` directly** — and record here that it
