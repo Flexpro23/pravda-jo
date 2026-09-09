@@ -67,6 +67,14 @@ env:
     secret: TALENT_SESSION_SECRET
     availability: [RUNTIME]
 
+  # Khaled's own number, and so the destination of every new-lead notice until
+  # a bot or an approved template exists. Deliberately not the studio's
+  # published line, which is answered by whoever is nearest. A personal number
+  # is a secret even though it only ever ends up in a wa.me link.
+  - variable: OPERATOR_PHONE
+    secret: OPERATOR_PHONE
+    availability: [RUNTIME]
+
   # Pinned deliberately: a Graph version bump can change field availability on
   # the business_discovery edge, so it moves when we have tested it moving.
   - variable: META_API_VERSION
@@ -74,14 +82,7 @@ env:
     availability: [RUNTIME]
 
 # ── Not configured yet. Create the secret, then uncomment its stanza. ────────
-#
-# Khaled's own number, for the wa.me fallback link. A personal number is a
-# secret even though it is only ever used to build a link.
-#   firebase apphosting:secrets:set OPERATOR_PHONE
-#  - variable: OPERATOR_PHONE
-#    secret: OPERATOR_PHONE
-#    availability: [RUNTIME]
-#
+##
 # The recommended operator channel: no 24-hour window, no template approval.
 #   firebase apphosting:secrets:set TELEGRAM_BOT_TOKEN
 #  - variable: TELEGRAM_BOT_TOKEN

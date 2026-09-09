@@ -161,6 +161,32 @@ backend access once:
 firebase apphosting:secrets:grantaccess SESSION_SECRET --backend my-web-app --location europe-west4
 ```
 
+**If the Firebase CLI refuses, check which account it is on before reauthenticating.**
+It reports an expired credential and tells you to run `firebase login --reauth`,
+which re-authenticates *the account it already has*. On 10 September 2026 that
+account was one with no access to `pravda-jo` at all, so the reauth would only
+have traded an authentication error for a permission error. `firebase
+login:list` says who it thinks you are; the project's owner account is the one
+that matters.
+
+gcloud is the way through when that happens, since it keeps its own separate
+sign-in. `firebase apphosting:secrets:set` is a secret plus three IAM bindings,
+and nothing more:
+
+```bash
+printf '%s' "$VALUE" | gcloud secrets create OPERATOR_PHONE --project pravda-jo \
+  --replication-policy=automatic --labels=firebase-managed=apphosting --data-file=-
+```
+
+then `gcloud secrets add-iam-policy-binding` granting
+`roles/secretmanager.secretAccessor` and `roles/secretmanager.viewer` to
+`firebase-app-hosting-compute@pravda-jo.iam.gserviceaccount.com`, and
+`roles/secretmanager.secretVersionManager` to
+`service-532534291763@gcp-sa-firebaseapphosting.iam.gserviceaccount.com`.
+Compare against an existing secret with `gcloud secrets get-iam-policy
+CRON_SECRET` before trusting it — a secret the backend cannot read fails the
+rollout exactly as a missing one does.
+
 (Non-`secret:` variables — `TELEGRAM_CHAT_ID`, `WHATSAPP_TEMPLATE`,
 `NEXT_PUBLIC_*`, `META_API_VERSION` — are plain `value:` entries and need no
 Secret Manager setup; edit the file directly.)
