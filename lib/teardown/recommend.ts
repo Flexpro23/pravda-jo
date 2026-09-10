@@ -1,7 +1,7 @@
 import { CONCEPTS, VIDEO_JOD_PER, type ConceptSource, type Shape, type Vertical } from '@/lib/data/concepts';
 import type { Findings } from '@/lib/teardown/findings';
 import type { Talent } from '@/lib/data/deals';
-import { arNum } from '@/lib/format/num';
+import { arPieces, enPieces } from '@/lib/format/num';
 
 /**
  * Five ideas for this business, chosen from the library and never invented.
@@ -272,7 +272,8 @@ export function recommend(
     const videos = c.economics.originations;
     const deciding = rarest(answers, freq, used);
     if (deciding) used.add(deciding);
-    const because = reason(deciding, c, genericUsed);
+    const because = reason(deciding, c, genericUsed,
+      !!vertical && c.verticals.includes(vertical));
     if (!deciding && !genericUsed) genericUsed = true;
     return {
       conceptN: c.n,
@@ -473,19 +474,43 @@ const PLAIN: Record<Shape, B> = {
   },
 };
 
-function reason(deciding: string | undefined, c: ConceptSource, genericUsed: boolean): B {
+/**
+ * Why this idea, in one line the client reads.
+ *
+ * `fitsTrade` is passed rather than assumed. The last branch used to be an
+ * unconditional "Fits their trade", reached whenever a concept had no finding
+ * left to claim and the plain line was already spent — so a concept that the
+ * library never tagged for this vertical still told the client it suited their
+ * trade. It surfaced on a real read: a loyalty platform set to `b2b` was shown
+ * a real-estate concept, tagged `property` and nothing else, over the sentence
+ * "Fits their trade". That is an invented justification on the one page a
+ * client actually reads, which is the thing this engine may never do.
+ */
+function reason(
+  deciding: string | undefined, c: ConceptSource, genericUsed: boolean, fitsTrade: boolean,
+): B {
   const top = deciding ? WHY[deciding] : undefined;
   if (top) return top;
   if (genericUsed) {
     const p = PLAIN[c.shape];
     return {
-      ar: `${p.ar} ${arNum(c.economics.originations)} مقاطع من يوم واحد.`,
-      en: `${p.en} ${c.economics.originations} pieces from one day.`,
+      ar: `${p.ar} ${arPieces(c.economics.originations)} من يوم واحد.`,
+      en: `${p.en} ${enPieces(c.economics.originations)} from one day.`,
+    };
+  }
+  // Nothing left to claim and the plain line is spent. Only a concept the
+  // library actually tagged for this trade may say so; everything else falls
+  // back to the shape, which is true of any concept regardless of vertical.
+  if (!fitsTrade) {
+    const p = PLAIN[c.shape];
+    return {
+      ar: `${p.ar} ${arPieces(c.economics.originations)} من يوم واحد.`,
+      en: `${p.en} ${enPieces(c.economics.originations)} from one day.`,
     };
   }
   return {
-    ar: `مناسب لقطاعهم، وبيطلع ${arNum(c.economics.originations)} مقاطع من يوم تصوير واحد.`,
-    en: `Fits their trade, and yields ${c.economics.originations} pieces from a single crew day.`,
+    ar: `مناسب لقطاعهم، وبيطلع ${arPieces(c.economics.originations)} من يوم تصوير واحد.`,
+    en: `Fits their trade, and yields ${enPieces(c.economics.originations)} from a single crew day.`,
   };
 }
 

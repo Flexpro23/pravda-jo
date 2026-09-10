@@ -1,5 +1,5 @@
 import { CO } from '@/lib/data/company';
-import { arNum, num, hourShort as hour } from '@/lib/format/num';
+import { arNum, arPieces, enPieces, num, hourShort as hour } from '@/lib/format/num';
 import { fmtDate } from '@/lib/format/date';
 import { DISCIPLINE_LABEL } from '@/lib/data/roster';
 import { CREW_LABEL } from '@/lib/data/deals';
@@ -374,8 +374,8 @@ export default function SheetView({
                   )}
                   <p className="idea-yield">
                     {ar
-                      ? `${arNum(r.videos)} مقاطع من يوم تصوير واحد`
-                      : `${r.videos} finished pieces from a single shoot day`}
+                      ? `${arPieces(r.videos)} من يوم تصوير واحد`
+                      : `${enPieces(r.videos, 'finished piece')} from a single shoot day`}
                   </p>
                 </article>
                 );
@@ -391,7 +391,7 @@ export default function SheetView({
                     <b className="num">{num(offer.totalJOD, ar)}</b>
                     <span className="unit">
                       {ar
-                        ? `دينار · ${arNum(offer.videos)} مقاطع · ${arNum(offer.pricePerVideo)} للمقطع`
+                        ? `دينار · ${arPieces(offer.videos)} · ${arNum(offer.pricePerVideo)} للمقطع`
                         : `JOD · ${offer.videos} videos · ${offer.pricePerVideo} each`}
                     </span>
                   </div>

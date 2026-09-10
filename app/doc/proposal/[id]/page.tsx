@@ -7,7 +7,7 @@ import type { Deal } from '@/lib/data/deals';
 import { VIDEO_JOD } from '@/lib/data/deals';
 import { CO } from '@/lib/data/company';
 import PrintBar from '@/components/doc/PrintBar';
-import { arNum, num as money } from '@/lib/format/num';
+import { arNum, arPieces, enPieces, num as money } from '@/lib/format/num';
 import { fmtDate } from '@/lib/format/date';
 
 export const runtime = 'nodejs';
@@ -195,7 +195,7 @@ export default async function ProposalDoc({
               <tr>
                 <td>
                   <span className="what">
-                    {ar ? `${arNum(flat.videos)} مقاطع فيديو` : `${flat.videos} videos`}
+                    {ar ? `${arPieces(flat.videos)} فيديو` : enPieces(flat.videos, 'video')}
                   </span>
                   <span className="sub">
                     {ar
@@ -221,7 +221,7 @@ export default async function ProposalDoc({
                       turnaround nobody has agreed. */}
                   <span className="sub">
                     {ar
-                      ? `يوم تصوير واحد · ${arNum(flat.videos)} مقاطع جاهزة للنشر`
+                      ? `يوم تصوير واحد · ${arPieces(flat.videos)} جاهزة للنشر`
                       : `One shoot day · ${flat.videos} finished pieces from it`}
                   </span>
                 </td>

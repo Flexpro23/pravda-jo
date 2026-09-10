@@ -62,3 +62,37 @@ export const hourShort = (h: number, ar: boolean) => {
   const part = h < 12 ? 'ص' : 'م';
   return `${arNum(t)}${part}`;
 };
+
+/**
+ * "one piece", "two pieces", "eleven pieces" — counted correctly in both.
+ *
+ * A client's page read "1 pieces from one day" and, in Arabic, "١ مقاطع",
+ * because both call sites interpolated a bare number in front of a plural
+ * noun. English needs one rule. Arabic needs four, and getting them wrong is
+ * the kind of thing that makes a page look machine-written to the only people
+ * whose opinion of it matters:
+ *
+ *   1        مقطع واحد        — the noun alone, singular, no numeral
+ *   2        مقطعين           — the dual, and never "٢ مقطع"
+ *   3 to 10  ٣ مقاطع          — the numeral with the plural of paucity
+ *   11 and up ١١ مقطع         — the numeral with the SINGULAR again
+ *
+ * `pieces` is the only noun this counts today. It is written as a table
+ * rather than as a rule because the next noun (days, faces, posts) has its
+ * own broken plural and cannot be derived from this one.
+ */
+const AR_PIECE = { one: 'مقطع', two: 'مقطعين', few: 'مقاطع' } as const;
+
+export const arPieces = (n: number): string => {
+  const k = Math.max(0, Math.round(n));
+  if (k === 1) return `${AR_PIECE.one} واحد`;
+  if (k === 2) return AR_PIECE.two;
+  if (k >= 3 && k <= 10) return `${arNum(k)} ${AR_PIECE.few}`;
+  return `${arNum(k)} ${AR_PIECE.one}`;
+};
+
+/** The English half. `noun` carries any adjective, e.g. `finished piece`. */
+export const enPieces = (n: number, noun = 'piece'): string => {
+  const k = Math.max(0, Math.round(n));
+  return `${k} ${noun}${k === 1 ? '' : 's'}`;
+};
