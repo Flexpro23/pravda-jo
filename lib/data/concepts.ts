@@ -25,10 +25,27 @@
 /** What a piece costs to make, in crew and days rather than money. */
 export type Tier = 'light' | 'standard' | 'premium';
 
-/** The eight verticals the library was written against. */
+/**
+ * The nine verticals the library was written against.
+ *
+ * `b2b` is the ninth and was added after a real read went wrong. A loyalty-card
+ * platform came through the funnel, the guesser correctly refused to name a
+ * trade, an operator picked `pro` as the closest thing on the list, and the
+ * shortlist came back with a dermatology explainer and a legal-contract series.
+ * Neither was a matching error: both concepts genuinely carry `pro`, because
+ * `pro` in this library means a *licensed practice* — a lawyer, an accountant,
+ * a clinic — and a company that sells software to other companies is not one.
+ * The taxonomy had no slot, so the nearest available answer was a wrong one.
+ *
+ * What separates `b2b` from `pro` is the buyer and the thing being sold: `pro`
+ * is a licensed individual selling their own judgement to a person, `b2b` is a
+ * company selling a product or a service to another company. That distinction
+ * decides whether a concept can be shot at all — there is no treatment room, no
+ * shopfront and no walk-in customer to film.
+ */
 export type Vertical =
   | 'food' | 'retail' | 'body' | 'fitness'
-  | 'property' | 'auto' | 'edu' | 'pro';
+  | 'property' | 'auto' | 'edu' | 'pro' | 'b2b';
 
 export const VERTICAL_LABEL: Record<Vertical, { ar: string; en: string }> = {
   food:     { ar: 'أكل ومشروبات',   en: 'Food & drink' },
@@ -39,6 +56,7 @@ export const VERTICAL_LABEL: Record<Vertical, { ar: string; en: string }> = {
   auto:     { ar: 'سيارات',          en: 'Automotive' },
   edu:      { ar: 'تعليم وتدريب',    en: 'Education' },
   pro:      { ar: 'خدمات مهنية',     en: 'Professional services' },
+  b2b:      { ar: 'برمجيات وخدمات للشركات', en: 'B2B & software' },
 };
 
 /**
@@ -90,7 +108,7 @@ export type ConceptSource = {
 export const CONCEPTS: ConceptSource[] = [
   {
     n: 1, name: "The Inbox Twelve",
-    tier: "light", verticals: ["body", "property", "auto", "edu", "pro"],
+    tier: "light", verticals: ["body", "property", "auto", "edu", "pro", "b2b"],
     shape: "talking-head", headline: true,
     format: "Talking-head batch. 10-12 Reels of 20-40s plus 5 twelve-second price cutdowns, all from one half-day (5-6 hours) on one setup. Budget 1.5 editor days for the batch.",
     economics: { costJOD: 35, originations: 10, billedJOD: 1500, grossJOD: 1465, marginPct: 98 },
@@ -108,7 +126,7 @@ export const CONCEPTS: ConceptSource[] = [
   },
   {
     n: 2, name: "The Forty Fils Number",
-    tier: "light", verticals: ["food", "retail", "auto", "edu", "pro"],
+    tier: "light", verticals: ["food", "retail", "auto", "edu", "pro", "b2b"],
     shape: "ugc", headline: true,
     format: "Reel 15-45s shot to look self-filmed. 4-6 originations per visit; 15s and 8s retargeting trims bundled free, not counted as assets.",
     economics: { costJOD: 35, originations: 4, billedJOD: 600, grossJOD: 565, marginPct: 94 },
@@ -126,7 +144,7 @@ export const CONCEPTS: ConceptSource[] = [
   },
   {
     n: 3, name: "We Say No To This",
-    tier: "light", verticals: ["body", "fitness", "property", "edu", "pro"],
+    tier: "light", verticals: ["body", "fitness", "property", "edu", "pro", "b2b"],
     shape: "talking-head", headline: true,
     format: "Talking-head Reel 30-45s with two inserts. Sold only as a same-setup add-on to an Inbox Twelve day, where its marginal cost is thirty minutes. 1-2 per client.",
     economics: { costJOD: 35, originations: 1, billedJOD: 150, grossJOD: 115, marginPct: 77 },
@@ -162,7 +180,7 @@ export const CONCEPTS: ConceptSource[] = [
   },
   {
     n: 5, name: "Send Us Your Contract",
-    tier: "light", verticals: ["property", "edu", "pro"],
+    tier: "light", verticals: ["property", "edu", "pro", "b2b"],
     shape: "product", headline: true,
     format: "Overhead vertical 20-35s, hands only. Series of 10-12 from one three-hour desk session, built from audience-submitted documents. Booking gated on the signed document pack.",
     economics: { costJOD: 85, originations: 10, billedJOD: 1500, grossJOD: 1415, marginPct: 94 },
@@ -198,7 +216,7 @@ export const CONCEPTS: ConceptSource[] = [
   },
   {
     n: 7, name: "Phone Kit Friday",
-    tier: "light", verticals: ["food", "retail", "body", "auto", "pro"],
+    tier: "light", verticals: ["food", "retail", "body", "auto", "pro", "b2b"],
     shape: "ugc", headline: true,
     format: "No crew day at all. PRAVDA ships a kit and directs over WhatsApp; the client shoots on their own phone. 6-10 assets per cycle, edit-only cost, the floor product below every shot concept.",
     economics: { costJOD: 35, originations: 6, billedJOD: 900, grossJOD: 865, marginPct: 96 },
@@ -234,7 +252,7 @@ export const CONCEPTS: ConceptSource[] = [
   },
   {
     n: 9, name: "Status Thirty",
-    tier: "light", verticals: ["food", "retail", "body", "auto", "pro"],
+    tier: "light", verticals: ["food", "retail", "body", "auto", "pro", "b2b"],
     shape: "ugc", headline: true,
     format: "Vertical 20-30s built for WhatsApp Status and broadcast lists, not for the feed. 6-8 per cycle, cut from footage already shot on any other concept day.",
     economics: { costJOD: 35, originations: 6, billedJOD: 900, grossJOD: 865, marginPct: 96 },
@@ -252,7 +270,7 @@ export const CONCEPTS: ConceptSource[] = [
   },
   {
     n: 10, name: "The Bad Review, Answered",
-    tier: "light", verticals: ["food", "body", "fitness", "auto", "pro"],
+    tier: "light", verticals: ["food", "body", "fitness", "auto", "pro", "b2b"],
     shape: "talking-head", headline: true,
     format: "Reel 25-40s, single take plus one insert. 2-3 per client, shot on any existing talking-head setup.",
     economics: { costJOD: 35, originations: 2, billedJOD: 300, grossJOD: 265, marginPct: 88 },
@@ -324,7 +342,7 @@ export const CONCEPTS: ConceptSource[] = [
   },
   {
     n: 14, name: "Hook Farm",
-    tier: "light", verticals: ["food", "retail", "body", "fitness", "edu"],
+    tier: "light", verticals: ["food", "retail", "body", "fitness", "edu", "b2b"],
     shape: "ugc", headline: false,
     format: "Creative-refill pack for the ads retainer, not a Teardown concept. 12 finished ads welded from one 90-minute block plus a full editor day. Never sold as twelve separate videos.",
     economics: { costJOD: 85, originations: 12, billedJOD: 1800, grossJOD: 1715, marginPct: 95 },
@@ -360,7 +378,7 @@ export const CONCEPTS: ConceptSource[] = [
   },
   {
     n: 16, name: "Out The Door Number",
-    tier: "standard", verticals: ["property", "auto", "pro"],
+    tier: "standard", verticals: ["property", "auto", "pro", "b2b"],
     shape: "graphics", headline: true,
     format: "Graphics-led vertical 25-40s over slow-push car footage. Set of 6-8, one per model on the lot. One-time template build charged as a setup fee, then cheap per car.",
     economics: { costJOD: 35, originations: 6, billedJOD: 900, grossJOD: 865, marginPct: 96 },
@@ -558,7 +576,7 @@ export const CONCEPTS: ConceptSource[] = [
   },
   {
     n: 27, name: "The Whole Visit",
-    tier: "premium", verticals: ["body", "property", "auto", "edu", "pro"],
+    tier: "premium", verticals: ["body", "property", "auto", "edu", "pro", "b2b"],
     shape: "observational", headline: true,
     format: "Continuous POV single-take vertical 60-90s, street to chair, no cuts. A full crew day of its own, sold as a premium bolt-on to an Inbox Twelve booking. One deliverable.",
     economics: { costJOD: 135, originations: 1, billedJOD: 150, grossJOD: 15, marginPct: 10 },
@@ -594,7 +612,7 @@ export const CONCEPTS: ConceptSource[] = [
   },
   {
     n: 29, name: "The Last 60 Seconds",
-    tier: "premium", verticals: ["food", "retail", "body", "auto", "pro"],
+    tier: "premium", verticals: ["food", "retail", "body", "auto", "pro", "b2b"],
     shape: "product", headline: true,
     format: "Reel 15-25s with a real-time countdown. Ramadan seasonal, sold only inside a priced Ramadan campaign bundle alongside the ads retainer. Finished three to four weeks before the month starts.",
     economics: { costJOD: 285, originations: 1, billedJOD: 150, grossJOD: -135, marginPct: -90 },
@@ -612,7 +630,7 @@ export const CONCEPTS: ConceptSource[] = [
   },
   {
     n: 30, name: "The Receipt at Six Months",
-    tier: "premium", verticals: ["body", "fitness", "property", "edu", "pro"],
+    tier: "premium", verticals: ["body", "fitness", "property", "edu", "pro", "b2b"],
     shape: "documentary", headline: true,
     format: "Documentary vertical 60-90s, two locations, plus three static pull-quote crops. One asset per subject, released fortnightly. Never sold with a fixed shoot date until the subject and the workplace are confirmed in writing.",
     economics: { costJOD: 35, originations: 1, billedJOD: 150, grossJOD: 115, marginPct: 77 },

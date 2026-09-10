@@ -1,5 +1,8 @@
 import { discover, normaliseHandle, type Profile, type Usage } from '@/lib/meta/discovery';
-import { readSite, normaliseUrl, type SiteRead } from '@/lib/meta/website';
+import {
+  readSite, pickWebsite, type SiteRead, type WebsiteSource,
+} from '@/lib/meta/website';
+import type { Classification } from '@/lib/teardown/classify';
 import { computeSignals, type Signals } from '@/lib/teardown/signals';
 import { buildFindings, type Web } from '@/lib/teardown/findings';
 import { recommend, type Recommendation } from '@/lib/teardown/recommend';
@@ -107,6 +110,18 @@ export type ComposeInput = {
   vertical?: Vertical | null;
   /** The URL we actually read, already normalised. */
   website?: string | null;
+  /** Which of the three places that URL came from. */
+  websiteSource?: WebsiteSource | null;
+  /**
+   * The read's answer to "what is this business", supplied rather than computed.
+   *
+   * `classify` talks to a language model, and this function is pure — so the
+   * classification arrives as an input exactly like the profile and the site
+   * read do, and a golden fixture pins the composed sheet by supplying a fixed
+   * one. Absent, the lexicon runs inline as it always did, which is what keeps
+   * every existing caller and every existing test working unchanged.
+   */
+  classification?: Classification | null;
 };
 
 /**
@@ -129,7 +144,8 @@ export function composeSheet(
   const siteText = site
     ? [site.title, site.description].filter(Boolean).join(' ')
     : undefined;
-  const verticalGuess = inferVertical(profile.biography ?? '', captions, siteText);
+  const verticalGuess = input.classification
+    ?? inferVertical(profile.biography ?? '', captions, siteText);
 
   const operatorSaid = input.vertical ?? null;
   const confidentGuess = verticalGuess.confidence >= VERTICAL_CONFIDENT
@@ -146,8 +162,13 @@ export function composeSheet(
     handle: input.handle,
     clientName: profile.name || `@${input.handle}`,
     ...(input.website ? { website: input.website } : {}),
+    ...(input.websiteSource ? { websiteSource: input.websiteSource } : {}),
     ...(vertical ? { vertical } : {}),
     verticalGuess,
+    // Operator-only, and stored rather than recomputed: the console shows it on
+    // the sheet and on the client record, and `/s` never reads it.
+    ...(input.classification?.summary
+      ? { businessSummary: input.classification.summary } : {}),
 
     // Public business data, kept for the life of the sheet so an operator can
     // read the bio without opening Instagram in another tab. The picture is
@@ -243,9 +264,12 @@ export async function runRead(input: {
     };
   }
 
-  // The site they gave us, else the one their own bio points at.
-  const wanted = (input.website ?? '').trim() || read.profile.website || '';
-  const url = wanted ? normaliseUrl(wanted) : null;
+  // The site they gave us, else the one their link field points at, else one
+  // written into the bio text. See `pickWebsite`: the third case exists because
+  // an account that spends its single link on WhatsApp used to be told, as a
+  // critical finding on a page a client reads, that it had no website at all.
+  const picked = pickWebsite(input.website, read.profile.website, read.profile.biography);
+  const url = picked?.url ?? null;
   const siteRead = url ? await readSite(url) : null;
   const site = siteRead?.ok ? siteRead.site : null;
 
@@ -267,13 +291,31 @@ export async function runRead(input: {
 
   // A roster we cannot read is an empty roster, which makes every concept
   // uncastable rather than taking the whole read down. The sheet says so.
-  const roster = await listTalent().catch(() => [] as Talent[]);
+  // Classified in parallel with it: the two share no inputs, and a language
+  // model that takes a second must not add that second to a person's wait.
+  const { classify } = await import('@/lib/teardown/classify');
+  const [roster, classification] = await Promise.all([
+    listTalent().catch(() => [] as Talent[]),
+    classify({
+      handle,
+      name: read.profile.name,
+      bio: read.profile.biography,
+      captions: (read.profile.media ?? []).map((m) => m.caption ?? ''),
+      siteText: site
+        ? [site.title, site.description].filter(Boolean).join(' ')
+        : undefined,
+      // `classify` never rejects — this catch is for an import that failed, not
+      // for the model, and it still leaves the lexicon to answer.
+    }).catch(() => null),
+  ]);
 
   const sheet = composeSheet(
     {
       handle, profile: read.profile, signals, site, web, roster,
       vertical: input.vertical ?? null,
       website: url,
+      websiteSource: picked?.source ?? null,
+      classification,
     },
     { now: new Date().toISOString(), token: mintToken() },
   );

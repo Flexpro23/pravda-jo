@@ -38,6 +38,21 @@ const projectResolvable = () =>
   has('GOOGLE_CLOUD_PROJECT') || has('GCLOUD_PROJECT') || has('FIREBASE_PROJECT_ID')
   || has('FIREBASE_SERVICE_ACCOUNT') || has('FIRESTORE_EMULATOR_HOST');
 
+/**
+ * Whether the classifier can reach Gemini at all, by either route.
+ *
+ * Mirrors `backend()` in lib/teardown/classify.ts rather than importing it, so
+ * that a config panel — which runs in a request that has no business loading
+ * the Google SDK — stays free of that dependency. The two must agree; the
+ * shared rule is that an API key wins when set, and Vertex answers otherwise
+ * from a project id that is not the Firestore emulator's.
+ */
+export const geminiConfigured = (): boolean => {
+  if (process.env.GEMINI_API_KEY?.trim()) return true;
+  const p = (process.env.VERTEX_PROJECT || process.env.GOOGLE_CLOUD_PROJECT || '').trim();
+  return !!p && !p.endsWith('-local');
+};
+
 /** Is there any way at all for the system to reach a human by itself? */
 export const anyNotifyChannel = () =>
   (has('WHATSAPP_TOKEN') && has('WHATSAPP_PHONE_ID'))
@@ -61,6 +76,20 @@ export function configReport(): ConfigRow[] {
       projectResolvable()),
 
     // ── these work, but not the way anyone would want ───────────────────────
+    {
+      // Two ways to reach Gemini and either will do, so the row reports the
+      // capability rather than a variable — a `GEMINI_API_KEY` row would read
+      // as missing on the deployment that is correctly using Vertex and needs
+      // no key at all.
+      key: 'GEMINI_BACKEND',
+      present: geminiConfigured(),
+      severity: 'degraded',
+      whatBreaks:
+        'The trade is guessed by keyword list instead of read from the captions. '
+        + 'Reads still succeed and the shortlist is still produced, but a business '
+        + 'whose words are not in the lexicon gets no guess and no explanation — '
+        + 'and nothing can tell you a business is outside the nine trades entirely.',
+    },
     {
       key: 'NOTIFY_CHANNEL',
       present: anyNotifyChannel(),

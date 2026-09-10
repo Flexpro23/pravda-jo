@@ -195,6 +195,102 @@ export function normaliseUrl(input: string): string | null {
   } catch { return null; }
 }
 
+/**
+ * Hosts that are a link to a link, not a website.
+ *
+ * Reading one tells us nothing a teardown can use — there is no pixel to find,
+ * no copy to audit, no order path to follow — and auditing an aggregator's
+ * markup as if it were the business's own site produces findings about
+ * Linktree. `web-none` is the truthful answer for an account whose only URL is
+ * one of these, and it is the finding an operator can actually act on.
+ */
+const AGGREGATORS = [
+  'linktr.ee', 'linktree.com', 'beacons.ai', 'bio.link', 'lnk.bio',
+  'linkin.bio', 'later.com', 'msha.ke', 'taplink.cc', 'campsite.bio',
+  'solo.to', 'carrd.co', 'shorturl.at', 'bit.ly', 'wa.me', 'api.whatsapp.com',
+  'instagram.com', 'facebook.com', 'm.me', 't.me', 'youtube.com', 'tiktok.com',
+];
+
+const isAggregator = (url: string): boolean => {
+  try {
+    const h = new URL(url).hostname.replace(/^www\./, '').toLowerCase();
+    return AGGREGATORS.some((a) => h === a || h.endsWith(`.${a}`));
+  } catch { return false; }
+};
+
+/**
+ * A website hiding in the bio text, when the link field is empty.
+ *
+ * Instagram gives a business exactly one link field, and plenty of them spend
+ * it on WhatsApp or leave it blank and type the domain into the bio instead.
+ * The read used to look only at the field, so those accounts scored `web-none`
+ * — "there is no site to send anyone to" — as a critical finding on a sheet a
+ * client reads, about a site they have. That is the worst kind of wrong: not a
+ * missing number, an asserted one.
+ *
+ * Deliberately conservative. It wants a scheme, a `www.`, or a hostname whose
+ * last label is a real-looking TLD, so that `شغلنا 24.7` and a price of `8.50`
+ * are not domains. Aggregators are skipped here rather than followed: an
+ * account whose only URL is a Linktree genuinely has no site to audit, and
+ * saying so is the point.
+ */
+export function urlFromBio(bio?: string | null): string | null {
+  const text = (bio ?? '').replace(/[‎‏‪-‮]/g, ' ');
+  if (!text.trim()) return null;
+
+  // Trailing punctuation is stripped per candidate: Arabic bios routinely end a
+  // line with `·` or `،` right against the domain.
+  const CANDIDATE = /(?:https?:\/\/)?(?:www\.)?[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+(?:\/[^\s،؛·|]*)?/gi;
+  const TLD = /\.(com|net|org|io|co|jo|me|shop|store|app|dev|ai|biz|info|xyz|online|site|sa|ae|uk|eu)$/i;
+
+  for (const m of text.matchAll(CANDIDATE)) {
+    const trimmed = m[0].replace(/[.,،؛:!?)»"'\]]+$/, '');
+    const hasScheme = /^https?:\/\//i.test(trimmed);
+    const host = trimmed.replace(/^https?:\/\//i, '').split('/')[0];
+    // An email address is not a website, and its domain is not one either. The
+    // `@` is never inside the match — the pattern cannot cross it — so this
+    // looks at the character before, which is where it actually sits.
+    if (m.index !== undefined && text[m.index - 1] === '@') continue;
+    // A bare host earns its place only on a plausible TLD; a typed scheme or a
+    // `www.` is the author saying "this is a URL" and is taken at their word.
+    if (!hasScheme && !/^www\./i.test(host) && !TLD.test(host)) continue;
+    const url = normaliseUrl(trimmed);
+    if (!url) continue;
+    if (isAggregator(url)) continue;
+    return url;
+  }
+  return null;
+}
+
+/** Where the URL we read came from, so the sheet can say which. */
+export type WebsiteSource = 'operator' | 'bio-link' | 'bio-text';
+
+/**
+ * The three places a website can come from, in the order they are trusted.
+ *
+ * What the person typed on the form beats what Instagram has on file, which
+ * beats what we dug out of their bio text.
+ */
+export function pickWebsite(
+  operator?: string | null, bioLink?: string | null, bio?: string | null,
+): { url: string; source: WebsiteSource } | null {
+  const typed = (operator ?? '').trim();
+  if (typed) {
+    const url = normaliseUrl(typed);
+    if (url) return { url, source: 'operator' };
+  }
+  const field = (bioLink ?? '').trim();
+  if (field) {
+    const url = normaliseUrl(field);
+    // An aggregator in the link field is still not a site, and falling through
+    // to the bio text is exactly right: businesses that use Linktree often also
+    // write their real domain out in the bio.
+    if (url && !isAggregator(url)) return { url, source: 'bio-link' };
+  }
+  const found = urlFromBio(bio);
+  return found ? { url: found, source: 'bio-text' } : null;
+}
+
 /** Four octets in, private or not out. Anything malformed counts as private. */
 function privateV4(p: number[]): boolean {
   if (p.length !== 4 || p.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return true;

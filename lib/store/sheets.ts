@@ -3,11 +3,12 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { store } from '@/lib/store/firebase';
 import { ttlWrite, withTtl } from '@/lib/store/ttl';
 import type { Signals } from '@/lib/teardown/signals';
-import type { SiteRead } from '@/lib/meta/website';
+import type { SiteRead, WebsiteSource } from '@/lib/meta/website';
 import type { Findings, Web } from '@/lib/teardown/findings';
 import type { Recommendation, CastPick } from '@/lib/teardown/recommend';
 import type { Vertical } from '@/lib/data/concepts';
 import type { VerticalGuess } from '@/lib/teardown/vertical';
+import type { Classification } from '@/lib/teardown/classify';
 import { listTalent } from '@/lib/store/deals';
 import type { Talent } from '@/lib/data/deals';
 
@@ -45,6 +46,15 @@ export type Sheet = {
   clientName: string;
   website?: string;
   /**
+   * Which of the three places that URL came from.
+   *
+   * `bio-text` means nobody gave us the address and Instagram's link field did
+   * not have it either — it was found written into the bio. Worth showing an
+   * operator, because that is the one of the three that can be wrong about
+   * whose site it is.
+   */
+  websiteSource?: WebsiteSource;
+  /**
    * What the business is, once somebody is prepared to stand behind it.
    *
    * Set from `verticalGuess` only when the guess is confident, or by an
@@ -60,7 +70,22 @@ export type Sheet = {
    * it needs to see the words that produced it — a guess with no evidence
    * behind it is an assertion nobody can argue with.
    */
-  verticalGuess?: VerticalGuess;
+  verticalGuess?: VerticalGuess | Classification;
+
+  /**
+   * What this business actually is, in one sentence, in both languages.
+   *
+   * Written by `lib/teardown/classify.ts` when it ran. It exists for the case
+   * the vertical list cannot express — a business the nine trades do not cover
+   * produces no guess at all, and without this an operator is left with silence
+   * and picks the nearest wrong label, which is the failure that put a
+   * dermatology explainer in front of a loyalty-card platform.
+   *
+   * **Operator-only.** It is a judgement about a business rather than a number
+   * computed from its posts, so `/s` must never render it. The console shows it
+   * on the sheet review and on the client record and that is all.
+   */
+  businessSummary?: { ar: string; en: string };
 
   /**
    * The account as Meta described it, at the moment we read it.

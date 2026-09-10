@@ -95,6 +95,12 @@ export default function SheetReview({ sheet, roster }: { sheet: Sheet; roster: T
   const [recs, setRecs] = useState<Recommendation[]>(sheet.recommendations);
   const [chosen, setChosen] = useState<number[]>(sheet.chosen ?? []);
   const [vertical, setVertical] = useState<Vertical | ''>(sheet.vertical ?? '');
+  // "The list came up short", not "there was nothing to go on". Only the
+  // classifier can say this; a lexicon guess is absent for want of matching
+  // words and never carries the flag.
+  const outsideTaxonomy = sheet.verticalGuess
+    && 'outsideTaxonomy' in sheet.verticalGuess
+    && sheet.verticalGuess.outsideTaxonomy === true;
   const [overrides, setOverrides] = useState<Record<string, CastPick[]>>(sheet.castOverrides ?? {});
   // The Arabic copy lives in state, never read back off the `sheet` prop: the
   // prop is a snapshot from render time, and posting a field straight from it
@@ -261,7 +267,20 @@ export default function SheetReview({ sheet, roster }: { sheet: Sheet; roster: T
               ))}
             </select>
           </div>
-          {sheet.verticalGuess?.guess && (
+          {/*
+            What the read understood, in a sentence, before the trade label.
+            It is deliberately above the guess: on an account the nine trades do
+            not cover there IS no guess, and this is the whole of what the
+            engine has to say. Operator-only — `/s` never renders it, because a
+            sentence about what a business is, is a judgement rather than a
+            number computed from its posts.
+          */}
+          {sheet.businessSummary && (
+            <p className="hint" style={{ marginTop: 8 }}>
+              Read as: <b dir="auto">{sheet.businessSummary.en}</b>
+            </p>
+          )}
+          {sheet.verticalGuess?.guess ? (
             <p className="hint" style={{ marginTop: 8 }}>
               The engine read it as <b>{VERTICAL_LABEL[sheet.verticalGuess.guess].en}</b> at{' '}
               {Math.round(sheet.verticalGuess.confidence * 100)}% confidence
@@ -271,7 +290,21 @@ export default function SheetReview({ sheet, roster }: { sheet: Sheet; roster: T
                 </span></>
               )}.
             </p>
-          )}
+          ) : outsideTaxonomy ? (
+            /*
+              The case this whole panel was rebuilt for. The engine understood
+              the business and is telling you the LIST is what came up short —
+              which is a different instruction from "no guess": do not reach for
+              the nearest label, because the nearest label is how a loyalty-card
+              platform got offered a dermatology explainer.
+            */
+            <p className="hint" style={{ marginTop: 8 }}>
+              <b>None of the nine trades fit this business.</b> Leaving it unsaid
+              scores no trade bonus, which is honest. Picking the closest one
+              will put the wrong films on the shortlist — check them against the
+              sentence above before you send anything.
+            </p>
+          ) : null}
         </section>
 
         {/* ── the account, as they wrote it ── */}

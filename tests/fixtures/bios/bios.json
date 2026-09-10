@@ -3,96 +3,162 @@
     "id": "food-shawarma",
     "vertical": "food",
     "bio": "مطعم شاورما ومشاوي في جبل عمّان · توصيل لكل المناطق · للحجز والاستفسار",
-    "captions": ["صحن مشاوي مشكل جاهز", "فطور جمعة من الساعة ٩"]
+    "captions": [
+      "صحن مشاوي مشكل جاهز",
+      "فطور جمعة من الساعة ٩"
+    ]
   },
   {
     "id": "food-cafe",
     "vertical": "food",
     "bio": "Specialty coffee bar in Weibdeh · cafe & bakery · حلويات بيتية كل يوم",
-    "captions": ["new menu this week", "قهوة مختصة على الفلتر"]
+    "captions": [
+      "new menu this week",
+      "قهوة مختصة على الفلتر"
+    ]
   },
   {
     "id": "body-dental",
     "vertical": "body",
     "bio": "عيادة أسنان وتجميل الابتسامة · تقويم وزراعة · حجز مسبق",
-    "captions": ["تبييض بجلسة وحدة", "تقويم شفاف للكبار"]
+    "captions": [
+      "تبييض بجلسة وحدة",
+      "تقويم شفاف للكبار"
+    ]
   },
   {
     "id": "body-derma",
     "vertical": "body",
     "bio": "Dermatology clinic in Abdoun · skin, laser and filler · ليزر وبشرة",
-    "captions": ["botox and filler consultations", "جلسة ليزر للوجه"]
+    "captions": [
+      "botox and filler consultations",
+      "جلسة ليزر للوجه"
+    ]
   },
   {
     "id": "fitness-gym",
     "vertical": "fitness",
     "bio": "نادي رياضي مختلط في الصويفية · اشتراك شهري وسنوي · تمرين مع كوتش خاص",
-    "captions": ["حديد وكارديو من ٦ الصبح", "اشتراك العائلة بخصم"]
+    "captions": [
+      "حديد وكارديو من ٦ الصبح",
+      "اشتراك العائلة بخصم"
+    ]
   },
   {
     "id": "fitness-coach",
     "vertical": "fitness",
     "bio": "Personal training and fitness coaching in Amman · جيم نسائي · لياقة",
-    "captions": ["workout of the week", "برنامج تمرين للمبتدئات"]
+    "captions": [
+      "workout of the week",
+      "برنامج تمرين للمبتدئات"
+    ]
   },
   {
     "id": "property-listings",
     "vertical": "property",
     "bio": "شقة مفروشة للبيع في عبدون · عقارات وأراضي · ١٥٠ متر · للإيجار الشهري",
-    "captions": ["شقة جديدة للبيع في خلدا", "أرض تجارية على شارع رئيسي"]
+    "captions": [
+      "شقة جديدة للبيع في خلدا",
+      "أرض تجارية على شارع رئيسي"
+    ]
   },
   {
     "id": "property-agency",
     "vertical": "property",
     "bio": "Real estate in Amman · apartments and villas · property management · شقق فاخرة",
-    "captions": ["new apartment listing in Deir Ghbar", "villa viewing this weekend"]
+    "captions": [
+      "new apartment listing in Deir Ghbar",
+      "villa viewing this weekend"
+    ]
   },
   {
     "id": "auto-dealer",
     "vertical": "auto",
     "bio": "معرض سيارات مستعملة · صيانة وكوشوك وتأمين · ورشة معتمدة",
-    "captions": ["سيارات وارد الوكالة", "صيانة دورية وتغيير زيت"]
+    "captions": [
+      "سيارات وارد الوكالة",
+      "صيانة دورية وتغيير زيت"
+    ]
   },
   {
     "id": "auto-detailing",
     "vertical": "auto",
     "bio": "Car detailing and auto garage in Amman · car care · تغيير زيت",
-    "captions": ["full detailing package", "ceramic coating for your car"]
+    "captions": [
+      "full detailing package",
+      "ceramic coating for your car"
+    ]
   },
   {
     "id": "edu-institute",
     "vertical": "edu",
     "bio": "معهد تدريب · دورات لغة إنجليزية · التسجيل مفتوح · شهادة معتمدة",
-    "captions": ["دورة محاسبة تبدأ الأحد", "التسجيل للدورة الصيفية"]
+    "captions": [
+      "دورة محاسبة تبدأ الأحد",
+      "التسجيل للدورة الصيفية"
+    ]
   },
   {
     "id": "edu-academy",
     "vertical": "edu",
     "bio": "Training academy in Amman · courses in design and marketing · كورس تصميم",
-    "captions": ["new course starting in October", "التسجيل مفتوح للكورس"]
+    "captions": [
+      "new course starting in October",
+      "التسجيل مفتوح للكورس"
+    ]
   },
   {
     "id": "retail-boutique",
     "vertical": "retail",
     "bio": "متجر ملابس نسائية · تشكيلة الشتاء وصلت · مقاسات من S لـ XXL · توصيل لكل الأردن",
-    "captions": ["تشكيلة جديدة كل خميس", "مقاسات محدودة"]
+    "captions": [
+      "تشكيلة جديدة كل خميس",
+      "مقاسات محدودة"
+    ]
   },
   {
     "id": "retail-shop",
     "vertical": "retail",
     "bio": "Boutique in Sweifieh · new collection · shop online · أزياء وأكسسوارات",
-    "captions": ["the winter collection is live", "store open till 10"]
+    "captions": [
+      "the winter collection is live",
+      "store open till 10"
+    ]
   },
   {
     "id": "pro-law",
     "vertical": "pro",
     "bio": "مكتب محاماة واستشارات قانونية · تدقيق ومحاسبة · خدمات الشركات",
-    "captions": ["استشارة قانونية أولى مجانية", "تسجيل شركات وضريبة"]
+    "captions": [
+      "استشارة قانونية أولى مجانية",
+      "تسجيل شركات وضريبة"
+    ]
   },
   {
     "id": "pro-accounting",
     "vertical": "pro",
     "bio": "Accounting and audit firm · legal consulting for SMEs · ضريبة المبيعات",
-    "captions": ["year-end audit checklist", "خدمات محاسبة شهرية"]
+    "captions": [
+      "year-end audit checklist",
+      "خدمات محاسبة شهرية"
+    ]
+  },
+  {
+    "id": "b2b-loyalty",
+    "vertical": "b2b",
+    "bio": "منصة ولاء ومكافآت للتجار في الأردن · Loyalty platform for merchants",
+    "captions": [
+      "كل تاجر بيشوف نسبة الشراء المتكرر على dashboard واحد",
+      "تكامل مع نظام نقاط البيع بدون برمجة إضافية"
+    ]
+  },
+  {
+    "id": "b2b-software-house",
+    "vertical": "b2b",
+    "bio": "شركة برمجيات في عمّان · تطبيقات ونظام CRM للشركات · Custom software and integrations",
+    "captions": [
+      "أتمتة الفواتير عبر api جاهز",
+      "منصة إدارة داخلية لفريق المبيعات"
+    ]
   }
 ]

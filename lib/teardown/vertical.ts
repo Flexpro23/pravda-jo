@@ -73,6 +73,27 @@ export const LEXICON: Record<Vertical, { ar: string[]; en: string[] }> = {
     ar: ['محاماه', 'محامي', 'محاسبه', 'استشارات', 'خدمات', 'ضريبه', 'تدقيق', 'ترجمه'],
     en: ['consulting', 'accounting', 'law firm', 'legal', 'audit'],
   },
+  /**
+   * Selling to another company rather than to a person.
+   *
+   * Deliberately narrower than it could be. `حلول` and `شركات` are the two
+   * terms every Jordanian business puts in a bio regardless of what it does,
+   * so they are not here: a lexicon entry that fires on a restaurant's "حلول
+   * تموين" is worse than no entry, because a wrong guess above 0.7 renames the
+   * business on a page a client reads. What is here is either unambiguous
+   * (`saas`, `api`, `crm`) or unambiguous in context (`منصه`, `تكامل`).
+   *
+   * This list is the fallback, not the classifier. `lib/teardown/classify.ts`
+   * reads the captions properly; these words are what remains when it cannot
+   * be reached, and they are tuned to stay silent rather than to guess.
+   */
+  b2b: {
+    ar: ['برمجيات', 'برمجه', 'منصه', 'تطبيق', 'نظام', 'انظمه', 'تكامل',
+      'اتمته', 'ولاء', 'فوتره', 'اشتراكات', 'تجار', 'التجار'],
+    en: ['saas', 'software', 'platform', 'b2b', 'api', 'dashboard', 'crm',
+      'erp', 'pos', 'loyalty', 'integration', 'automation', 'merchants',
+      'onboarding', 'workflow'],
+  },
 };
 
 export type VerticalEvidence = { vertical: Vertical; term: string; hits: number };
