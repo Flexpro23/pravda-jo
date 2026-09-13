@@ -81,16 +81,22 @@ export function backend(): 'api-key' | 'vertex' | 'none' {
   return 'none';
 }
 
+/**
+ * One client for every Gemini call in the codebase, so the backend decision
+ * above is made in exactly one place. `lib/talent/readCard.ts` uses it too.
+ */
+export function client(): GoogleGenAI {
+  return backend() === 'vertex'
+    ? new GoogleGenAI({ vertexai: true, project: vertexProject(), location: vertexLocation() })
+    : new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+}
+
 /** The one seam. Tests replace it; production never touches it. */
 export const io = {
   generate: async (
     prompt: string, system: string, signal: AbortSignal,
   ): Promise<string | undefined> => {
-    const ai = backend() === 'vertex'
-      ? new GoogleGenAI({
-        vertexai: true, project: vertexProject(), location: vertexLocation(),
-      })
-      : new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const ai = client();
     const res = await ai.models.generateContent({
       model: MODEL,
       contents: prompt,

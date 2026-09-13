@@ -3,7 +3,8 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Talent } from '@/lib/data/deals';
-import { groupsFor, GROUP_LABEL, type Attributes, type Field } from '@/lib/data/talentFields';
+import { fieldsFor, type Attributes, type Field } from '@/lib/data/talentFields';
+import CompCardFields from '@/components/ops/CompCardFields';
 import {
   PURPOSES, PURPOSE_LABEL, CONSENT_DEFAULT_MONTHS, IMAGE_MAX_PER_PERSON,
   consentLive, latestConsent, mayShow, type Purpose,
@@ -110,15 +111,13 @@ export default function TalentLibrary({ t }: { t: Talent }) {
   };
 
   // ── the comp card ─────────────────────────────────────────────────────────
-  const groups = groupsFor(t.discipline);
-  const fields = groups.flatMap((g) => g.fields);
+  const fields = fieldsFor(t.discipline);
   const attrs: Attributes = t.attributes ?? {};
   const valueOf = (f: Field): string => {
     if (f.key in draft) return draft[f.key];
     const v = attrs[f.key];
     return Array.isArray(v) ? v.join(', ') : v === undefined ? '' : String(v);
   };
-  const set = (f: Field, v: string) => setDraft((d) => ({ ...d, [f.key]: v }));
   const dirty = Object.keys(draft).length > 0;
 
   const saveCard = async () => {
@@ -132,38 +131,6 @@ export default function TalentLibrary({ t }: { t: Talent }) {
     if (j) setDraft({});
   };
 
-  const control = (f: Field) => {
-    const id = `${t.id}-${f.key}`;
-    switch (f.kind) {
-      case 'choice':
-        return (
-          <select id={id} className="sel" value={valueOf(f)} disabled={busy}
-                  onChange={(e) => set(f, e.target.value)}>
-            <option value="">—</option>
-            {f.options.map((o) => <option key={o.value} value={o.value}>{o.label.en}</option>)}
-          </select>
-        );
-      case 'flag':
-        return (
-          <input id={id} type="checkbox" checked={valueOf(f) === 'true'} disabled={busy}
-                 onChange={(e) => set(f, String(e.target.checked))} />
-        );
-      case 'number':
-        return (
-          <span className="cc-num">
-            <input id={id} value={valueOf(f)} disabled={busy} inputMode="decimal" dir="ltr"
-                   onChange={(e) => set(f, e.target.value)} />
-            {f.unit && <span className="cc-unit">{f.unit.en}</span>}
-          </span>
-        );
-      default:
-        return (
-          <input id={id} value={valueOf(f)} disabled={busy} dir="auto"
-                 placeholder={f.kind === 'list' ? (f.suggest ?? []).slice(0, 3).join(', ') : ''}
-                 onChange={(e) => set(f, e.target.value)} />
-        );
-    }
-  };
 
   return (
     <section className="lib" aria-label={`${t.name.en}: library`}>
@@ -314,28 +281,9 @@ export default function TalentLibrary({ t }: { t: Talent }) {
         <h4 className="lib-h">Comp card</h4>
         <span className="hint">Everything optional. None of it reaches a client or the website.</span>
       </div>
-      <div className="cc">
-        {groups.map(({ group, fields: gf }) => (
-          <div key={group} className="cc-row">
-            <span className="cc-glabel">{GROUP_LABEL[group].en}</span>
-            <div className="cc-fields">
-              {gf.map((f) => (
-                <div key={f.key} className="cc-field" data-kind={f.kind}>
-                  <label htmlFor={`${t.id}-${f.key}`} title={f.hint?.en}>{f.label.en}</label>
-                  {control(f)}
-                </div>
-              ))}
-            </div>
-            {gf.some((f) => f.hint) && (
-              <p className="cc-hints hint">
-                {gf.filter((f) => f.hint).map((f) => (
-                  <span key={f.key}><b>{f.label.en}:</b> {f.hint!.en}</span>
-                ))}
-              </p>
-            )}
-          </div>
-        ))}
-      </div>
+      <CompCardFields discipline={t.discipline} idPrefix={t.id} disabled={busy}
+                      values={Object.fromEntries(fields.map((f) => [f.key, valueOf(f)]))}
+                      onChange={(key, v) => setDraft((d) => ({ ...d, [key]: v }))} />
       <div className="row">
         <button className="go" disabled={busy || !dirty} onClick={saveCard}>Save comp card</button>
         {dirty && <button disabled={busy} onClick={() => setDraft({})}>Discard</button>}

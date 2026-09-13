@@ -524,3 +524,34 @@ a.btn.go{background:var(--go);border-color:var(--go);color:#10210F;}
 .ava[data-fake="true"]{border-style:dashed;border-color:var(--ash);}
 /* The profile-picture tag names a role, not a caption; it needs to fit a thumbnail. */
 .lib-tag{white-space:nowrap;}
+
+/* ── add someone: one sheet ────────────────────────────────────────────────
+   A modal on a desk, a full-height sheet on a phone. The steps strip names
+   the order of the obligation — card, who, photos — and is not clickable:
+   the sheet decides when a step is complete, not the reader.              */
+.modal-bg{position:fixed;inset:0;z-index:50;background:rgba(10,10,10,.72);backdrop-filter:blur(3px);
+  display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{width:min(820px,100%);max-height:calc(100dvh - 40px);display:flex;flex-direction:column;
+  background:var(--void);border:1px solid var(--line);border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.modal-head{display:flex;align-items:center;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line);}
+.modal-head h2{margin:0;font:500 15px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;}
+.modal-x{min-height:36px;padding:4px 12px;font-size:20px;line-height:1;margin-inline-start:auto;}
+.modal-body{padding:18px 20px;overflow:auto;flex:1 1 auto;}
+.modal-foot{display:flex;gap:10px;align-items:center;padding:14px 20px;border-top:1px solid var(--line);}
+.modal-foot .sp{flex:1;}
+.steps{list-style:none;display:flex;gap:6px;margin:0;padding:0;}
+.steps li{font:500 10.5px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--ash);
+  padding:8px 10px;border:1px solid var(--line);border-radius:999px;}
+.steps li[data-done="true"]{color:var(--dim);border-color:var(--go);}
+.steps li[data-on="true"]{color:var(--brass);border-color:var(--brass);}
+.drop{border:1px dashed var(--edge,#4a4a4a);border-radius:8px;padding:18px;margin:14px 0 8px;text-align:center;}
+.drop[data-busy="true"]{opacity:.7;}
+.drop-lead{margin:0 0 4px;font-weight:500;}
+.drop .hint{max-width:52ch;margin:0 auto 12px;}
+.drop-list{list-style:none;margin:10px 0 0;padding:0;font-size:12px;color:var(--dim);display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;}
+.cc-num[data-note="true"]{border-color:var(--warn);}
+@media (max-width:640px){
+  .modal-bg{padding:0;align-items:stretch;}
+  .modal{width:100%;max-height:100dvh;border-radius:0;border:0;}
+  .steps li{padding:7px 8px;font-size:9.5px;}
+}

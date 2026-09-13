@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  AVAILABILITY_LABEL, DISCIPLINE_RATE, rateIsSet,
+  AVAILABILITY_LABEL, DISCIPLINE_RATE,
   type Talent, type TalentDiscipline,
 } from '@/lib/data/deals';
 import { VERTICAL_LABEL } from '@/lib/data/concepts';
@@ -12,6 +12,8 @@ import { reauthAction, useToast } from '@/components/ops/Toast';
 import TalentLibrary from '@/components/ops/TalentLibrary';
 import { fieldsFor } from '@/lib/data/talentFields';
 import { coverFor } from '@/lib/data/media';
+import DisciplineTabs, { DISCIPLINES, DISCIPLINE_NAME } from '@/components/ops/DisciplineTabs';
+import AddTalent from '@/components/ops/AddTalent';
 
 /**
  * The roster, editable.
@@ -53,49 +55,6 @@ function Avatar({ t }: { t: Talent }) {
   );
 }
 
-/**
- * In the order people think of the roster, not the rate card's key order —
- * the four trades as Khaled names them.
- */
-const DISCIPLINES: TalentDiscipline[] = ['model', 'photographer', 'videographer', 'voiceover'];
-
-const DISCIPLINE_NAME: Record<TalentDiscipline, string> = {
-  model: 'Model', photographer: 'Photographer', videographer: 'Videographer', voiceover: 'Voiceover',
-};
-
-/**
- * The four trades as tabs, one tap each.
- *
- * Built from radio inputs rather than buttons, because choosing one of four is
- * what a radio group is: the browser gives it arrow-key movement, one tab stop
- * for the whole group, and a screen reader announces "3 of 4" — none of which
- * a row of buttons would have without being rebuilt by hand. The inputs are
- * hidden visually and nowhere else.
- *
- * Each tab carries its rate, because the dropdown did and the rate is the
- * thing that decides whether the person can be booked at all.
- */
-function DisciplineTabs({
-  name, value, onChange, disabled,
-}: {
-  name: string; value: TalentDiscipline;
-  onChange: (d: TalentDiscipline) => void; disabled?: boolean;
-}) {
-  return (
-    <div className="dtabs" role="radiogroup" aria-label="Discipline">
-      {DISCIPLINES.map((d) => (
-        <label key={d} className="dtab" data-on={value === d}>
-          <input type="radio" name={name} value={d} checked={value === d}
-                 disabled={disabled} onChange={() => onChange(d)} />
-          <span className="dtab-name">{DISCIPLINE_NAME[d]}</span>
-          <span className="dtab-rate">
-            {rateIsSet(d) ? `${DISCIPLINE_RATE[d]} JOD/day` : 'no rate yet'}
-          </span>
-        </label>
-      ))}
-    </div>
-  );
-}
 const TAG_SUGGESTIONS = [...Object.keys(VERTICAL_LABEL), ...DISCIPLINES];
 
 export type TalentWork = {
@@ -122,10 +81,6 @@ export default function TalentManager({
   const [adding, setAdding] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [tagDraft, setTagDraft] = useState('');
-  const [f, setF] = useState({
-    nameEn: '', nameAr: '', discipline: 'videographer' as TalentDiscipline,
-    phone: '', dayRateJOD: '',
-  });
   // The active toggle is the one thing on this page pressed often enough
   // that waiting for a round trip is felt: this is applied the instant it is
   // pressed and rolled back if the request that should confirm it fails.
@@ -207,14 +162,6 @@ export default function TalentManager({
     );
   };
 
-  const create = async () => {
-    const j = await call({ action: 'create', ...f, dayRateJOD: f.dayRateJOD || undefined });
-    if (j?.code) {
-      setCode({ who: f.nameEn, code: j.code });
-      setF({ nameEn: '', nameAr: '', discipline: 'videographer', phone: '', dayRateJOD: '' });
-      setAdding(false);
-    }
-  };
 
   return (
     <>
@@ -231,54 +178,10 @@ export default function TalentManager({
       )}
 
       <div style={{ marginBottom: 22 }}>
-        <button className="go" onClick={() => setAdding((o) => !o)}>
-          {adding ? 'Cancel' : 'Add someone'}
-        </button>
+        <button className="go" type="button" onClick={() => setAdding(true)}>Add someone</button>
       </div>
-
-      {adding && (
-        <section className="blk">
-          <h2>New provider</h2>
-          <div className="pair">
-            <div>
-              <label>Name — EN</label>
-              <input value={f.nameEn} onChange={(e) => setF({ ...f, nameEn: e.target.value })} />
-            </div>
-            <div>
-              <label>Name — AR</label>
-              <input dir="rtl" value={f.nameAr} onChange={(e) => setF({ ...f, nameAr: e.target.value })} />
-            </div>
-          </div>
-          <label className="dtabs-label">Discipline</label>
-          <DisciplineTabs name="new-discipline" value={f.discipline} disabled={busy}
-                          onChange={(d) => setF({ ...f, discipline: d })} />
-          {!rateIsSet(f.discipline) && (
-            <p className="hint todo" style={{ marginTop: 6 }}>
-              There is no rate card entry for this discipline, so nothing
-              booking them can be priced. Set a day rate below, or set the
-              published rate first.
-            </p>
-          )}
-          <div className="pair">
-            <div>
-              <label>Day rate — JOD (what PRAVDA pays)</label>
-              <input
-                type="number" min={0} value={f.dayRateJOD}
-                placeholder={String(DISCIPLINE_RATE[f.discipline] || '')}
-                onChange={(e) => setF({ ...f, dayRateJOD: e.target.value })}
-              />
-            </div>
-            <div>
-              <label>Phone</label>
-              <input dir="ltr" className="mono" value={f.phone}
-                     onChange={(e) => setF({ ...f, phone: e.target.value })} />
-            </div>
-          </div>
-          <button className="go" disabled={busy || !f.nameEn || !f.nameAr} onClick={create}>
-            Add and issue a code
-          </button>
-        </section>
-      )}
+      <AddTalent open={adding} onClose={() => setAdding(false)}
+                 onCreated={(r) => { setCode(r); setAdding(false); router.refresh(); }} />
 
       {talent.length === 0 ? (
         <div className="panel">
