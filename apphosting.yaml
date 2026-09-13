@@ -55,19 +55,17 @@ env:
   # assumption that App Hosting provides GOOGLE_CLOUD_PROJECT — it does not,
   # and the first rollout without it quietly ran every read on the keyword
   # fallback, with the console's config panel the only thing that noticed.
-  # Photographs of the talent library. A dedicated private bucket, not the
-  # project's Firebase default: the default bucket's location is permanent
-  # project-wide, while this one can be recreated elsewhere while it is empty.
+  # Photographs of the talent library, in the project's Firebase Storage
+  # bucket. It sits in us-central1, the owner's choice, and the same country
+  # as Firestore (nam5), so every personal record lives under one transfer
+  # disclosure. Photos are never served from the bucket: they stream through
+  # the app's own route handlers after a consent check, and the bucket's
+  # Firebase rules deny every client (storage.rules). The runtime service
+  # account holds roles/storage.objectAdmin on this bucket alone.
   #
-  # europe-west4, alongside this backend, because photos are streamed through
-  # the app's own route handlers (never served from the bucket), so a bucket in
-  # another region would add latency and egress to every thumbnail. Public
-  # access prevention is enforced and uniform bucket-level access is on; the
-  # runtime service account holds roles/storage.objectAdmin on this bucket
-  # alone. Photos of Jordanian residents stored in the EU is a transfer outside
-  # Jordan under PDPL, as Firestore in nam5 already is — disclose both.
+  # Nothing here is a secret. A bucket name is an address, not a credential.
   - variable: STORAGE_BUCKET
-    value: pravda-jo-talent-photos
+    value: pravda-jo.firebasestorage.app
     availability: [RUNTIME]
 
   - variable: VERTEX_PROJECT
