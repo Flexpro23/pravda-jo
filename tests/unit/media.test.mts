@@ -184,3 +184,18 @@ test('the recommender does not read the photo module at all', () => {
   assert.ok(!/from '@\/lib\/data\/media'/.test(src), 'recommend.ts must not import lib/data/media');
   assert.ok(!/\bimages\b|\bconsents\b/.test(src), 'recommend.ts must not read images or consents');
 });
+
+test('every comp-card field belongs to a group, and a size range is a valid size', async () => {
+  const { GROUPS, groupsFor } = await import('@/lib/data/talentFields');
+  for (const d of Object.keys(DISCIPLINE_RATE) as TalentDiscipline[]) {
+    for (const g of groupsFor(d)) {
+      assert.ok(GROUPS.includes(g.group), `${d}: unknown group ${g.group}`);
+      for (const f of g.fields) assert.equal(f.group, g.group);
+    }
+  }
+  // "xs-s", "XS - S" and "xs–s" are the same rack range, written three ways.
+  assert.equal(cleanAttributes('model', { size: 'xs-s' }).size, 'XS–S');
+  assert.equal(cleanAttributes('model', { size: 'XS - S' }).size, 'XS–S');
+  assert.equal(cleanAttributes('model', { size: 'M' }).size, 'M');
+  assert.equal(cleanAttributes('model', { backCm: '42' }).backCm, 42, 'the back measurement is a real field');
+});
