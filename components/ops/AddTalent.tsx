@@ -52,6 +52,7 @@ export default function AddTalent({
   const [attrs, setAttrs] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [card, setCard] = useState<{ name: string; read: number } | null>(null);
+  const [pasted, setPasted] = useState('');
   const [reading, setReading] = useState(false);
   const [evidence, setEvidence] = useState('');
   const [months, setMonths] = useState(String(CONSENT_DEFAULT_MONTHS));
@@ -83,13 +84,14 @@ export default function AddTalent({
     push({ kind: 'err', text: j.detail ?? explain(j.error ?? 'unknown', j),
            ...(j.error === 'unauthenticated' ? { action: reauthAction() } : {}) });
 
-  /** Drop a picture of their card; the fields fill themselves. */
-  const readCard = async (file: File | undefined) => {
-    if (!file) return;
+  /** A picture of their card, or the message they sent — either fills the form. */
+  const readCard = async (source: { file?: File; text?: string }) => {
+    if (!source.file && !source.text?.trim()) return;
     setReading(true);
     try {
       const form = new FormData();
-      form.set('file', file); form.set('discipline', discipline);
+      if (source.file) form.set('file', source.file); else form.set('text', source.text!);
+      form.set('discipline', discipline);
       const res = await fetch('/api/ops/talent/card', { method: 'POST', body: form });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) { fail(j); return; }
@@ -110,8 +112,17 @@ export default function AddTalent({
         if (f) n[f.key] = `${line.slice(label.length + 2)} — check the card`;
       }
       setNotes(n);
-      setCard({ name: file.name, read: Object.keys(next).length });
-      push({ kind: 'ok', text: `Read ${Object.keys(next).length} field${Object.keys(next).length === 1 ? '' : 's'} off the card${Object.keys(n).length ? `, ${Object.keys(n).length} to check` : ''}.` });
+      const got = Object.keys(next).length + (j.name?.en || j.name?.ar ? 1 : 0) + (j.phone ? 1 : 0);
+      const from = source.file ? source.file.name : 'what you pasted';
+      setCard({ name: from, read: got });
+      // Nothing read is a result worth saying plainly, with the way round it.
+      if (got === 0) {
+        push({ kind: 'err', text: source.file
+          ? 'Nothing on that picture read as a card. If the details are in a message, paste the text instead.'
+          : 'Nothing in that text read as details. Try labelling them: height 160, weight 60.' });
+      } else {
+        push({ kind: 'ok', text: `Read ${got} field${got === 1 ? '' : 's'} from ${from}${Object.keys(n).length ? `, ${Object.keys(n).length} to check` : ''}.` });
+      }
     } catch {
       push({ kind: 'err', text: OFFLINE });
     } finally {
@@ -213,16 +224,35 @@ export default function AddTalent({
 
               <div className="drop" data-busy={reading}>
                 <input ref={cardRef} type="file" accept="image/jpeg,image/png,image/webp" hidden
-                       onChange={(e) => readCard(e.target.files?.[0])} />
+                       onChange={(e) => readCard({ file: e.target.files?.[0] })} />
                 <p className="drop-lead">Have their comp card?</p>
                 <p className="hint">Add a photo or screenshot of it — the fields can be in any order,
                   Arabic or English — and the form fills itself. You check every number before it is saved.</p>
                 <button type="button" disabled={busy || reading} onClick={() => cardRef.current?.click()}>
                   {reading ? 'Reading the card…' : card ? 'Read a different card' : 'Add a picture of the card'}
                 </button>
-                {card && <p className="hint">Read {card.read} field{card.read === 1 ? '' : 's'} from <span className="mono">{card.name}</span>.</p>}
+                {card && card.read > 0 && (
+                  <p className="hint">Read {card.read} field{card.read === 1 ? '' : 's'} from <span className="mono">{card.name}</span>.</p>
+                )}
+                {card && card.read === 0 && (
+                  <p className="hint todo">Nothing on <span className="mono">{card.name}</span> read as a card.</p>
+                )}
               </div>
-              <p className="hint">No card? Just continue and type what you know.</p>
+
+              <div className="paste">
+                <label htmlFor="add-paste">Or paste what they sent</label>
+                <textarea id="add-paste" rows={3} value={pasted} dir="auto" disabled={busy || reading}
+                          placeholder={'160 60 18 Merna\nor: height 171, waist 66, shoes 38'}
+                          onChange={(e) => setPasted(e.target.value)} />
+                <div className="row">
+                  <button type="button" disabled={busy || reading || !pasted.trim()}
+                          onClick={() => readCard({ text: pasted })}>
+                    {reading ? 'Reading…' : 'Read the text'}
+                  </button>
+                  <span className="hint">Bare numbers are read by convention — height, weight, then age, which is ignored. You still check every one.</span>
+                </div>
+              </div>
+              <p className="hint">Neither? Just continue and type what you know.</p>
             </>
           )}
 

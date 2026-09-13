@@ -9,7 +9,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * Read a comp card image into a draft the console can show.
+ * Read a comp card — a picture of one, or a pasted message — into a draft the
+ * console can show.
  *
  * Stores nothing and touches no record: the image is read, the draft is
  * returned, and the bytes are gone with the request. Saving is the operator's
@@ -21,17 +22,29 @@ export async function POST(req: Request) {
 
   const form = await req.formData().catch(() => null);
   const file = form?.get('file');
+  const text = String(form?.get('text') ?? '').trim();
   const discipline = String(form?.get('discipline') ?? '') as TalentDiscipline;
-  if (!(file instanceof File) || !Object.prototype.hasOwnProperty.call(DISCIPLINE_RATE, discipline)) {
+  if (!Object.prototype.hasOwnProperty.call(DISCIPLINE_RATE, discipline)) {
     return NextResponse.json({ error: 'malformed' }, { status: 400 });
   }
-  const bytes = Buffer.from(await file.arrayBuffer());
-  if (!bytes.length) return NextResponse.json({ error: 'empty' }, { status: 400 });
-  if (bytes.length > IMAGE_MAX_BYTES) return NextResponse.json({ error: 'too-large' }, { status: 413 });
-  const mimeType = sniff(bytes);
-  if (!mimeType) return NextResponse.json({ error: 'not-an-image' }, { status: 415 });
 
-  const r = await readCompCard({ bytes, mimeType }, discipline);
+  let input;
+  if (file instanceof File) {
+    const bytes = Buffer.from(await file.arrayBuffer());
+    if (!bytes.length) return NextResponse.json({ error: 'empty' }, { status: 400 });
+    if (bytes.length > IMAGE_MAX_BYTES) return NextResponse.json({ error: 'too-large' }, { status: 413 });
+    const mimeType = sniff(bytes);
+    if (!mimeType) return NextResponse.json({ error: 'not-an-image' }, { status: 415 });
+    input = { image: { bytes, mimeType } };
+  } else if (text) {
+    // It is not always a card. A message that says "160 60 18 Merna" is what
+    // actually arrives most days, and it reads the same way.
+    input = { text };
+  } else {
+    return NextResponse.json({ error: 'malformed' }, { status: 400 });
+  }
+
+  const r = await readCompCard(input, discipline);
   if (!r.ok) {
     const status = r.why === 'unconfigured' ? 503 : r.why === 'timeout' ? 504 : 502;
     const detail = {

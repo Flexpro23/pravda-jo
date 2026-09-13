@@ -34,13 +34,15 @@ import type { TalentDiscipline } from '@/lib/data/deals';
  */
 
 /** The one seam. Tests replace it; production never touches it. */
+export type Part = { inlineData: { mimeType: string; data: string } } | { text: string };
+
 export const io = {
   read: async (
-    image: { mimeType: string; data: string }, prompt: string, schema: unknown, signal: AbortSignal,
+    parts: Part[], prompt: string, schema: unknown, signal: AbortSignal,
   ): Promise<string | undefined> => {
     const res = await client().models.generateContent({
       model: MODEL,
-      contents: [{ role: 'user', parts: [{ inlineData: image }, { text: prompt }] }],
+      contents: [{ role: 'user', parts: [...parts, { text: prompt }] }],
       config: {
         responseMimeType: 'application/json',
         responseSchema: schema as never,
@@ -86,36 +88,50 @@ function schemaFor(fields: Field[]) {
   return { type: Type.OBJECT, properties };
 }
 
-const PROMPT = (fields: Field[]) => [
-  'This image is a talent comp card, or a photo or screenshot of one, from Jordan.',
-  'Read the fields off it into the JSON schema. Rules:',
+const PROMPT = (fields: Field[], source: 'image' | 'text') => [
+  source === 'image'
+    ? 'This image is a talent comp card, or a photo or screenshot of one, from Jordan.'
+    : 'The text below is what a talent (or their agent) in Jordan sent about themselves — a WhatsApp '
+      + 'message or a note. It is often just bare numbers in the conventional order — height, weight, '
+      + 'then age — sometimes with a name, sometimes with labels. Map by magnitude and convention: '
+      + '145–200 on its own is a height in cm, 35–120 a weight in kg, a number next to "shoe" or '
+      + '35–46 alone a shoe size, chest/waist/hips usually together in that order.',
+  'Read the fields into the JSON schema. Rules:',
   '',
   '· The fields appear in ANY order, in Arabic or English or both, often with',
   '  spelling mistakes ("waight", "heigh") and often without units. Match by meaning.',
   '· Heights and body measurements are centimetres; weight is kilograms; shoe size is',
   '  EU. If a value is plainly in another unit, convert it.',
   '· A clothing size may be a range like "xs-s". Return it as written.',
-  '· Return null for anything not on the card. Never estimate, never infer a',
-  '  measurement from a photograph, never fill a blank with a typical value.',
-  '· Ignore age and date of birth entirely, even if printed.',
+  '· Return null for anything not stated. Never estimate, never infer a',
+  '  measurement from a photograph, never fill a blank with a typical value. If a',
+  '  bare number could equally be two things, return null rather than guess.',
+  '· Ignore age and date of birth entirely, even if stated — a bare 18 or 25 after',
+  '  height and weight is an age, not a measurement.',
   '',
   'Fields: ' + fields.map((f) => `${f.key} (${f.label.en})`).join(', '),
 ].join('\n');
 
+export type CardInput =
+  | { image: { bytes: Buffer; mimeType: string } }
+  /** A pasted message: "160 60 18 Merna", or a labelled list, or anything between. */
+  | { text: string };
+
 export async function readCompCard(
-  image: { bytes: Buffer; mimeType: string }, discipline: TalentDiscipline,
+  input: CardInput, discipline: TalentDiscipline,
 ): Promise<CardDraft | CardRefusal> {
   if (backend() === 'none') return { ok: false, why: 'unconfigured' };
   const fields = fieldsFor(discipline);
+  const parts: Part[] = 'image' in input
+    ? [{ inlineData: { mimeType: input.image.mimeType, data: input.image.bytes.toString('base64') } }]
+    : [{ text: `MESSAGE:\n${input.text.trim().slice(0, 4000)}` }];
+  const source = 'image' in input ? 'image' : 'text';
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   let raw: string | undefined;
   try {
-    raw = await io.read(
-      { mimeType: image.mimeType, data: image.bytes.toString('base64') },
-      PROMPT(fields), schemaFor(fields), controller.signal,
-    );
+    raw = await io.read(parts, PROMPT(fields, source), schemaFor(fields), controller.signal);
   } catch (e) {
     log({ msg: 'card.failed', why: controller.signal.aborted ? 'timeout' : 'request', detail: msgOf(e) });
     return { ok: false, why: controller.signal.aborted ? 'timeout' : 'request' };
@@ -153,7 +169,7 @@ export async function readCompCard(
   const nameAr = str(body.nameAr, 80);
   const phone = str(body.phone, 20)?.replace(/[^\d+]/g, '') || undefined;
 
-  log({ msg: 'card.ok', model: MODEL, discipline, fields: Object.keys(attributes).length, unread: unread.length });
+  log({ msg: 'card.ok', model: MODEL, source, discipline, fields: Object.keys(attributes).length, unread: unread.length });
   return {
     ok: true, attributes, unread,
     ...(nameEn || nameAr ? { name: { ...(nameEn ? { en: nameEn } : {}), ...(nameAr ? { ar: nameAr } : {}) } } : {}),
