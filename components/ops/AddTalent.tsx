@@ -279,7 +279,7 @@ export default function AddTalent({
                          onChange={(e) => setRate(e.target.value)} disabled={busy} />
                 </div>
               </div>
-              <label className="dtabs-label">Comp card{card ? ' — read from the picture, check it' : ''}</label>
+              <label className="dtabs-label">Comp card{card && card.read > 0 ? ' — read for you, check every value' : ''}</label>
               <CompCardFields discipline={discipline} idPrefix="add" disabled={busy} values={attrs} notes={notes}
                               onChange={(k, v) => { setAttrs((a) => ({ ...a, [k]: v })); setNotes((n) => { const { [k]: _gone, ...rest } = n; return rest; }); }} />
             </>
