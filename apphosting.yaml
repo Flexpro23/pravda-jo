@@ -55,6 +55,21 @@ env:
   # GOOGLE_CLOUD_PROJECT, which App Hosting already sets to this project. It
   # exists only for a developer machine, where GOOGLE_CLOUD_PROJECT points at
   # the Firestore emulator instead.
+  # Photographs of the talent library. A dedicated private bucket, not the
+  # project's Firebase default: the default bucket's location is permanent
+  # project-wide, while this one can be recreated elsewhere while it is empty.
+  #
+  # europe-west4, alongside this backend, because photos are streamed through
+  # the app's own route handlers (never served from the bucket), so a bucket in
+  # another region would add latency and egress to every thumbnail. Public
+  # access prevention is enforced and uniform bucket-level access is on; the
+  # runtime service account holds roles/storage.objectAdmin on this bucket
+  # alone. Photos of Jordanian residents stored in the EU is a transfer outside
+  # Jordan under PDPL, as Firestore in nam5 already is — disclose both.
+  - variable: STORAGE_BUCKET
+    value: pravda-jo-talent-photos
+    availability: [RUNTIME]
+
   - variable: VERTEX_LOCATION
     value: global
     availability: [RUNTIME]

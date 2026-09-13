@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// Photographs of the people PRAVDA books. Every one of them is personal data,
+// and whether a given photo may be seen by a given reader depends on a consent
+// record that lives in Firestore and on the reader's identity — a decision
+// these rules cannot make, and must never be asked to.
+//
+// So, like firestore.rules, this file's whole job is to deny the client SDK
+// outright. Photos are written and read only by route handlers using the Admin
+// SDK, which bypasses these rules, and each read is checked against the
+// person's live consent first (lib/talent/photo.ts). A public bucket URL would
+// outlive a withdrawn consent in every cache it reached.
+//
+// If a rule here ever needs loosening, that is the signal that a photo is
+// about to be served without anyone checking whether its subject agreed.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

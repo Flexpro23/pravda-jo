@@ -98,6 +98,9 @@ export function configReport(): ConfigRow[] {
         'No notification channel is configured — nothing will reach you automatically. '
         + 'Leads are still written and the console still composes every message for a human to send.',
     },
+    row('STORAGE_BUCKET', 'degraded',
+      'The talent library cannot hold photos. Profiles, comp cards and consents still save; '
+      + 'uploading says photos are not configured.'),
     row('OPERATOR_PHONE', 'degraded',
       'Even the manual fallback has no destination: there is no wa.me link to tap.'),
     row('NEXT_PUBLIC_SITE_URL', 'degraded',

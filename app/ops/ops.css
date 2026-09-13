@@ -417,3 +417,84 @@ a.btn.go{background:var(--go);border-color:var(--go);color:#10210F;}
 @media(min-width:641px){
   .toasts{top:auto;bottom:0;left:auto;right:0;align-items:flex-end;max-width:380px;}
 }
+
+/* ── the library: consent, photos, comp card ───────────────────────────────
+   Consent first, because it comes first. The state colours are the console's
+   own: --go for a live agreement, --warn for one that ended.                */
+.lib{margin:18px 0 6px;padding-top:16px;border-top:1px solid var(--line);}
+.lib-h{font:500 12px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin:22px 0 8px;display:flex;gap:10px;align-items:baseline;}
+.lib-h:first-child{margin-top:0;}
+
+.lib-consents{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:10px;}
+.lib-consent{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--void);
+  border-inline-start:3px solid var(--line);}
+.lib-consent[data-state="live"]{border-inline-start-color:var(--go);}
+.lib-consent[data-state="withdrawn"],.lib-consent[data-state="expired"]{border-inline-start-color:var(--warn);}
+.lib-consent-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:4px;}
+.lib-state{font-size:12px;color:var(--ash);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.lib-consent[data-state="live"] .lib-state{color:var(--go);}
+.lib-consent .hint{margin:4px 0 8px;}
+.lib-ev{font-style:italic;}
+.lib-form{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);}
+
+.lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:8px 0;}
+.lib-photo{margin:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--void);}
+.lib-photo[data-cover="true"]{border-color:var(--brass);}
+.lib-photo img{display:block;width:100%;aspect-ratio:3/4;object-fit:cover;background:var(--panel);}
+.lib-photo figcaption{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px;}
+.lib-tag{font:500 10px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--void);background:var(--brass);padding:5px 7px;border-radius:3px;}
+/* Small controls under a thumbnail still keep a 44px target on a phone. */
+.lib-mini{min-height:36px;padding:6px 9px;font-size:11.5px;}
+.lib-web{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--dim);min-height:36px;}
+.lib-web input{width:18px;height:18px;margin:0;}
+.lib-fails{margin:8px 0 0;padding-inline-start:18px;color:var(--warn);font-size:13px;}
+
+.lib-card{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px 14px;margin:8px 0 10px;}
+.lib-field{display:flex;flex-direction:column;gap:4px;}
+.lib-field label{margin:0;}
+.lib-field[data-kind="list"],.lib-field[data-kind="text"]{grid-column:span 2;}
+.lib-field[data-kind="flag"]{flex-direction:row;align-items:center;gap:8px;grid-column:span 2;}
+.lib-field[data-kind="flag"] input{width:20px;height:20px;order:-1;}
+.lib-field .hint{font-size:11.5px;}
+@media (max-width:560px){
+  .lib-field[data-kind="list"],.lib-field[data-kind="text"],.lib-field[data-kind="flag"]{grid-column:auto;}
+}
+
+/* ── discipline tabs ───────────────────────────────────────────────────────
+   Four trades, one tap. The selected tab takes the nav's own selected state —
+   brass border, brass name — so "this one is chosen" reads the same way on
+   every screen of the console. Radios underneath, hidden only from sight.  */
+.dtabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:6px 0 16px;}
+.dtab{position:relative;display:flex;flex-direction:column;justify-content:center;gap:4px;
+  min-height:56px;padding:10px 14px;margin:0;cursor:pointer;
+  background:var(--panel);border:1px solid var(--line);border-radius:6px;
+  text-transform:none;letter-spacing:0;transition:border-color .14s,background .14s;}
+.dtab:hover{border-color:var(--edge,#4a4a4a);}
+.dtab input{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none;}
+.dtab-name{font:500 14px/1.15 var(--sans);color:var(--ink);}
+.dtab-rate{font:400 11.5px/1.2 var(--sans);color:var(--ash);font-variant-numeric:tabular-nums;}
+.dtab[data-on="true"]{border-color:var(--brass);background:#1d1d1b;}
+.dtab[data-on="true"] .dtab-name{color:var(--brass);}
+/* The keyboard focus ring the hidden radio cannot show for itself. */
+.dtab:has(input:focus-visible){outline:2px solid var(--brass);outline-offset:2px;}
+.dtab:has(input:disabled){cursor:default;opacity:.6;}
+@media (max-width:640px){.dtabs{grid-template-columns:repeat(2,minmax(0,1fr));}}
+/* The heading over the tabs sits outside a .pair, so it restates the field
+   label look instead of inheriting it. */
+.dtabs-label{display:block;font:500 10.5px/1 var(--sans);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ash);margin:4px 0 5px;}
+
+/* ── profile picture ───────────────────────────────────────────────────────
+   A circle beside the name: their chosen photo, or their initial. A worked
+   example gets a dashed ring, echoing the dashed card it sits in, so an
+   invented person never reads as a real face even at a glance.            */
+.ava{flex:none;width:40px;height:40px;border-radius:50%;overflow:hidden;
+  display:inline-grid;place-items:center;background:var(--panel);
+  border:1px solid var(--line);align-self:center;}
+.ava img{width:100%;height:100%;object-fit:cover;display:block;}
+.ava-initial{font:500 16px/1 var(--sans);color:var(--dim);}
+.ava[data-fake="true"]{border-style:dashed;border-color:var(--ash);}
+/* The profile-picture tag names a role, not a caption; it needs to fit a thumbnail. */
+.lib-tag{white-space:nowrap;}

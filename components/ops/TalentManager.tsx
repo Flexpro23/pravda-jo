@@ -9,6 +9,9 @@ import {
 import { VERTICAL_LABEL } from '@/lib/data/concepts';
 import { explain, OFFLINE } from '@/lib/ops/errors';
 import { reauthAction, useToast } from '@/components/ops/Toast';
+import TalentLibrary from '@/components/ops/TalentLibrary';
+import { fieldsFor } from '@/lib/data/talentFields';
+import { coverFor } from '@/lib/data/media';
 
 /**
  * The roster, editable.
@@ -24,7 +27,75 @@ import { reauthAction, useToast } from '@/components/ops/Toast';
  * screen said so.
  */
 
-const DISCIPLINES = Object.keys(DISCIPLINE_RATE) as TalentDiscipline[];
+/**
+ * Their profile picture, or their initial in a circle.
+ *
+ * The picture is whichever photo was chosen as their profile picture, and it is
+ * shown only while their consent to keep photos on file is live — the same rule
+ * as the photos themselves, so withdrawing consent turns this back into an
+ * initial on the next load, with nothing else to remember to update.
+ *
+ * The initial is the English name's first letter. An Arabic name's first
+ * letter is often a connector form that reads wrongly on its own in a circle.
+ */
+function Avatar({ t }: { t: Talent }) {
+  const pic = coverFor(t, 'roster');
+  const initial = (t.name.en.trim()[0] ?? '?').toUpperCase();
+  return (
+    <span className="ava" data-fake={!!t.placeholder} aria-hidden="true">
+      {pic ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={`/api/ops/talent/photo/${t.id}/${pic.id}`} alt="" loading="lazy" />
+      ) : (
+        <span className="ava-initial">{initial}</span>
+      )}
+    </span>
+  );
+}
+
+/**
+ * In the order people think of the roster, not the rate card's key order —
+ * the four trades as Khaled names them.
+ */
+const DISCIPLINES: TalentDiscipline[] = ['model', 'photographer', 'videographer', 'voiceover'];
+
+const DISCIPLINE_NAME: Record<TalentDiscipline, string> = {
+  model: 'Model', photographer: 'Photographer', videographer: 'Videographer', voiceover: 'Voiceover',
+};
+
+/**
+ * The four trades as tabs, one tap each.
+ *
+ * Built from radio inputs rather than buttons, because choosing one of four is
+ * what a radio group is: the browser gives it arrow-key movement, one tab stop
+ * for the whole group, and a screen reader announces "3 of 4" — none of which
+ * a row of buttons would have without being rebuilt by hand. The inputs are
+ * hidden visually and nowhere else.
+ *
+ * Each tab carries its rate, because the dropdown did and the rate is the
+ * thing that decides whether the person can be booked at all.
+ */
+function DisciplineTabs({
+  name, value, onChange, disabled,
+}: {
+  name: string; value: TalentDiscipline;
+  onChange: (d: TalentDiscipline) => void; disabled?: boolean;
+}) {
+  return (
+    <div className="dtabs" role="radiogroup" aria-label="Discipline">
+      {DISCIPLINES.map((d) => (
+        <label key={d} className="dtab" data-on={value === d}>
+          <input type="radio" name={name} value={d} checked={value === d}
+                 disabled={disabled} onChange={() => onChange(d)} />
+          <span className="dtab-name">{DISCIPLINE_NAME[d]}</span>
+          <span className="dtab-rate">
+            {rateIsSet(d) ? `${DISCIPLINE_RATE[d]} JOD/day` : 'no rate yet'}
+          </span>
+        </label>
+      ))}
+    </div>
+  );
+}
 const TAG_SUGGESTIONS = [...Object.keys(VERTICAL_LABEL), ...DISCIPLINES];
 
 export type TalentWork = {
@@ -60,6 +131,10 @@ export default function TalentManager({
   // pressed and rolled back if the request that should confirm it fails.
   const [activeOverride, setActiveOverride] = useState<Record<string, boolean>>({});
   const isActive = (t: Talent) => activeOverride[t.id] ?? t.active;
+  // Same optimistic pattern as the active toggle: a tab lights up when it is
+  // pressed, not when the round trip confirms it.
+  const [disciplineOverride, setDisciplineOverride] = useState<Record<string, TalentDiscipline>>({});
+  const disciplineOf = (t: Talent) => disciplineOverride[t.id] ?? t.discipline;
   const router = useRouter();
 
   const call = async (
@@ -94,6 +169,33 @@ export default function TalentManager({
   /** One field, saved on blur. `saveTalent` merges, so nothing else moves. */
   const patch = (t: Talent, body: Record<string, unknown>) =>
     call({ action: 'update', id: t.id, ...body });
+
+  /**
+   * Switch a person's trade — with a question first when that loses anything.
+   *
+   * The server re-cleans their comp card against the new trade, so a model
+   * moved to voiceover loses her height and shoe size. Inside a dropdown that
+   * took a deliberate choice; as a tab it is one stray tap on a phone. So the
+   * fields that would go are named before they go, and a switch that loses
+   * nothing asks nothing.
+   */
+  const changeDiscipline = (t: Talent, next: TalentDiscipline) => {
+    const from = disciplineOf(t);
+    if (next === from) return;
+    const keep = new Set(fieldsFor(next).map((x) => x.key));
+    const lost = fieldsFor(from).filter((x) => t.attributes?.[x.key] !== undefined && !keep.has(x.key));
+    if (lost.length && !window.confirm(
+      `Switching ${t.name.en} to ${DISCIPLINE_NAME[next].toLowerCase()} clears their `
+      // First letter only, so "Shoe size (EU)" reads "shoe size (EU)" and not "(eu)".
+      + `${lost.map((x) => x.label.en.charAt(0).toLowerCase() + x.label.en.slice(1)).join(', ')}. Continue?`,
+    )) return;
+    setDisciplineOverride((o) => ({ ...o, [t.id]: next }));
+    call(
+      { action: 'update', id: t.id, discipline: next },
+      `Now a ${DISCIPLINE_NAME[next].toLowerCase()}.`,
+      { rollback: () => setDisciplineOverride((o) => ({ ...o, [t.id]: from })) },
+    );
+  };
 
   const toggleActive = (t: Talent) => {
     const next = !isActive(t);
@@ -147,25 +249,17 @@ export default function TalentManager({
               <input dir="rtl" value={f.nameAr} onChange={(e) => setF({ ...f, nameAr: e.target.value })} />
             </div>
           </div>
+          <label className="dtabs-label">Discipline</label>
+          <DisciplineTabs name="new-discipline" value={f.discipline} disabled={busy}
+                          onChange={(d) => setF({ ...f, discipline: d })} />
+          {!rateIsSet(f.discipline) && (
+            <p className="hint todo" style={{ marginTop: 6 }}>
+              There is no rate card entry for this discipline, so nothing
+              booking them can be priced. Set a day rate below, or set the
+              published rate first.
+            </p>
+          )}
           <div className="pair">
-            <div>
-              <label>Discipline</label>
-              <select className="sel" value={f.discipline}
-                      onChange={(e) => setF({ ...f, discipline: e.target.value as TalentDiscipline })}>
-                {DISCIPLINES.map((d) => (
-                  <option key={d} value={d}>
-                    {d}{rateIsSet(d) ? ` — ${DISCIPLINE_RATE[d]} JOD/day` : ' — no published rate'}
-                  </option>
-                ))}
-              </select>
-              {!rateIsSet(f.discipline) && (
-                <p className="hint todo" style={{ marginTop: 6 }}>
-                  There is no rate card entry for this discipline, so nothing
-                  booking them can be priced. Set a day rate below, or set the
-                  published rate first.
-                </p>
-              )}
-            </div>
             <div>
               <label>Day rate — JOD (what PRAVDA pays)</label>
               <input
@@ -174,8 +268,6 @@ export default function TalentManager({
                 onChange={(e) => setF({ ...f, dayRateJOD: e.target.value })}
               />
             </div>
-          </div>
-          <div className="pair">
             <div>
               <label>Phone</label>
               <input dir="ltr" className="mono" value={f.phone}
@@ -212,6 +304,7 @@ export default function TalentManager({
             return (
               <div className="tal" key={t.id} data-off={!isActive(t)} data-fake={!!t.placeholder}>
                 <div className="tal-head">
+                  <Avatar t={t} />
                   <b dir="auto">{t.name.en}</b>
                   <span className="muted" dir="auto">{t.name.ar}</span>
                   <span className="mono muted">{t.discipline} · {t.dayRateJOD} JOD</span>
@@ -266,27 +359,23 @@ export default function TalentManager({
                                onBlur={(e) => e.target.value !== t.name.ar && patch(t, { nameAr: e.target.value })} />
                       </div>
                     </div>
+                    <label className="dtabs-label">Discipline</label>
+                    <DisciplineTabs name={`discipline-${t.id}`} value={disciplineOf(t)} disabled={busy}
+                                    onChange={(d) => changeDiscipline(t, d)} />
                     <div className="pair">
-                      <div>
-                        <label>Discipline</label>
-                        <select className="sel" defaultValue={t.discipline}
-                                onChange={(e) => patch(t, { discipline: e.target.value })}>
-                          {DISCIPLINES.map((d) => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                      </div>
                       <div>
                         <label>Day rate — JOD</label>
                         <input type="number" min={0} defaultValue={t.dayRateJOD}
                                onBlur={(e) => Number(e.target.value) !== t.dayRateJOD
                                  && patch(t, { dayRateJOD: Number(e.target.value) })} />
                       </div>
-                    </div>
-                    <div className="pair">
                       <div>
                         <label>Phone</label>
                         <input defaultValue={t.phone} dir="ltr" className="mono"
                                onBlur={(e) => e.target.value !== t.phone && patch(t, { phone: e.target.value })} />
                       </div>
+                    </div>
+                    <div className="pair">
                       <div>
                         <label>Back from {AVAILABILITY_LABEL[t.availability].en.toLowerCase()} on</label>
                         <input type="date" defaultValue={t.availableFrom ?? ''}
@@ -328,6 +417,8 @@ export default function TalentManager({
                         </button>
                       ))}
                     </div>
+
+                    <TalentLibrary t={t} />
 
                     <div className="pair" style={{ marginTop: 14 }}>
                       <div>

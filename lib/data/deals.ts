@@ -19,6 +19,9 @@
  * at that moment and is simply not there before it.
  */
 
+import type { Attributes } from '@/lib/data/talentFields';
+import type { Consent, TalentImage } from '@/lib/data/media';
+
 type B = { ar: string; en: string };
 
 // ── talent ──────────────────────────────────────────────────────────────────
@@ -28,14 +31,22 @@ export const DISCIPLINE_RATE = {
   videographer: 35,   // shoots and edits, per day
   model: 50,          // per shooting day
   voiceover: 40,      // per day, set 27 Aug 2026
+  /**
+   * No published rate yet, so none is written here. Zero is not a price — it
+   * is the absence of one, and `rateIsSet` turns it into "unbookable" rather
+   * than into somebody who can be cast for nothing a day. A photographer can be
+   * added to the library, photographed and profiled today; they reach a sheet
+   * the day a rate is set here or on their own record.
+   */
+  photographer: 0,
 } as const;
 
 export type TalentDiscipline = keyof typeof DISCIPLINE_RATE;
 
 /**
- * A discipline we can quote. All three are set today, but the check stays: a
- * fourth discipline added without a rate should surface as unbookable rather
- * than as somebody who can be hired for nothing a day.
+ * A discipline we can quote. Photographers are the fourth discipline and have
+ * no rate yet, which is exactly the case this check exists for: they surface as
+ * unbookable rather than as somebody who can be hired for nothing a day.
  */
 export const rateIsSet = (d: TalentDiscipline) => DISCIPLINE_RATE[d] > 0;
 
@@ -98,6 +109,24 @@ export type Talent = {
   idNumber?: string;
   /** The field for everything the schema did not anticipate. */
   note?: string;
+
+  // ── the library ───────────────────────────────────────────────────────────
+  /**
+   * The comp-card fields for their discipline — height and shoe size for a
+   * model, kit and whether they edit for a videographer. Shaped by
+   * `lib/data/talentFields.ts` and cleaned against it on every write, so a key
+   * left over from a discipline they no longer have is dropped rather than
+   * kept. Operator-only.
+   */
+  attributes?: Attributes;
+  /** Their photographs. Held in Storage; see `lib/data/media.ts` for who may see them. */
+  images?: TalentImage[];
+  /**
+   * What they agreed each photograph may be used for, and until when. Absent
+   * means nothing was agreed, and nothing is shown — not even in the console.
+   */
+  consents?: Consent[];
+
   active: boolean;
   placeholder?: boolean;
   createdAt: string;

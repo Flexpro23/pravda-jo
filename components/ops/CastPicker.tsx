@@ -20,6 +20,7 @@ import type { Recommendation } from '@/lib/teardown/recommend';
 
 const LABEL: Record<TalentDiscipline, string> = {
   videographer: 'Videographer', model: 'Model', voiceover: 'Voiceover',
+  photographer: 'Photographer',
 };
 
 /** The slots this concept has room for — the same arithmetic the route uses. */

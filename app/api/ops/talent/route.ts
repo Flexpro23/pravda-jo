@@ -7,6 +7,7 @@ import {
 } from '@/lib/store/deals';
 import type { Talent, TalentDiscipline } from '@/lib/data/deals';
 import { DISCIPLINE_RATE } from '@/lib/data/deals';
+import { cleanAttributes } from '@/lib/data/talentFields';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -146,6 +147,11 @@ export async function POST(req: Request) {
     const patch: Record<string, unknown> = {
       name: { ar, en },
       discipline,
+      // A discipline change re-cleans the comp card against the new trade, so
+      // somebody moved from model to voiceover does not keep a height and a
+      // shoe size that no field would ever render or let anyone correct.
+      ...(discipline !== t.discipline && t.attributes
+        ? { attributes: cleanAttributes(discipline, t.attributes) } : {}),
       ...(b.dayRateJOD !== undefined ? { dayRateJOD: Number(b.dayRateJOD) } : {}),
       ...(b.phone !== undefined ? { phone: String(b.phone) } : {}),
       ...(b.active !== undefined ? { active: !!b.active } : {}),

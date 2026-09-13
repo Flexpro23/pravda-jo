@@ -1,5 +1,6 @@
 import { cert, getApps, initializeApp, applicationDefault, type App } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
+import { getStorage } from 'firebase-admin/storage';
 
 /**
  * One Firestore handle for the process.
@@ -68,4 +69,35 @@ export function store(): Firestore {
     db = fresh;
   }
   return db;
+}
+
+/**
+ * Storage is not set up, as opposed to broken.
+ *
+ * Its own type so a caller can say so to the operator in words — "photos are
+ * not configured on this deployment" — rather than letting an undefined bucket
+ * name surface as a 500 that reads like an outage.
+ */
+export class StorageUnconfigured extends Error {
+  constructor() { super('STORAGE_BUCKET is not set'); this.name = 'StorageUnconfigured'; }
+}
+
+/**
+ * The bucket photographs of the roster are held in.
+ *
+ * Resolved through the same app as `store()`, so the emulator, a local service
+ * account and App Hosting's runtime identity all apply here without a second
+ * set of rules — and, like Firestore, it is only ever reached from a route
+ * handler. `storage.rules` denies every client read and write by design; a
+ * photograph is served by a route that has already checked the person agreed
+ * to it being seen there.
+ *
+ * Named explicitly rather than taken from the app's default, because App
+ * Hosting does not set one and a default that silently resolves to the wrong
+ * bucket is the Storage version of reading an unrelated project's Firestore.
+ */
+export function bucket() {
+  const name = process.env.STORAGE_BUCKET?.trim();
+  if (!name) throw new StorageUnconfigured();
+  return getStorage(app()).bucket(name);
 }
